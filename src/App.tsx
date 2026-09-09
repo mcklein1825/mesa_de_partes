@@ -282,6 +282,7 @@ function App() {
   const [toast, setToast] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [validationResult, setValidationResult] = useState<{ valid: boolean; message: string } | null>(null)
+  const [pendingAction, setPendingAction] = useState<{ type: 'derive' | 'complete' | 'archive'; id: string; area?: string } | null>(null)
   const areaOptions = useMemo(() => Array.from(new Set([...areas, ...expedientes.map(getAreaDestino).filter(Boolean)])).sort(), [expedientes])
 
   // Fecha actual dinámica para el dashboard
@@ -391,12 +392,20 @@ function App() {
     notify(`Expediente ${nextId} registrado correctamente`)
   }
 
-  // Deriva desde Mesa de Partes al área elegida por el director.
+  // Deriva desde Mesa de Partes al área elegida por el director con confirmación.
   const deriveExpediente = (id: string, targetArea: string) => {
     if (!targetArea) {
       notify('Seleccione el área de destino antes de derivar')
       return
     }
+    setPendingAction({ type: 'derive', id, area: targetArea })
+  }
+
+  // Confirma y ejecuta la derivación del expediente.
+  const confirmDerive = () => {
+    if (!pendingAction || pendingAction.type !== 'derive' || !pendingAction.area) return
+    
+    const { id, area: targetArea } = pendingAction
     const timestamp = new Date().toLocaleString('es-PE')
     saveExpedientes(expedientes.map((item) => item.id === id ? {
       ...item,
@@ -415,10 +424,19 @@ function App() {
       }],
     } : item))
     notify('Expediente derivado y enviado a En atención')
+    setPendingAction(null)
   }
 
-  // Marca como atendido por el área que recibió la derivación.
+  // Marca como atendido por el área que recibió la derivación con confirmación.
   const completeExpediente = (id: string) => {
+    setPendingAction({ type: 'complete', id })
+  }
+
+  // Confirma y ejecuta la atención del expediente.
+  const confirmComplete = () => {
+    if (!pendingAction || pendingAction.type !== 'complete') return
+    
+    const { id } = pendingAction
     const timestamp = new Date().toLocaleString('es-PE')
     saveExpedientes(expedientes.map((item) => item.id === id ? {
       ...item,
@@ -435,6 +453,12 @@ function App() {
       }],
     } : item))
     notify('Expediente marcado como Atendido')
+    setPendingAction(null)
+  }
+
+  // Cancela una acción pendiente.
+  const cancelPendingAction = () => {
+    setPendingAction(null)
   }
 
   return (
@@ -481,6 +505,35 @@ function App() {
       </main>
       {toast && <div className="toast"><span>✓</span>{toast}</div>}
       {trackingId && <TrackingModal item={expedientes.find((item) => item.id === trackingId)} onClose={() => setTrackingId(null)} />}
+      {pendingAction && (
+        <div className="modal-backdrop" role="presentation" onClick={cancelPendingAction}>
+          <section className="confirmation-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+            <div className="confirmation-header">
+              <h2>Confirmar acción</h2>
+              <button className="modal-close" onClick={cancelPendingAction} aria-label="Cerrar">×</button>
+            </div>
+            <div className="confirmation-body">
+              {pendingAction.type === 'derive' ? (
+                <>
+                  <p>¿Está seguro que desea derivar este expediente al área seleccionada?</p>
+                  <p className="confirmation-detail">Esta acción no se puede deshacer.</p>
+                </>
+              ) : (
+                <>
+                  <p>¿Está seguro que desea marcar este expediente como atendido?</p>
+                  <p className="confirmation-detail">Esta acción cambiará el estado del expediente.</p>
+                </>
+              )}
+            </div>
+            <div className="confirmation-actions">
+              <button className="outline-button" onClick={cancelPendingAction}>Cancelar</button>
+              <button className="primary-button" onClick={pendingAction.type === 'derive' ? confirmDerive : confirmComplete}>
+                {pendingAction.type === 'derive' ? '✓ Derivar' : '✓ Atender'}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   )
 }
