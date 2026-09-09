@@ -1,10 +1,57 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useState, useRef } from 'react'
 import importedExpedientes from './data/expedientes.csv.json'
 
-// Estados permitidos durante el ciclo de vida de un expediente.
+// Estados permitidos durante el ciclo de vida de un expediente (Máquina de Estados Finita).
 type Status = 'Pendiente' | 'En atención' | 'Atendido' | 'Archivado'
 // Pantallas principales disponibles en la aplicación.
 type View = 'inicio' | 'expedientes' | 'nuevo' | 'reportes'
+
+// Roles del sistema con permisos específicos
+type Role = 'MesaPartes' | 'AreaOperativa' | 'Administrador' | 'Auditor'
+
+// Usuario del sistema con autenticación básica
+type User = {
+  id: string
+  nombre: string
+  email: string
+  rol: Role
+  area?: string
+  activo: boolean
+}
+
+// Permisos por rol
+const ROLE_PERMISSIONS: Record<Role, {
+  puedeRegistrar: boolean
+  puedeDerivar: boolean
+  puedeAtender: boolean
+  puedeArchivar: boolean
+  puedeEditar: boolean
+  puedeVerReportes: boolean
+  puedeVerTodos: boolean
+}> = {
+  MesaPartes: { puedeRegistrar: true, puedeDerivar: true, puedeAtender: false, puedeArchivar: false, puedeEditar: true, puedeVerReportes: true, puedeVerTodos: true },
+  AreaOperativa: { puedeRegistrar: false, puedeDerivar: false, puedeAtender: true, puedeArchivar: false, puedeEditar: false, puedeVerReportes: false, puedeVerTodos: false },
+  Administrador: { puedeRegistrar: true, puedeDerivar: true, puedeAtender: true, puedeArchivar: true, puedeEditar: true, puedeVerReportes: true, puedeVerTodos: true },
+  Auditor: { puedeRegistrar: false, puedeDerivar: false, puedeAtender: false, puedeArchivar: false, puedeEditar: false, puedeVerReportes: true, puedeVerTodos: true },
+}
+
+// Transiciones válidas de estado (Máquina de Estados Finita)
+const VALID_TRANSITIONS: Record<Status, Status[]> = {
+  'Pendiente': ['En atención'],
+  'En atención': ['Atendido', 'Archivado'],
+  'Atendido': ['Archivado'],
+  'Archivado': [], // Estado terminal
+}
+
+// Usuario actual por defecto (en producción esto vendría de un backend)
+const DEFAULT_USER: User = {
+  id: 'USR-001',
+  nombre: 'Lucía Ramírez',
+  email: 'lucia.ramirez@institucion.gob.pe',
+  rol: 'MesaPartes',
+  area: 'Mesa de Partes',
+  activo: true,
+}
 
 // Un movimiento representa un paso de trazabilidad del expediente.
 type HistoryEntry = {
@@ -259,6 +306,43 @@ const readFileAsDataUrl = (file: File) => new Promise<string>((resolve, reject) 
 
 // Componente raíz: coordina navegación, datos, filtros, acciones y modales.
 function App() {
+  // Usuario actual con sesión
+  const [currentUser, setCurrentUser] = useState<User>(() => {
+    const stored = localStorage.getItem('mesa-partes-user')
+    if (stored) {
+      try {
+        return JSON.parse(stored) as User
+      } catch {
+        return DEFAULT_USER
+      }
+    }
+    return DEFAULT_USER
+  })
+  
+  // Timeout de sesión (30 minutos)
+  const sessionTimeoutRef = useRef<number | null>(null)
+  const resetSessionTimeout = () => {
+    if (sessionTimeoutRef.current) window.clearTimeout(sessionTimeoutRef.current)
+    sessionTimeoutRef.current = window.setTimeout(() => {
+      notify('Sesión expirada por inactividad')
+      setCurrentUser({ ...DEFAULT_USER }) // En producción, cerrar sesión completamente
+      localStorage.removeItem('mesa-partes-user')
+    }, 30 * 60 * 1000) // 30 minutos
+  }
+  
+  useEffect(() => {
+    resetSessionTimeout()
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart']
+    events.forEach(event => window.addEventListener(event, resetSessionTimeout))
+    return () => {
+      if (sessionTimeoutRef.current) clearTimeout(sessionTimeoutRef.current)
+      events.forEach(event => window.removeEventListener(event, resetSessionTimeout))
+    }
+  }, [])
+  
+  // Permisos del usuario actual
+  const userPermissions = ROLE_PERMISSIONS[currentUser.rol]
+  
   // Pantalla visible actualmente.
   const [view, setView] = useState<View>('nuevo')
   // Carga primero localStorage y usa el histórico como respaldo.
@@ -394,8 +478,17 @@ function App() {
 
   // Deriva desde Mesa de Partes al área elegida por el director con confirmación.
   const deriveExpediente = (id: string, targetArea: string) => {
+    if (!userPermissions.puedeDerivar) {
+      notify('No tiene permisos para derivar expedientes')
+      return
+    }
     if (!targetArea) {
       notify('Seleccione el área de destino antes de derivar')
+      return
+    }
+    const expediente = expedientes.find(e => e.id === id)
+    if (expediente && !VALID_TRANSITIONS[expediente.estado].includes('En atención')) {
+      notify(`No se puede derivar: estado actual "${expediente.estado}" no permite transición a "En atención"`)
       return
     }
     setPendingAction({ type: 'derive', id, area: targetArea })
@@ -406,6 +499,13 @@ function App() {
     if (!pendingAction || pendingAction.type !== 'derive' || !pendingAction.area) return
     
     const { id, area: targetArea } = pendingAction
+    const expediente = expedientes.find(e => e.id === id)
+    if (expediente && !VALID_TRANSITIONS[expediente.estado].includes('En atención')) {
+      notify(`No se puede derivar: estado actual "${expediente.estado}" no permite esta transición`)
+      setPendingAction(null)
+      return
+    }
+    
     const timestamp = new Date().toLocaleString('es-PE')
     saveExpedientes(expedientes.map((item) => item.id === id ? {
       ...item,
@@ -420,7 +520,7 @@ function App() {
         areaDestino: getAreaDestino(item),
         accion: 'Derivado para atención',
         observacion: 'Expediente enviado al área responsable para su revisión.',
-        responsable: 'Lucía Ramírez - Mesa de Partes',
+        responsable: `${currentUser.nombre} - ${currentUser.area}`,
       }],
     } : item))
     notify('Expediente derivado y enviado a En atención')
@@ -429,6 +529,15 @@ function App() {
 
   // Marca como atendido por el área que recibió la derivación con confirmación.
   const completeExpediente = (id: string) => {
+    if (!userPermissions.puedeAtender) {
+      notify('No tiene permisos para atender expedientes')
+      return
+    }
+    const expediente = expedientes.find(e => e.id === id)
+    if (expediente && !VALID_TRANSITIONS[expediente.estado].includes('Atendido')) {
+      notify(`No se puede atender: estado actual "${expediente.estado}" no permite transición a "Atendido"`)
+      return
+    }
     setPendingAction({ type: 'complete', id })
   }
 
@@ -437,6 +546,13 @@ function App() {
     if (!pendingAction || pendingAction.type !== 'complete') return
     
     const { id } = pendingAction
+    const expediente = expedientes.find(e => e.id === id)
+    if (expediente && !VALID_TRANSITIONS[expediente.estado].includes('Atendido')) {
+      notify(`No se puede atender: estado actual "${expediente.estado}" no permite esta transición`)
+      setPendingAction(null)
+      return
+    }
+    
     const timestamp = new Date().toLocaleString('es-PE')
     saveExpedientes(expedientes.map((item) => item.id === id ? {
       ...item,
@@ -449,10 +565,54 @@ function App() {
         areaDestino: 'Mesa de Partes',
         accion: 'Atendido',
         observacion: 'La oficina responsable registró la atención del expediente.',
-        responsable: `${getAreaDestino(item)} - responsable del área`,
+        responsable: `${currentUser.nombre} - ${currentUser.area || getAreaDestino(item)}`,
       }],
     } : item))
     notify('Expediente marcado como Atendido')
+    setPendingAction(null)
+  }
+
+  // Archiva un expediente con confirmación
+  const archiveExpediente = (id: string) => {
+    if (!userPermissions.puedeArchivar) {
+      notify('No tiene permisos para archivar expedientes')
+      return
+    }
+    const expediente = expedientes.find(e => e.id === id)
+    if (expediente && !VALID_TRANSITIONS[expediente.estado].includes('Archivado')) {
+      notify(`No se puede archivar: estado actual "${expediente.estado}" no permite transición a "Archivado"`)
+      return
+    }
+    setPendingAction({ type: 'archive', id })
+  }
+
+  // Confirma y ejecuta el archivado del expediente
+  const confirmArchive = () => {
+    if (!pendingAction || pendingAction.type !== 'archive') return
+    
+    const { id } = pendingAction
+    const expediente = expedientes.find(e => e.id === id)
+    if (expediente && !VALID_TRANSITIONS[expediente.estado].includes('Archivado')) {
+      notify(`No se puede archivar: estado actual "${expediente.estado}" no permite esta transición`)
+      setPendingAction(null)
+      return
+    }
+    
+    const timestamp = new Date().toLocaleString('es-PE')
+    saveExpedientes(expedientes.map((item) => item.id === id ? {
+      ...item,
+      estado: 'Archivado',
+      historial: [...(item.historial || createInitialHistory(item)), {
+        fechaHora: timestamp,
+        fechaSalida: timestamp,
+        areaOrigen: getAreaDestino(item),
+        areaDestino: 'Archivo Central',
+        accion: 'Archivado',
+        observacion: 'Expediente archivado luego de su atención.',
+        responsable: `${currentUser.nombre} - ${currentUser.area}`,
+      }],
+    } : item))
+    notify('Expediente archivado correctamente')
     setPendingAction(null)
   }
 
@@ -477,7 +637,11 @@ function App() {
         </nav>
         <div className="sidebar-footer">
           <div className="secure-note"><span>⌁</span><div><b>Entorno local</b><small>Datos guardados en este equipo</small></div></div>
-          <div className="user-mini"><div className="avatar">LR</div><div><b>Lucía Ramírez</b><small>Mesa de Partes</small></div><span>⋮</span></div>
+          <div className="user-mini" onClick={() => setShowProfile(!showProfile)} role="button" tabIndex={0}>
+            <div className="avatar">{currentUser.nombre.split(' ').map(n => n[0]).slice(0, 2).join('')}</div>
+            <div><b>{currentUser.nombre}</b><small>{currentUser.rol === 'MesaPartes' ? 'Mesa de Partes' : currentUser.rol}</small></div>
+            <span>⋮</span>
+          </div>
         </div>
       </aside>
 
@@ -491,8 +655,25 @@ function App() {
             <button onClick={() => setView('inicio')}>Inicio</button>
           </nav>
           <div className="top-actions">
-            <button className="profile-button" onClick={() => setShowProfile(!showProfile)}><div className="avatar">LR</div><span>Lucía Ramírez</span><b>⌄</b></button>
-            {showProfile && <div className="profile-popover"><b>Lucía Ramírez</b><span>Rol: Mesa de Partes</span><hr /><button onClick={() => notify('La sesión local permanece activa')}>Configuración</button><button onClick={() => notify('Cierre de sesión disponible en la integración institucional')}>Cerrar sesión</button></div>}
+            <button className="profile-button" onClick={() => setShowProfile(!showProfile)}>
+              <div className="avatar">{currentUser.nombre.split(' ').map(n => n[0]).slice(0, 2).join('')}</div>
+              <span>{currentUser.nombre}</span><b>⌄</b>
+            </button>
+            {showProfile && (
+              <div className="profile-popover">
+                <b>{currentUser.nombre}</b>
+                <span>Rol: {currentUser.rol === 'MesaPartes' ? 'Mesa de Partes' : currentUser.rol}</span>
+                <span>Área: {currentUser.area || 'N/A'}</span>
+                <hr />
+                <button onClick={() => { notify('Configuración disponible en versión completa'); setShowProfile(false); }}>Configuración</button>
+                <button onClick={() => { 
+                  setCurrentUser(DEFAULT_USER);
+                  localStorage.removeItem('mesa-partes-user');
+                  notify('Sesión cerrada correctamente');
+                  setShowProfile(false);
+                }}>Cerrar sesión</button>
+              </div>
+            )}
           </div>
         </header>
 
@@ -518,17 +699,26 @@ function App() {
                   <p>¿Está seguro que desea derivar este expediente al área seleccionada?</p>
                   <p className="confirmation-detail">Esta acción no se puede deshacer.</p>
                 </>
-              ) : (
+              ) : pendingAction.type === 'complete' ? (
                 <>
                   <p>¿Está seguro que desea marcar este expediente como atendido?</p>
                   <p className="confirmation-detail">Esta acción cambiará el estado del expediente.</p>
+                </>
+              ) : (
+                <>
+                  <p>¿Está seguro que desea archivar este expediente?</p>
+                  <p className="confirmation-detail">El expediente pasará a estado "Archivado" y no podrá ser modificado.</p>
                 </>
               )}
             </div>
             <div className="confirmation-actions">
               <button className="outline-button" onClick={cancelPendingAction}>Cancelar</button>
-              <button className="primary-button" onClick={pendingAction.type === 'derive' ? confirmDerive : confirmComplete}>
-                {pendingAction.type === 'derive' ? '✓ Derivar' : '✓ Atender'}
+              <button className="primary-button" onClick={() => {
+                if (pendingAction?.type === 'derive') confirmDerive()
+                else if (pendingAction?.type === 'complete') confirmComplete()
+                else if (pendingAction?.type === 'archive') confirmArchive()
+              }}>
+                {pendingAction.type === 'derive' ? '✓ Derivar' : pendingAction.type === 'complete' ? '✓ Atender' : '✓ Archivar'}
               </button>
             </div>
           </section>
