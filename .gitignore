@@ -1,0 +1,17 @@
+# Dependencias instaladas localmente
+node_modules/
+
+# Salida generada por Vite
+dist/
+
+# Cachés y archivos temporales
+.vite/
+*.tsbuildinfo
+*.log
+
+# Configuración local del editor y del sistema
+.vscode/*
+!.vscode/extensions.json
+.idea/
+Thumbs.db
+.DS_Store
