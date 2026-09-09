@@ -148,6 +148,107 @@ const addDays = (value: string, days: number) => {
   return formatDate(date.toISOString().slice(0, 10))
 }
 
+// Calcula días restantes hasta el vencimiento
+const daysUntilDeadline = (deadlineDate: string): number => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const deadline = new Date(deadlineDate.split('/').reverse().join('-'))
+  const diffTime = deadline.getTime() - today.getTime()
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  return diffDays
+}
+
+// Valida formato de DNI (8 dígitos) y RUC (11 dígitos)
+const validateDocument = (tipo: string, numero: string): { valid: boolean; message: string } => {
+  const cleanNumber = numero.trim()
+  if (tipo === 'DNI') {
+    if (!/^\d{8}$/.test(cleanNumber)) {
+      return { valid: false, message: 'DNI debe tener 8 dígitos' }
+    }
+    // Algoritmo de validación DNI peruano
+    const dni = parseInt(cleanNumber)
+    const summary = Math.floor(dni / 10000000) * 2 + Math.floor((dni % 10000000) / 1000000) * 3
+      + Math.floor((dni % 1000000) / 100000) * 4 + Math.floor((dni % 100000) / 10000) * 5
+      + Math.floor((dni % 10000) / 1000) * 6 + Math.floor((dni % 1000) / 100) * 7
+      + Math.floor((dni % 100) / 10) * 8 + (dni % 10) * 9
+    const checkDigit = 11 - (summary % 11)
+    const expectedCheckDigit = checkDigit === 11 ? 0 : checkDigit === 10 ? 1 : checkDigit
+    if (parseInt(cleanNumber[7]) !== expectedCheckDigit) {
+      return { valid: false, message: 'DNI inválido (no pasa verificación)' }
+    }
+    return { valid: true, message: 'DNI válido' }
+  } else if (tipo === 'RUC') {
+    if (!/^\d{11}$/.test(cleanNumber)) {
+      return { valid: false, message: 'RUC debe tener 11 dígitos' }
+    }
+    // Algoritmo de validación RUC peruano
+    const weights = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2]
+    let sum = 0
+    for (let i = 0; i < 10; i++) {
+      sum += parseInt(cleanNumber[i]) * weights[i]
+    }
+    const remainder = sum % 11
+    const checkDigit = remainder === 0 ? 0 : 11 - remainder
+    if (parseInt(cleanNumber[10]) !== checkDigit) {
+      return { valid: false, message: 'RUC inválido (no pasa verificación)' }
+    }
+    return { valid: true, message: 'RUC válido' }
+  }
+  return { valid: true, message: 'Documento válido' }
+}
+
+// Calcula tiempo promedio de atención en días
+const calculateAverageResolutionTime = (expedientes: Expediente[]): number => {
+  const attended = expedientes.filter(e => e.estado === 'Atendido' || e.estado === 'Archivado')
+  if (attended.length === 0) return 0
+  
+  let totalDays = 0
+  let count = 0
+  
+  attended.forEach(exp => {
+    const startDate = exp.fechaIngreso || exp.fecha
+    if (!startDate) return
+    
+    // Buscar fecha de atención en el historial
+    const attendedEntry = exp.historial?.find(h => h.accion === 'Atendido' || h.accion === 'Archivado')
+    const endDate = attendedEntry?.fechaHora || new Date().toLocaleString('es-PE')
+    
+    const start = new Date(startDate.split('/').reverse().join('-'))
+    const end = new Date(endDate)
+    const diffTime = Math.abs(end.getTime() - start.getTime())
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    
+    totalDays += diffDays
+    count++
+  })
+  
+  return count > 0 ? Math.round(totalDays / count) : 0
+}
+
+// Exporta reporte a CSV
+const exportReportToCSV = (expedientes: Expediente[]) => {
+  const headers = ['ID', 'Fecha', 'Remitente', 'Asunto', 'Área', 'Estado', 'Prioridad', 'Plazo']
+  const rows = expedientes.map(e => [
+    e.id,
+    e.fechaIngreso,
+    getRemitenteNombre(e),
+    `"${e.asunto.replace(/"/g, '""')}"`,
+    getAreaDestino(e),
+    e.estado,
+    e.prioridad,
+    e.plazo
+  ])
+  
+  const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `reporte-expedientes-${new Date().toISOString().slice(0, 10)}.csv`
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
 // Lee un archivo del navegador como Data URL para conservarlo localmente.
 const readFileAsDataUrl = (file: File) => new Promise<string>((resolve, reject) => {
   const reader = new FileReader()
@@ -180,7 +281,16 @@ function App() {
   const [showProfile, setShowProfile] = useState(false)
   const [toast, setToast] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const [validationResult, setValidationResult] = useState<{ valid: boolean; message: string } | null>(null)
+  const [pendingAction, setPendingAction] = useState<{ type: 'derive' | 'complete' | 'archive'; id: string; area?: string } | null>(null)
   const areaOptions = useMemo(() => Array.from(new Set([...areas, ...expedientes.map(getAreaDestino).filter(Boolean)])).sort(), [expedientes])
+
+  // Fecha actual dinámica para el dashboard
+  const currentDate = useMemo(() => {
+    const now = new Date()
+    const options: Intl.DateTimeFormatOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }
+    return now.toLocaleDateString('es-PE', options).toUpperCase()
+  }, [])
 
   // Persiste cambios antes de actualizar la interfaz para evitar estados falsos.
   const saveExpedientes = (next: Expediente[]) => {
@@ -216,7 +326,8 @@ function App() {
     const form = event.currentTarget
     const data = new FormData(event.currentTarget)
     const nextNumber = expedientes.reduce((highest, item) => Math.max(highest, Number(item.id.match(/^EXP-\d{4}-(\d+)/)?.[1] || 0)), 0) + 1
-    const nextId = `EXP-2026-${String(nextNumber).padStart(5, '0')}`
+    const currentYear = new Date().getFullYear()
+    const nextId = `EXP-${currentYear}-${String(nextNumber).padStart(5, '0')}`
     const selectedFile = data.get('archivo')
     const fileName = selectedFile instanceof File && selectedFile.name ? selectedFile.name : 'Sin adjunto'
     let fileData = ''
@@ -281,12 +392,20 @@ function App() {
     notify(`Expediente ${nextId} registrado correctamente`)
   }
 
-  // Deriva desde Mesa de Partes al área elegida por el director.
+  // Deriva desde Mesa de Partes al área elegida por el director con confirmación.
   const deriveExpediente = (id: string, targetArea: string) => {
     if (!targetArea) {
       notify('Seleccione el área de destino antes de derivar')
       return
     }
+    setPendingAction({ type: 'derive', id, area: targetArea })
+  }
+
+  // Confirma y ejecuta la derivación del expediente.
+  const confirmDerive = () => {
+    if (!pendingAction || pendingAction.type !== 'derive' || !pendingAction.area) return
+    
+    const { id, area: targetArea } = pendingAction
     const timestamp = new Date().toLocaleString('es-PE')
     saveExpedientes(expedientes.map((item) => item.id === id ? {
       ...item,
@@ -305,10 +424,19 @@ function App() {
       }],
     } : item))
     notify('Expediente derivado y enviado a En atención')
+    setPendingAction(null)
   }
 
-  // Marca como atendido por el área que recibió la derivación.
+  // Marca como atendido por el área que recibió la derivación con confirmación.
   const completeExpediente = (id: string) => {
+    setPendingAction({ type: 'complete', id })
+  }
+
+  // Confirma y ejecuta la atención del expediente.
+  const confirmComplete = () => {
+    if (!pendingAction || pendingAction.type !== 'complete') return
+    
+    const { id } = pendingAction
     const timestamp = new Date().toLocaleString('es-PE')
     saveExpedientes(expedientes.map((item) => item.id === id ? {
       ...item,
@@ -325,6 +453,12 @@ function App() {
       }],
     } : item))
     notify('Expediente marcado como Atendido')
+    setPendingAction(null)
+  }
+
+  // Cancela una acción pendiente.
+  const cancelPendingAction = () => {
+    setPendingAction(null)
   }
 
   return (
@@ -363,14 +497,43 @@ function App() {
         </header>
 
         <div className="page">
-          {view === 'inicio' && <Dashboard expedientes={expedientes} onNew={() => setView('nuevo')} onViewAll={() => setView('expedientes')} />}
+          {view === 'inicio' && <Dashboard expedientes={expedientes} onNew={() => setView('nuevo')} onViewAll={() => setView('expedientes')} currentDate={currentDate} />}
           {view === 'expedientes' && <ExpedientesView items={filtered} query={query} setQuery={setQuery} areaFilter={areaFilter} areaOptions={areaOptions} setAreaFilter={setAreaFilter} remitenteFilter={remitenteFilter} setRemitenteFilter={setRemitenteFilter} statusFilter={statusFilter} setStatusFilter={setStatusFilter} onNew={() => setView('nuevo')} onDerive={deriveExpediente} onComplete={completeExpediente} onTracking={setTrackingId} />}
           {view === 'nuevo' && <NewExpediente onSubmit={addExpediente} onCancel={() => setView('inicio')} isSaving={isSaving} />}
-          {view === 'reportes' && <Reports expedientes={expedientes} />}
+          {view === 'reportes' && <Reports expedientes={expedientes} notify={notify} />}
         </div>
       </main>
       {toast && <div className="toast"><span>✓</span>{toast}</div>}
       {trackingId && <TrackingModal item={expedientes.find((item) => item.id === trackingId)} onClose={() => setTrackingId(null)} />}
+      {pendingAction && (
+        <div className="modal-backdrop" role="presentation" onClick={cancelPendingAction}>
+          <section className="confirmation-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+            <div className="confirmation-header">
+              <h2>Confirmar acción</h2>
+              <button className="modal-close" onClick={cancelPendingAction} aria-label="Cerrar">×</button>
+            </div>
+            <div className="confirmation-body">
+              {pendingAction.type === 'derive' ? (
+                <>
+                  <p>¿Está seguro que desea derivar este expediente al área seleccionada?</p>
+                  <p className="confirmation-detail">Esta acción no se puede deshacer.</p>
+                </>
+              ) : (
+                <>
+                  <p>¿Está seguro que desea marcar este expediente como atendido?</p>
+                  <p className="confirmation-detail">Esta acción cambiará el estado del expediente.</p>
+                </>
+              )}
+            </div>
+            <div className="confirmation-actions">
+              <button className="outline-button" onClick={cancelPendingAction}>Cancelar</button>
+              <button className="primary-button" onClick={pendingAction.type === 'derive' ? confirmDerive : confirmComplete}>
+                {pendingAction.type === 'derive' ? '✓ Derivar' : '✓ Atender'}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   )
 }
@@ -381,15 +544,99 @@ function NavItem({ icon, label, active, count, onClick }: { icon: string; label:
 }
 
 // Panel inicial con indicadores, expedientes recientes y vencimientos.
-function Dashboard({ expedientes, onNew, onViewAll }: { expedientes: Expediente[]; onNew: () => void; onViewAll: () => void }) {
+function Dashboard({ expedientes, onNew, onViewAll, currentDate }: { expedientes: Expediente[]; onNew: () => void; onViewAll: () => void; currentDate: string }) {
   const pending = expedientes.filter((item) => item.estado === 'Pendiente').length
   const attention = expedientes.filter((item) => item.estado === 'En atención').length
   const attended = expedientes.filter((item) => item.estado === 'Atendido').length
-  return <><div className="page-heading"><div><p className="eyebrow">LUNES, 07 DE SETIEMBRE DE 2026</p><h1>Buenos días, Lucía <span>👋</span></h1><p className="muted">Aquí tienes el resumen de tu mesa de partes.</p></div><button className="primary-button" onClick={onNew}>＋ Nuevo expediente</button></div>
-    <section className="stats-grid"><StatCard label="Por atender" value={pending} detail="Requieren derivación" tone="orange" icon="◷" /><StatCard label="En atención" value={attention} detail="En las áreas responsables" tone="blue" icon="↗" /><StatCard label="Atendidos" value={attended} detail="Registros con seguimiento" tone="green" icon="✓" /><StatCard label="Total de expedientes" value={expedientes.length} detail="Importados desde 2026" tone="purple" icon="▤" /></section>
-    <div className="content-grid"><section className="panel recent-panel"><div className="panel-header"><div><h2>Expedientes recientes</h2><p>Últimos documentos registrados en el sistema</p></div><button className="text-button" onClick={onViewAll}>Ver todos <span>→</span></button></div><div className="table-wrap"><table><thead><tr><th>N° DE EXPEDIENTE</th><th>REMITENTE</th><th>ASUNTO</th><th>ÁREA DESTINO</th><th>ESTADO</th><th /></tr></thead><tbody>{expedientes.slice(0, 4).map((item) => <tr key={item.id}><td><b className="exp-id">{item.id}</b><small>{item.fecha}</small></td><td><span className="person-cell"><span className="small-avatar">{item.remitente.split(' ').map((x) => x[0]).slice(0, 2).join('')}</span>{item.remitente}</span></td><td>{item.asunto}</td><td>{item.area}</td><td><StatusBadge status={item.estado} /></td><td><button className="dots">•••</button></td></tr>)}</tbody></table></div></section><section className="panel deadlines-panel"><div className="panel-header"><div><h2>Próximos vencimientos</h2><p>Expedientes que requieren atención</p></div><span className="warning-icon">!</span></div><div className="deadline-list">{expedientes.filter((item) => item.estado === 'Pendiente' || item.estado === 'En atención').slice(0, 3).map((item, index) => <div className="deadline-item" key={item.id}><div className={`deadline-date ${index === 0 ? 'urgent' : ''}`}><b>{index === 0 ? '13' : '14'}</b><span>SET</span></div><div><b>{item.id}</b><p>{item.asunto}</p><small>{index === 0 ? 'Vence en 6 días' : 'Vence en 7 días'}</small></div></div>)}</div><button className="outline-button" onClick={onViewAll}>Ver calendario de vencimientos</button></section></div>
-    <div className="quick-tip"><span>✦</span><div><b>Todo bajo control</b><p>No tienes expedientes vencidos. Recuerda revisar tu bandeja al inicio de cada jornada.</p></div><button>×</button></div>
-  </>
+  
+  // Calcular vencimientos dinámicamente
+  const upcomingDeadlines = expedientes
+    .filter((item) => (item.estado === 'Pendiente' || item.estado === 'En atención') && item.plazo)
+    .map(item => ({
+      ...item,
+      daysLeft: daysUntilDeadline(item.plazo)
+    }))
+    .filter(item => item.daysLeft >= 0 && item.daysLeft <= 15)
+    .sort((a, b) => a.daysLeft - b.daysLeft)
+    .slice(0, 3)
+  
+  const formatDateShort = (dateStr: string) => {
+    const date = new Date(dateStr.split('/').reverse().join('-'))
+    return { day: date.getDate(), month: date.toLocaleString('es-PE', { month: 'short' }).toUpperCase() }
+  }
+
+  return (
+    <>
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">{currentDate}</p>
+          <h1>Buenos días, Lucía <span>👋</span></h1>
+          <p className="muted">Aquí tienes el resumen de tu mesa de partes.</p>
+        </div>
+        <button className="primary-button" onClick={onNew}>＋ Nuevo expediente</button>
+      </div>
+      <section className="stats-grid">
+        <StatCard label="Por atender" value={pending} detail="Requieren derivación" tone="orange" icon="◷" />
+        <StatCard label="En atención" value={attention} detail="En las áreas responsables" tone="blue" icon="↗" />
+        <StatCard label="Atendidos" value={attended} detail="Registros con seguimiento" tone="green" icon="✓" />
+        <StatCard label="Total de expedientes" value={expedientes.length} detail={`Año ${new Date().getFullYear()}`} tone="purple" icon="▤" />
+      </section>
+      <div className="content-grid">
+        <section className="panel recent-panel">
+          <div className="panel-header">
+            <div><h2>Expedientes recientes</h2><p>Últimos documentos registrados en el sistema</p></div>
+            <button className="text-button" onClick={onViewAll}>Ver todos <span>→</span></button>
+          </div>
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>N° DE EXPEDIENTE</th><th>REMITENTE</th><th>ASUNTO</th><th>ÁREA DESTINO</th><th>ESTADO</th><th /></tr></thead>
+              <tbody>
+                {expedientes.slice(0, 4).map((item) => (
+                  <tr key={item.id}>
+                    <td><b className="exp-id">{item.id}</b><small>{item.fecha}</small></td>
+                    <td><span className="person-cell"><span className="small-avatar">{getRemitenteNombre(item).split(' ').map((x) => x[0]).slice(0, 2).join('')}</span>{getRemitenteNombre(item)}</span></td>
+                    <td>{item.asunto}</td>
+                    <td>{getAreaDestino(item)}</td>
+                    <td><StatusBadge status={item.estado} /></td>
+                    <td><button className="dots">•••</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <section className="panel deadlines-panel">
+          <div className="panel-header">
+            <div><h2>Próximos vencimientos</h2><p>Expedientes que requieren atención</p></div>
+            <span className="warning-icon">!</span>
+          </div>
+          <div className="deadline-list">
+            {upcomingDeadlines.length > 0 ? (
+              upcomingDeadlines.map((item) => {
+                const { day, month } = formatDateShort(item.plazo)
+                return (
+                  <div className="deadline-item" key={item.id}>
+                    <div className={`deadline-date ${item.daysLeft <= 3 ? 'urgent' : ''}`}>
+                      <b>{day}</b><span>{month}</span>
+                    </div>
+                    <div>
+                      <b>{item.id}</b>
+                      <p>{item.asunto}</p>
+                      <small>{item.daysLeft === 0 ? 'Vence hoy' : item.daysLeft === 1 ? 'Vence mañana' : `Vence en ${item.daysLeft} días`}</small>
+                    </div>
+                  </div>
+                )
+              })
+            ) : (
+              <div className="empty-state" style={{ padding: '20px', textAlign: 'center' }}>No hay vencimientos próximos</div>
+            )}
+          </div>
+          <button className="outline-button" onClick={onViewAll}>Ver calendario de vencimientos</button>
+        </section>
+      </div>
+      <div className="quick-tip"><span>✦</span><div><b>Todo bajo control</b><p>No tienes expedientes vencidos. Recuerda revisar tu bandeja al inicio de cada jornada.</p></div><button>×</button></div>
+    </>
+  )
 }
 
 // Tarjeta reutilizable para mostrar un indicador numérico.
@@ -464,9 +711,52 @@ function NewExpediente({ onSubmit, onCancel, isSaving }: { onSubmit: (event: For
   return <div className="legacy-form-page"><form className="form-layout" onSubmit={onSubmit}>{isSaving && <div className="saving-notice">El archivo se está leyendo y guardando. No cierres ni recargues la página.</div>}<div className="legacy-title">▣ Registro de Expediente MPV</div><section className="panel form-panel"><div className="panel-header"><div><h2>Datos del trámite</h2><p>Complete los datos solicitados para registrar el expediente.</p></div></div><div className="form-grid"><label>Fecha de ingreso <input name="fechaIngreso" type="date" required defaultValue={todayInputValue()} /></label>  <label>Trámite <select name="tipo" required><option value="">Seleccione el tipo</option><option>Solicitud</option><option>Oficio</option><option>Memorando</option><option>Informe</option><option>Carta</option><option>Resolución</option></select></label>    <label className="wide">Nombre / apellido o razón social <input name="remitente" required placeholder="Ingrese el nombre completo o razón social." /></label><label>Cargo del remitente <input name="cargoRemitente" placeholder="Cargo o función del remitente" /></label><label>Representante (si aplica) <input name="representante" placeholder="Nombre del representante" /></label><label>Cargo del representante <input name="cargoRepresentante" placeholder="Cargo" /></label><label>Área destino   <select name="area" required><option value="">Seleccione el área</option>{areas.map((area) => <option key={area}>{area}</option>)}</select></label><label className="wide">Asunto de la solicitud <input name="asunto" required placeholder="Registre en forma clara el asunto por el cual ingresa el documento." /></label><label className="wide">Documentos <input name="documentos" required placeholder="Ej. Oficio Múltiple N.° 00129-2025-MINEDU/..." /></label></div></section><section className="panel form-panel"><div className="section-strip">▣ Datos del administrado</div><div className="form-grid"><label>Tipo de documento <select name="tipoDocumento"><option>RUC</option><option>DNI</option><option>CE</option></select></label><label>Número de documento <div className="inline-field"><input name="numeroDocumento" required placeholder="Número de documento" /><button type="button" className="legacy-blue-button">⌕ Validar</button></div></label><p className="helper-text wide">Si su documento corresponde a un contribuyente, recuerde que deberá autenticarse con RUC.</p>  <label className="wide">Contenido <textarea name="contenido" required placeholder="Ingrese en forma detallada el contenido de su solicitud, procedimiento o trámite." rows={3} /></label><label className="wide">Dirección <input name="direccion" placeholder="Ingrese la Dirección" /></label><label>Correo electrónico <input name="correo" type="email" placeholder="Necesario para notificación electrónica" /></label><label>Celular <input name="celular" placeholder="Teléfono de contacto" /></label><label>Folios <input name="folios" type="number" min="1" required defaultValue="1" /></label>  <label>Anexos <input name="anexos" type="number" min="0" required defaultValue="0" /></label><label>Prioridad <select name="prioridad" required><option>Normal</option><option>Alta</option></select></label></div></section><section className="panel form-panel"><div className="section-strip">▣ Recepción y seguimiento</div><div className="form-grid">    <label>Recibido presencial/virtual <select name="canalRecepcion" required><option value="">Seleccione el canal</option><option>Físico</option><option>Plataforma SINAD</option><option>Virtual</option><option>Presencial</option></select></label><label>Entregado presencial/virtual a <select name="entregadoA" required><option value="">Seleccione el destino</option>{areas.map((area) => <option key={area}>{area}</option>)}</select></label><label className="wide">Documento seguimiento <input name="documentoSeguimiento" placeholder="Ej. Informe técnico, memorando o cargo de atención" /></label></div></section><section className="panel form-panel"><div className="section-strip">▣ Archivos a Adjuntar</div><div className="form-grid attachment-grid"><label>Archivo <label className="file-button">▣ Seleccionar archivo<input name="archivo" type="file" accept=".pdf,.jpg,.jpeg,.png" required onChange={(event) => setSelectedFileName(event.target.files?.[0]?.name || '')} /></label><small>{selectedFileName ? `Archivo seleccionado: ${selectedFileName}` : 'Ningún archivo seleccionado. Máximo 5 MB.'}</small></label><label>Descripción del archivo <input name="archivoDescripcion" placeholder="Ingrese la descripción de su archivo." /></label></div><div className="empty-files">{selectedFileName ? 'El archivo se guardará junto con el expediente.' : 'Seleccione un archivo para adjuntarlo al expediente.'}</div></section><div className="form-actions"><button type="button" className="legacy-light-button" onClick={onCancel}>‹ Anterior</button><button type="submit" className="legacy-blue-button">✓ Enviar</button><button type="reset" className="legacy-blue-button" onClick={() => setSelectedFileName('')}>▰ Limpiar</button></div></form></div>
 }
 
-function Reports({ expedientes }: { expedientes: Expediente[] }) {
+function Reports({ expedientes, notify }: { expedientes: Expediente[]; notify: (message: string) => void }) {
   const total = expedientes.length
-  return <><div className="page-heading compact"><div><p className="eyebrow">ANÁLISIS Y SEGUIMIENTO</p><h1>Reportes</h1><p className="muted">Indicadores de gestión de la mesa de partes.</p></div><button className="outline-button">↓ Exportar reporte</button></div><section className="stats-grid"><StatCard label="Total registrados" value={total} detail="Año 2026" tone="purple" icon="▤" /><StatCard label="Pendientes" value={expedientes.filter((item) => item.estado === 'Pendiente').length} detail="Por derivar" tone="orange" icon="◷" /><StatCard label="Atendidos" value={expedientes.filter((item) => item.estado === 'Atendido').length} detail="Con seguimiento" tone="green" icon="✓" /><StatCard label="Tiempo promedio" value={3} detail="Días de atención" tone="blue" icon="◴" /></section><section className="panel report-panel"><div className="panel-header"><div><h2>Distribución por área</h2><p>Expedientes registrados durante el periodo actual</p></div></div>{areas.slice(0, 4).map((area, index) => <div className="bar-row" key={area}><span>{area}</span><div><i style={{ width: `${[72, 58, 44, 31][index]}%` }} /></div><b>{[42, 34, 26, 18][index]}</b></div>)}</section></>
+  const avgTime = calculateAverageResolutionTime(expedientes)
+  
+  // Calcular distribución real por área
+  const areaDistribution = areas.map(area => {
+    const count = expedientes.filter(e => getAreaDestino(e) === area).length
+    const percentage = total > 0 ? Math.round((count / total) * 100) : 0
+    return { area, count, percentage }
+  }).filter(item => item.count > 0)
+  
+  const handleExport = () => {
+    exportReportToCSV(expedientes)
+    notify('Reporte exportado correctamente')
+  }
+
+  return (
+    <>
+      <div className="page-heading compact">
+        <div><p className="eyebrow">ANÁLISIS Y SEGUIMIENTO</p><h1>Reportes</h1><p className="muted">Indicadores de gestión de la mesa de partes.</p></div>
+        <button className="outline-button" onClick={handleExport}>↓ Exportar reporte</button>
+      </div>
+      <section className="stats-grid">
+        <StatCard label="Total registrados" value={total} detail={`Año ${new Date().getFullYear()}`} tone="purple" icon="▤" />
+        <StatCard label="Pendientes" value={expedientes.filter((item) => item.estado === 'Pendiente').length} detail="Por derivar" tone="orange" icon="◷" />
+        <StatCard label="Atendidos" value={expedientes.filter((item) => item.estado === 'Atendido').length} detail="Con seguimiento" tone="green" icon="✓" />
+        <StatCard label="Tiempo promedio" value={avgTime} detail="Días de atención" tone="blue" icon="◴" />
+      </section>
+      <section className="panel report-panel">
+        <div className="panel-header">
+          <div><h2>Distribución por área</h2><p>Expedientes registrados durante el periodo actual</p></div>
+        </div>
+        {areaDistribution.length > 0 ? (
+          areaDistribution.map(({ area, count, percentage }) => (
+            <div className="bar-row" key={area}>
+              <span>{area}</span>
+              <div><i style={{ width: `${percentage}%` }} /></div>
+              <b>{count}</b>
+            </div>
+          ))
+        ) : (
+          <div className="empty-state" style={{ padding: '20px', textAlign: 'center' }}>No hay datos para mostrar</div>
+        )}
+      </section>
+    </>
+  )
 }
 
 export default App

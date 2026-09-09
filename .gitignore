@@ -1,17 +1,28 @@
-# Dependencias instaladas localmente
+```
+# Build artifacts
+dist/
+build/
+*.js
+*.css
+
+# Dependencies
 node_modules/
 
-# Salida generada por Vite
-dist/
+# Environment
+.env
+.env.local
+.env.*
 
-# Cachés y archivos temporales
-.vite/
-*.tsbuildinfo
-*.log
-
-# Configuración local del editor y del sistema
-.vscode/*
-!.vscode/extensions.json
+# Editors
+.vscode/
 .idea/
-Thumbs.db
-.DS_Store
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+
+# Compiled files
+*.pyc
+__pycache__/
+```

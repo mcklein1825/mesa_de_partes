@@ -128,3 +128,15 @@
 .saving-notice{position:sticky;top:0;z-index:5;margin:0 0 12px;padding:11px 14px;border:2px solid #2b809a;border-radius:6px;background:#e8f6f8;color:#15596b;font-size:12px;font-weight:700;text-align:center}
 .tracking-close{display:block;margin:8px 28px 24px;margin-left:auto}
 @media (max-width:900px){.portal-shell .filter-input{width:180px}.tracking-summary{grid-template-columns:1fr}.timeline-card-header{align-items:flex-start;flex-direction:column;gap:4px}}
+
+/* Confirmation modal styles */
+.confirmation-modal{width:min(480px,100%);max-height:calc(100vh - 48px);overflow:auto;background:#fff;border:2px solid #8ebdce;border-radius:10px;box-shadow:0 18px 50px #102c3e55}
+.confirmation-header{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid #e5eaee;background:#f7fafb;border-top-left-radius:8px;border-top-right-radius:8px}
+.confirmation-header h2{font:700 16px 'Plus Jakarta Sans';margin:0;color:#193140}
+.confirmation-body{padding:24px 22px}
+.confirmation-body p{margin:0 0 12px;font-size:13px;color:#3d505b;line-height:1.5}
+.confirmation-body p:last-child{margin-bottom:0}
+.confirmation-detail{font-size:12px;color:#7a8b94!important}
+.confirmation-actions{display:flex;justify-content:flex-end;gap:12px;padding:18px 22px;border-top:1px solid #e5eaee;background:#f9fbfc;border-bottom-left-radius:8px;border-bottom-right-radius:8px}
+.confirmation-actions .outline-button{min-width:100px}
+.confirmation-actions .primary-button{min-width:120px}
