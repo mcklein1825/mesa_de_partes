@@ -1,3 +1,10 @@
 ```
+# Dependencies
+node_modules/
+
+# Build artifacts
 dist/
+
+# Temporary files
+node_modules/.tmp/
 ```
