@@ -1,4 +1,40 @@
 import { FormEvent, useEffect, useMemo, useState, useRef } from 'react'
+import { 
+  FileText, 
+  PlusCircle, 
+  Search, 
+  BarChart3, 
+  Clock, 
+  CheckCircle, 
+  AlertCircle, 
+  Archive, 
+  Users, 
+  Building2, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  Calendar, 
+  ChevronDown, 
+  LogOut,
+  UserCircle,
+  Filter,
+  Download,
+  Eye,
+  Edit,
+  Trash2,
+  X,
+  Check,
+  ArrowRight,
+  FolderOpen,
+  Bell,
+  Settings,
+  HelpCircle,
+  Menu,
+  Home,
+  FilePlus,
+  TrendingUp,
+  AlertTriangle
+} from 'lucide-react'
 import importedExpedientes from './data/expedientes.csv.json'
 
 // Estados permitidos durante el ciclo de vida de un expediente (Máquina de Estados Finita).
