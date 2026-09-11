@@ -1,4 +1,7 @@
-import { FormEvent, useEffect, useMemo, useState, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, FormEvent } from 'react'
+import { supabase } from './supabaseClient' 
+
+// ... resto de tus tipos, interfaces y funciones auxiliares
 //import importedExpedientes from './data/expedientes.csv.json'
 
 // Estados permitidos durante el ciclo de vida de un expediente (Máquina de Estados Finita)
