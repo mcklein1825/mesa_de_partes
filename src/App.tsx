@@ -64,13 +64,13 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <header className="flex justify-between items-center bg-white p-4 rounded shadow">
-          <h1 className="text-xl font-bold text-gray-800">Sistema de Trámite Documentario</h1>
-          <span className="text-sm text-gray-500">Usuario: {currentUser.nombre}</span>
-        </header>
+    <div className="portal-shell">
+      <header className="topbar">
+        <h1 className="text-xl font-bold text-gray-800">Sistema de Trámite Documentario</h1>
+        <span className="text-sm text-gray-500">Usuario: {currentUser.nombre}</span>
+      </header>
 
+      <main className="page space-y-6">
         {currentView === 'list' ? (
           <ExpedienteList 
             expedientes={expedientes} 
@@ -100,7 +100,7 @@ export default function App() {
             onSubmit={ejecutarAccion} 
           />
         )}
-      </div>
+      </main>
     </div>
   );
 }
