@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useMemo, useState, useRef } from 'react'
-import importedExpedientes from './data/expedientes.csv.json'
+//import importedExpedientes from './data/expedientes.csv.json'
 
 // Estados permitidos durante el ciclo de vida de un expediente (Máquina de Estados Finita)
 type Status = 'Pendiente' | 'En atención' | 'Atendido' | 'Archivado'
@@ -165,10 +165,6 @@ const formatDate = (value: string) => {
     : cleanValue
 }
 
-const csvExpedientes = (importedExpedientes as Expediente[])
-  .filter((item) => !(item.remitente === 'Pendiente de registro' && (item.asunto === 'Pendiente de registro' || item.asunto === '0')))
-  .map((item) => normalizeExpediente({ ...item, fechaIngreso: formatDate(item.fechaIngreso || item.fecha) }))
-
 const storageKey = 'mesa-partes-expedientes-v7'
 const todayInputValue = () => new Date().toISOString().slice(0, 10)
 const displayDate = (value: string) => formatDate(value) || 'Pendiente'
@@ -278,16 +274,72 @@ function App() {
   
   const userPermissions = ROLE_PERMISSIONS[currentUser.rol]
   const [view, setView] = useState<View>('nuevo')
-  const [expedientes, setExpedientes] = useState<Expediente[]>(() => {
-    const stored = localStorage.getItem(storageKey)
-    if (!stored) return csvExpedientes
-    try {
-      const parsed: unknown = JSON.parse(stored)
-      return Array.isArray(parsed) ? (parsed as Expediente[]).map(normalizeExpediente) : csvExpedientes
-    } catch {
-      return csvExpedientes
+  
+  // ESTADO Y LECTURA CONECTADA A TU TABLA 'expedientes'
+  const [expedientes, setExpedientes] = useState<Expediente[]>([])
+  const [loadingDb, setLoadingDb] = useState(true)
+
+  useEffect(() => {
+    const cargarDeSupabase = async () => {
+      setLoadingDb(true)
+      const { data, error } = await supabase
+        .from('expedientes')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        notify('Error al cargar expedientes desde Supabase')
+        console.error('Supabase Error:', error)
+        setLoadingDb(false)
+        return
+      }
+
+      if (data) {
+        const normalizados: Expediente[] = data.map((item: any) => normalizeExpediente({
+          id: item.id,
+          fechaIngreso: item.fecha_ingreso || '',
+          remitente: item.remitente || '',
+          remitenteNombre: item.remitente_nombre || '',
+          remitenteCargo: item.remitente_cargo || '',
+          documento: item.documento || '',
+          tipo: item.tipo || '',
+          asunto: item.asunto || '',
+          contenido: item.contenido || '',
+          area: item.area || '',
+          areaDestino: item.area_destino || '',
+          estado: item.estado || 'Pendiente',
+          fecha: item.fecha || '',
+          plazo: item.plazo || '',
+          prioridad: item.prioridad || 'Normal',
+          archivo: item.archivo || 'Sin adjunto',
+          archivoData: item.archivo_data || '',
+          archivoTipo: item.archivo_tipo || '',
+          archivoTamano: item.archivo_tamano || 0,
+          archivoDescripcion: item.archivo_descripcion || '',
+          documentos: item.documentos || '',
+          modalidadRecepcion: item.modalidad_recepcion || '',
+          entregadoA: item.entregado_a || '',
+          documentoSeguimiento: item.documento_seguimiento || '',
+          canalRecepcion: item.canal_recepcion || '',
+          folios: item.folios ?? 1,
+          anexos: item.anexos ?? 0,
+          direccion: item.direccion || '',
+          correo: item.correo || '',
+          celular: item.celular || '',
+          representante: item.representante || '',
+          cargoRepresentante: item.cargo_representante || '',
+          usuarioRegistro: item.usuario_registro || '',
+          fechaHoraRecepcion: item.fecha_hora_recepcion || '',
+          constanciaRecepcion: item.constancia_recepcion || '',
+          historial: item.historial || []
+        }))
+        setExpedientes(normalizados)
+      }
+      setLoadingDb(false)
     }
-  })
+
+    cargarDeSupabase()
+  }, [])
 
   const [query, setQuery] = useState('')
   const [areaFilter, setAreaFilter] = useState('Todas')
@@ -305,7 +357,6 @@ function App() {
     const options: Intl.DateTimeFormatOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }
     return now.toLocaleDateString('es-PE', options).toUpperCase()
   }, [])
-
   const saveExpedientes = (next: Expediente[]) => {
     try {
       localStorage.setItem(storageKey, JSON.stringify(next))
