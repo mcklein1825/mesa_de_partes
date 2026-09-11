@@ -36,7 +36,7 @@ export const ModalTrazabilidad: React.FC<ModalTrazabilidadProps> = ({ expediente
                   <div key={index} className="text-sm space-y-1">
                     <div className="font-semibold text-blue-600">{h.accion} {h.areaDestino ? `➔ ${h.areaDestino}` : ''}</div>
                     <div className="text-gray-600">{h.observacion}</div>
-                    <div className="text-xs text-gray-400">{new Date(h.fechaHora || h.fecha || Date.now()).toLocaleString()} por {h.responsable}</div>
+                    <div className="text-xs text-gray-400">{new Date(h.fechaHora || Date.now()).toLocaleString()} por {h.responsable}</div>
                   </div>
                 ))
               )}
