@@ -1,5 +1,4 @@
-// Tipos centrales para la gestión de expedientes - Sincronizados con Supabase
-import { supabase } from '../lib/supabaseClient';
+
 
 export type Status = 'Pendiente' | 'En atención' | 'Atendido' | 'Archivado' | 'Anulado'
 export type Prioridad = 'Normal' | 'Alta' | 'Urgente' | 'Muy Urgente'
