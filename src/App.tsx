@@ -13,7 +13,6 @@ export default function App() {
   const [modalAccionType, setModalAccionType] = useState<AccionMovimiento | 'Anulación' | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   
-  // Usuario activo simulado (puedes adaptarlo a tu sistema de autenticación)
   const currentUser = { nombre: 'Administrador Sistema' };
 
   useEffect(() => {
@@ -45,7 +44,7 @@ export default function App() {
 
   const ejecutarAccion = async (data: { areaDestino?: string; observacion: string }) => {
     if (!selectedExpediente || !modalAccionType) return;
-    let actualizado = null;
+    let actualizado: Expediente | null = null;
 
     if (modalAccionType === 'Derivación' && data.areaDestino) {
       actualizado = await expedientesService.derivar(selectedExpediente.id, data.areaDestino, currentUser.nombre, data.observacion);
@@ -58,7 +57,7 @@ export default function App() {
     }
 
     if (actualizado) {
-      setExpedientes(prev => prev.map(e => e.id === actualizado.id ? actualizado : e));
+      setExpedientes(prev => prev.map(e => e.id === actualizado!.id ? actualizado! : e));
       setSelectedExpediente(actualizado);
       setModalAccionType(null);
     }
@@ -75,7 +74,7 @@ export default function App() {
         {currentView === 'list' ? (
           <ExpedienteList 
             expedientes={expedientes} 
-            onSelect={(exp) => setSelectedExpediente(exp)} 
+            onSelect={(exp: Expediente) => setSelectedExpediente(exp)} 
             onNew={() => setCurrentView('form')} 
           />
         ) : (
@@ -90,7 +89,7 @@ export default function App() {
           <ModalTrazabilidad 
             expediente={selectedExpediente} 
             onClose={() => setSelectedExpediente(null)} 
-            onOpenAction={(accion) => setModalAccionType(accion)} 
+            onOpenAction={(accion: AccionMovimiento | 'Anulación') => setModalAccionType(accion)} 
           />
         )}
 
