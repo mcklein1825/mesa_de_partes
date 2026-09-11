@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, FormEvent } from 'react'
-import { supabase } from './supabaseClient' 
+import { supabase } from './lib/supabaseClient' 
 
 // ... resto de tus tipos, interfaces y funciones auxiliares
 //import importedExpedientes from './data/expedientes.csv.json'
