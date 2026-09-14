@@ -706,30 +706,16 @@ function App() {
     const data =
       new FormData(form)
 
-    const nextNumber =
-      expedientes.reduce(
-        (
-          highest,
-          item
-        ) =>
-          Math.max(
-            highest,
-            Number(
-              item.id.match(
-                /^EXP-\d{4}-(\d+)/
-              )?.[1] || 0
-            )
-          ),
-        0
-      ) + 1
+  const nextNumber = expedientes.reduce(
+  (highest, item) => {
+    const numero = Number(item.id)
+    return Number.isFinite(numero) ? Math.max(highest, numero) : highest
+  },
+  0
+) + 1
 
-    const currentYear =
-      new Date().getFullYear()
-
-    const nextId =
-      `EXP-${currentYear}-${String(
-        nextNumber
-      ).padStart(5, '0')}`
+const currentYear = new Date().getFullYear()
+const nextId = `EXP-${currentYear}-${String(nextNumber).padStart(5, '0')}`
 
     const selectedFile =
       data.get('archivo')
@@ -962,8 +948,6 @@ function App() {
           'mesa_partes_2026'
         )
         .insert({
-          id:
-            newExpediente.id,
           fecha_ingreso:
             newExpediente.fechaIngreso,
           nombre_apellido:
