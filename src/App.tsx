@@ -639,18 +639,14 @@ function App() {
       .toUpperCase()
   }, [])
 
-  const filtered = useMemo(
-    () =>
-      expedientes.filter(item => {
-        const matchesQuery =
-          `${item.id} ${item.asunto}`
-            .toLowerCase()
-            .includes(
-              query
-                .trim()
-                .toLowerCase()
-            )
-
+ const matchesQuery =
+  `${item.id} EXP-2026-${String(item.id).padStart(5, '0')} ${item.asunto}`
+    .toLowerCase()
+    .includes(
+      query
+        .trim()
+        .toLowerCase()
+    )
         const matchesArea =
           areaFilter === 'Todas' ||
           getAreaDestino(item) ===
@@ -2126,7 +2122,7 @@ function Dashboard({
                     >
                       <td>
                         <b className="exp-id">
-                          {item.id}
+                          {`EXP-2026-${String(item.id).padStart(5, '0')}`}
                         </b>
                         <small>
                           {item.fecha}
@@ -2246,7 +2242,7 @@ function Dashboard({
 
                       <div>
                         <b>
-                          {item.id}
+                          {`EXP-2026-${String(item.id).padStart(5, '0')}`}
                         </b>
 
                         <p>
@@ -2646,11 +2642,11 @@ function ExpedientesView({
                         item.id
                       }
                     >
-                      <td>
-                        <b className="exp-id">
-                          {item.id}
-                        </b>
-                      </td>
+                    <td>
+                      <b className="exp-id">
+                        {`EXP-2026-${String(item.id).padStart(5, '0')}`}
+                      </b>
+                    </td>
 
                       <td>
                         {displayDate(
@@ -2949,7 +2945,7 @@ function TrackingModal({
             </p>
 
             <h2>
-              {item.id}
+              {`EXP-2026-${String(item.id).padStart(5, '0')}`}
             </h2>
 
             <p>
