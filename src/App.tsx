@@ -229,7 +229,7 @@ const displayDate = (value: string) =>
 const addDays = (value: string, days: number) => {
   const date = new Date(`${value}T00:00:00`)
   date.setDate(date.getDate() + days)
-  return formatDate(date.toISOString().slice(0, 10))
+  return date.toISOString().slice(0, 10)
 }
 
 const daysUntilDeadline = (deadlineDate: string): number => {
@@ -949,7 +949,7 @@ const nextId = `EXP-${currentYear}-${String(nextNumber).padStart(5, '0')}`
         )
         .insert({
           fecha_ingreso:
-            newExpediente.fechaIngreso,
+            fechaIngreso,
           nombre_apellido:
             newExpediente.remitente,
           remitente:
@@ -973,7 +973,7 @@ const nextId = `EXP-${currentYear}-${String(nextNumber).padStart(5, '0')}`
           estado:
             newExpediente.estado,
           fecha:
-            newExpediente.fecha,
+            fechaIngreso,
           plazo:
             newExpediente.plazo,
           prioridad:
