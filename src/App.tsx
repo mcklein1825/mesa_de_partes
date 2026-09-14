@@ -1692,11 +1692,11 @@ const nextId = `EXP-${currentYear}-${String(nextNumber).padStart(5, '0')}`
               {view ===
                 'expedientes' && (
                 <ExpedientesView
-                  items={filtered}
-                  query={query}
-                  setQuery={
-                    setQuery
-                  }
+                items={filteredExpedientes}
+                query={query}
+                setQuery={
+                  setQuery
+                }
                   areaFilter={
                     areaFilter
                   }
