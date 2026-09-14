@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef, FormEvent } from 'react'
 import { supabase } from './lib/supabaseClient' 
+import UserSelectModal from './components/UserSelectModal'
 
 // ... resto de tus tipos, interfaces y funciones auxiliares
 //import importedExpedientes from './data/expedientes.csv.json'
@@ -9,9 +10,9 @@ type Status = 'Pendiente' | 'En atención' | 'Atendido' | 'Archivado'
 type View = 'inicio' | 'expedientes' | 'nuevo' | 'reportes'
 
 // Roles del sistema con permisos específicos
-type Role = 'MesaPartes' | 'AreaOperativa' | 'Administrador' | 'Auditor'
+export type Role = 'MesaPartes' | 'AreaOperativa' | 'Administrador' | 'Auditor'
 
-type User = {
+export type User = {
   id: string
   nombre: string
   email: string
@@ -101,7 +102,7 @@ type Expediente = {
   historial?: HistoryEntry[]
 }
 
-const areas = ['Dirección General', 'Recursos Humanos', 'Administración', 'Oficina de TI', 'Asesoría Jurídica']
+export const areas = ['Dirección General', 'Recursos Humanos', 'Administración', 'Oficina de TI', 'Asesoría Jurídica']
 
 const splitRemitente = (value: string) => {
   const [name, ...cargo] = value.split(/\s*-\s*/, 2)
@@ -249,10 +250,10 @@ function App() {
       try {
         return JSON.parse(stored) as User
       } catch {
-        return DEFAULT_USER
+        return null
       }
     }
-    return DEFAULT_USER
+    return null
   })
   
   const sessionTimeoutRef = useRef<number | null>(null)
@@ -274,6 +275,13 @@ function App() {
       events.forEach(event => window.removeEventListener(event, resetSessionTimeout))
     }
   }, [])
+  if (!currentUser) {
+    return <UserSelectModal onSelectUser={setCurrentUser} />
+  }
+
+  // Ahora typescript sabe que de aquí en adelante currentUser NO es nulo
+  const userPermissions = ROLE_PERMISSIONS[currentUser.rol]
+  const [view, setView] = useState<View>('nuevo')
   
   const userPermissions = ROLE_PERMISSIONS[currentUser.rol]
   const [view, setView] = useState<View>('nuevo')
