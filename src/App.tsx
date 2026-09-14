@@ -288,7 +288,7 @@ function App() {
       const { data, error } = await supabase
         .from('mesa_partes_2026')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order('nro_exp', { ascending: false })
 
       if (error) {
         notify('Error al cargar expedientes desde Supabase')
