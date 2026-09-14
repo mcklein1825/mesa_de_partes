@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '../lib/supabaseClient'
 
 export const expedientesService = {
   // 1. Obtener todos los expedientes
@@ -15,9 +15,9 @@ export const expedientesService = {
         id: item.id.toString(), 
         numeroExpediente: item.nro_exp ? `EXP-2026-${item.nro_exp}` : `EXP-2026-${item.id}`,
         fechaIngreso: item.fecha,
-        // Mandamos las dos variantes para asegurar que la interfaz imprima el texto
-        remitente: item.nombre_apellido || item.remitente,
-        nombre_apellido: item.nombre_apellido || item.remitente,
+        // Corrección: Buscar en múltiples variantes para asegurar que se muestre el nombre
+        remitente: item.nombre_apellido || item.remitente || 'Sin nombre',
+        nombre_apellido: item.nombre_apellido || item.remitente || 'Sin nombre',
         asunto: item.asunto,
         documentos: item.documentos,
         recibido: item.recibido,
@@ -50,8 +50,8 @@ export const expedientesService = {
         id: data.id.toString(),
         numeroExpediente: data.nro_exp ? `EXP-2026-${data.nro_exp}` : `EXP-2026-${data.id}`,
         fechaIngreso: data.fecha,
-        remitente: data.nombre_apellido || data.remitente,
-        nombre_apellido: data.nombre_apellido || data.remitente,
+        remitente: data.nombre_apellido || data.remitente || 'Sin nombre',
+        nombre_apellido: data.nombre_apellido || data.remitente || 'Sin nombre',
         asunto: data.asunto,
         documentos: data.documentos,
         recibido: data.recibido,
@@ -68,7 +68,7 @@ export const expedientesService = {
     }
   },
 
-  // 3. Crear nuevo expediente
+  // 3. Crear nuevo expediente (CORREGIDO PARA CAPTURAR EL NOMBRE)
   async create(expediente: any) {
     try {
       let nextNroExp = expediente.numeroExpediente;
@@ -84,14 +84,21 @@ export const expedientesService = {
         nextNroExp = lastRecord?.nro_exp ? lastRecord.nro_exp + 1 : 1531; 
       }
 
-      const nombreFinal = expediente.nombre_apellido || expediente.remitente;
+      // CORRECCIÓN PRINCIPAL: Buscar el nombre en todas las posibles variantes del formulario
+      const nombreFinal = 
+        expediente.nombre_apellido || 
+        expediente.remitente || 
+        expediente.remitenteNombre || 
+        expediente.nombreCompleto || 
+        expediente.nombre || 
+        'Sin especificar';
 
       const { data, error } = await supabase
         .from('mesa_partes_2026')
         .insert([{
           nro_exp: nextNroExp, 
           fecha: expediente.fechaIngreso || new Date().toISOString().split('T')[0],
-          nombre_apellido: nombreFinal || null,
+          nombre_apellido: nombreFinal, // Se guarda forzosamente aquí
           asunto: expediente.asunto || null,
           documentos: expediente.documentos || null,
           recibido: expediente.recibido || null,
@@ -118,9 +125,11 @@ export const expedientesService = {
   async update(id: string, updates: any) {
     try {
       const payload: any = {};
-      const nombreParaActualizar = updates.nombre_apellido || updates.remitente;
       
+      // Si viene nombre en cualquier variante, actualizar columna nombre_apellido
+      const nombreParaActualizar = updates.nombre_apellido || updates.remitente || updates.remitenteNombre;
       if (nombreParaActualizar) payload.nombre_apellido = nombreParaActualizar;
+      
       if (updates.asunto) payload.asunto = updates.asunto;
       if (updates.documentos) payload.documentos = updates.documentos;
       if (updates.entregadoA) payload.entregado_a = updates.entregado_a;
