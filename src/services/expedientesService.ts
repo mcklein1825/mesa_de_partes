@@ -1,201 +1,630 @@
-import { supabase } from '../lib/supabaseClient' // Asegúrate que esta ruta sea correcta
+import { supabase } from '../lib/supabaseClient'
+
+/**
+ * Servicio para gestionar expedientes de Mesa de Partes.
+ *
+ * Tabla de Supabase:
+ * mesa_partes_2026
+ *
+ * Columnas utilizadas:
+ * id
+ * nro_exp
+ * fecha
+ * nombre_apellido
+ * asunto
+ * documentos
+ * recibido
+ * entregado_a
+ * documento_seguimiento
+ * created_at
+ */
+
+// ============================================================
+// TIPOS
+// ============================================================
+
+export interface Expediente {
+  id: string
+  numeroExpediente: string
+  fechaIngreso: string | null
+  remitente: string
+  nombre_apellido: string
+  asunto: string
+  documentos: string | null
+  recibido: string | null
+  entregadoA: string
+  seguimiento: string | null
+  created_at: string | null
+  estado: string
+  areaDestino: string
+  historial: any[]
+}
+
+// ============================================================
+// FUNCIÓN PARA TRANSFORMAR DATOS DE SUPABASE
+// ============================================================
+
+function transformarExpediente(item: any): Expediente {
+  let estadoCalculado = 'Pendiente'
+
+  const entregadoA = item.entregado_a || 'Mesa de Partes'
+
+  if (
+    typeof entregadoA === 'string' &&
+    entregadoA.toLowerCase().includes('archivo')
+  ) {
+    estadoCalculado = 'Archivado'
+  } else if (
+    entregadoA &&
+    entregadoA !== 'Mesa de Partes'
+  ) {
+    estadoCalculado = 'En atención'
+  }
+
+  return {
+    id: String(item.id),
+
+    numeroExpediente: item.nro_exp
+      ? `EXP-2026-${item.nro_exp}`
+      : `EXP-2026-${item.id}`,
+
+    fechaIngreso: item.fecha || null,
+
+    remitente:
+      item.nombre_apellido ||
+      'Sin Nombre',
+
+    nombre_apellido:
+      item.nombre_apellido ||
+      'Sin Nombre',
+
+    asunto:
+      item.asunto ||
+      'Sin Asunto',
+
+    documentos:
+      item.documentos || null,
+
+    recibido:
+      item.recibido || null,
+
+    entregadoA,
+
+    seguimiento:
+      item.documento_seguimiento || null,
+
+    created_at:
+      item.created_at || null,
+
+    estado: estadoCalculado,
+
+    areaDestino: entregadoA,
+
+    historial: []
+  }
+}
+
+// ============================================================
+// SERVICIO
+// ============================================================
 
 export const expedientesService = {
-  async getAll() {
+
+  // ==========================================================
+  // OBTENER TODOS
+  // ==========================================================
+
+  async getAll(): Promise<Expediente[]> {
     try {
-      // 1. Consultamos SOLO lo que existe en tu tabla real
       const { data, error } = await supabase
-        .from('mesa_partes_2026') 
+        .from('mesa_partes_2026')
         .select('*')
-        .order('nro_exp', { ascending: false });
+        .order('nro_exp', {
+          ascending: false
+        })
 
       if (error) {
-        console.error("Error de Supabase:", error);
-        throw error;
+        console.error(
+          'Error de Supabase al obtener expedientes:',
+          error
+        )
+
+        throw error
       }
 
-      if (!data) return [];
+      if (!data) {
+        return []
+      }
 
-      // 2. Transformamos los datos para que tu App entienda
-      return data.map((item: any) => {
-        // Lógica para determinar el estado si no existe en la BD
-        let estadoCalculado = 'Pendiente';
-        if (item.entregado_a && item.entregado_a.toLowerCase().includes('archivo')) {
-          estadoCalculado = 'Archivado';
-        } else if (item.entregado_a && item.entregado_a !== 'Mesa de Partes') {
-          estadoCalculado = 'En atención'; // O 'Atendido' según tu lógica
-        }
+      return data.map(transformarExpediente)
 
-        return {
-          id: String(item.id),
-          numeroExpediente: item.nro_exp ? `EXP-2026-${item.nro_exp}` : `EXP-2026-${item.id}`,
-          fechaIngreso: item.fecha,
-          
-          // AQUÍ ESTÁ LA CLAVE: Forzamos que exista el nombre aunque venga vacío
-          remitente: item.nombre_apellido || 'Sin Nombre', 
-          nombre_apellido: item.nombre_apellido || 'Sin Nombre',
-          
-          asunto: item.asunto || 'Sin Asunto',
-          documentos: item.documentos,
-          recibido: item.recibido,
-          entregadoA: item.entregado_a || 'Mesa de Partes',
-          seguimiento: item.documento_seguimiento,
-          created_at: item.created_at,
-          
-          // Inventamos estos campos porque tu tabla no los tiene físicamente
-          estado: estadoCalculado, 
-          areaDestino: item.entregado_a || 'Mesa de Partes',
-          historial: [] 
-        };
-      });
     } catch (error) {
-      console.error('Error crítico al obtener expedientes:', error);
-      return [];
+
+      console.error(
+        'Error crítico al obtener expedientes:',
+        error
+      )
+
+      return []
     }
   },
 
-  async getById(id: string) {
+  // ==========================================================
+  // OBTENER POR ID
+  // ==========================================================
+
+  async getById(
+    id: string
+  ): Promise<Expediente | null> {
+
     try {
+
       const { data, error } = await supabase
         .from('mesa_partes_2026')
         .select('*')
         .eq('id', id)
-        .single();
+        .single()
 
-      if (error) throw error;
-      if (!data) return null;
+      if (error) {
+        console.error(
+          'Error de Supabase al obtener expediente:',
+          error
+        )
 
-      // Misma lógica de transformación para un solo item
-      let estadoCalculado = 'Pendiente';
-      if (data.entregado_a && data.entregado_a.toLowerCase().includes('archivo')) {
-        estadoCalculado = 'Archivado';
-      } else if (data.entregado_a && data.entregado_a !== 'Mesa de Partes') {
-        estadoCalculado = 'En atención';
+        throw error
       }
 
-      return {
-        id: String(data.id),
-        numeroExpediente: data.nro_exp ? `EXP-2026-${data.nro_exp}` : `EXP-2026-${data.id}`,
-        fechaIngreso: data.fecha,
-        remitente: data.nombre_apellido || 'Sin Nombre',
-        nombre_apellido: data.nombre_apellido || 'Sin Nombre',
-        asunto: data.asunto || 'Sin Asunto',
-        documentos: data.documentos,
-        recibido: data.recibido,
-        entregadoA: data.entregado_a || 'Mesa de Partes',
-        seguimiento: data.documento_seguimiento,
-        created_at: data.created_at,
-        estado: estadoCalculado,
-        areaDestino: data.entregado_a || 'Mesa de Partes',
-        historial: []
-      };
+      if (!data) {
+        return null
+      }
+
+      return transformarExpediente(data)
+
     } catch (error) {
-      console.error('Error al obtener expediente:', error);
-      return null;
+
+      console.error(
+        'Error al obtener expediente:',
+        error
+      )
+
+      return null
     }
   },
 
-  async create(expediente: any) {
+  // ==========================================================
+  // CREAR
+  // ==========================================================
+
+  async create(expediente: any): Promise<Expediente | null> {
+
     try {
-      // Calcular siguiente número de expediente
-      const { data: lastRecord } = await supabase
+
+      // --------------------------------------------------------
+      // Obtener el último número de expediente
+      // --------------------------------------------------------
+
+      const {
+        data: lastRecord,
+        error: lastRecordError
+      } = await supabase
         .from('mesa_partes_2026')
         .select('nro_exp')
-        .order('nro_exp', { ascending: false })
+        .not('nro_exp', 'is', null)
+        .order('nro_exp', {
+          ascending: false
+        })
         .limit(1)
-        .maybeSingle(); 
-      
-      const nextNroExp = lastRecord?.nro_exp ? lastRecord.nro_exp + 1 : 1531; 
+        .maybeSingle()
 
-      // Búsqueda robusta del nombre
-      const nombreFinal = 
-        expediente.nombre_apellido || 
-        expediente.remitente || 
-        expediente.remitenteNombre || 
-        expediente.nombreCompleto || 
-        'Sin Nombre';
+      if (lastRecordError) {
+        console.error(
+          'Error obteniendo el último número de expediente:',
+          lastRecordError
+        )
+
+        throw lastRecordError
+      }
+
+      // Si existen expedientes, continúa desde el último.
+      // Si no existen, comienza desde 1.
+      const ultimoNumero = Number(
+        lastRecord?.nro_exp || 0
+      )
+
+      const nextNroExp = ultimoNumero + 1
+
+      // --------------------------------------------------------
+      // Obtener nombre
+      // --------------------------------------------------------
+
+      const nombreFinal =
+        expediente.nombre_apellido ||
+        expediente.remitente ||
+        expediente.remitenteNombre ||
+        expediente.nombreCompleto ||
+        'Sin Nombre'
+
+      // --------------------------------------------------------
+      // Fecha
+      // --------------------------------------------------------
+
+      const fechaFinal =
+        expediente.fechaIngreso
+          ? String(expediente.fechaIngreso).split('T')[0]
+          : new Date().toISOString().split('T')[0]
+
+      // --------------------------------------------------------
+      // Insertar
+      // --------------------------------------------------------
 
       const { data, error } = await supabase
         .from('mesa_partes_2026')
-        .insert([{
-          nro_exp: nextNroExp, 
-          fecha: expediente.fechaIngreso ? expediente.fechaIngreso.split('T')[0] : new Date().toISOString().split('T')[0],
-          nombre_apellido: nombreFinal, // Guardamos explícitamente aquí
-          asunto: expediente.asunto || 'Sin Asunto',
-          documentos: expediente.documentos || null,
-          recibido: expediente.recibido || null,
-          entregado_a: expediente.entregadoA || expediente.areaDestino || 'Mesa de Partes',
-          documento_seguimiento: expediente.seguimiento || null
-        }])
-        .select()
-        .single();
+        .insert([
+          {
+            nro_exp: nextNroExp,
 
-      if (error) throw error;
-      
-      return {
-        id: String(data.id),
-        numeroExpediente: `EXP-2026-${data.nro_exp}`,
-        ...expediente
-      };
+            fecha: fechaFinal,
+
+            nombre_apellido: nombreFinal,
+
+            asunto:
+              expediente.asunto ||
+              'Sin Asunto',
+
+            documentos:
+              expediente.documentos ??
+              null,
+
+            recibido:
+              expediente.recibido ??
+              null,
+
+            entregado_a:
+              expediente.entregadoA ||
+              expediente.areaDestino ||
+              'Mesa de Partes',
+
+            documento_seguimiento:
+              expediente.seguimiento ??
+              null
+          }
+        ])
+        .select()
+        .single()
+
+      if (error) {
+        console.error(
+          'Error de Supabase al crear expediente:',
+          error
+        )
+
+        throw error
+      }
+
+      if (!data) {
+        return null
+      }
+
+      return transformarExpediente(data)
+
     } catch (error) {
-      console.error('Error al crear expediente:', error);
-      return null;
+
+      console.error(
+        'Error al crear expediente:',
+        error
+      )
+
+      return null
     }
   },
 
-  async update(id: string, updates: any) {
-    try {
-      const payload: any = {};
-      
-      // Mapeo directo a columnas reales
-      if (updates.nombre_apellido) payload.nombre_apellido = updates.nombre_apellido;
-      if (updates.remitente) payload.nombre_apellido = updates.remitente; // Si viene como remitente, va a nombre_apellido
-      
-      if (updates.asunto) payload.asunto = updates.asunto;
-      if (updates.documentos) payload.documentos = updates.documentos;
-      if (updates.entregadoA) payload.entregado_a = updates.entregado_a;
-      if (updates.areaDestino) payload.entregado_a = updates.areaDestino; // Si cambia área, actualizamos entregado_a
-      if (updates.seguimiento) payload.documento_seguimiento = updates.seguimiento;
+  // ==========================================================
+  // ACTUALIZAR
+  // ==========================================================
 
-      // Nota: No podemos actualizar 'estado' directamente porque esa columna no existe en tu BD.
-      // El estado se calcula visualmente basado en 'entregado_a'.
+  async update(
+    id: string,
+    updates: any
+  ): Promise<Expediente | null> {
+
+    try {
+
+      const payload: Record<string, any> = {}
+
+      // --------------------------------------------------------
+      // Nombre
+      // --------------------------------------------------------
+
+      if (
+        updates.nombre_apellido !== undefined
+      ) {
+        payload.nombre_apellido =
+          updates.nombre_apellido
+      } else if (
+        updates.remitente !== undefined
+      ) {
+        payload.nombre_apellido =
+          updates.remitente
+      }
+
+      // --------------------------------------------------------
+      // Asunto
+      // --------------------------------------------------------
+
+      if (
+        updates.asunto !== undefined
+      ) {
+        payload.asunto =
+          updates.asunto
+      }
+
+      // --------------------------------------------------------
+      // Documentos
+      // --------------------------------------------------------
+
+      if (
+        updates.documentos !== undefined
+      ) {
+        payload.documentos =
+          updates.documentos
+      }
+
+      // --------------------------------------------------------
+      // Recibido
+      // --------------------------------------------------------
+
+      if (
+        updates.recibido !== undefined
+      ) {
+        payload.recibido =
+          updates.recibido
+      }
+
+      // --------------------------------------------------------
+      // Fecha
+      // --------------------------------------------------------
+
+      if (
+        updates.fechaIngreso !== undefined
+      ) {
+        payload.fecha =
+          updates.fechaIngreso
+            ? String(updates.fechaIngreso).split('T')[0]
+            : null
+      }
+
+      // --------------------------------------------------------
+      // Área / Entregado a
+      // --------------------------------------------------------
+
+      if (
+        updates.entregadoA !== undefined
+      ) {
+        payload.entregado_a =
+          updates.entregadoA
+      } else if (
+        updates.areaDestino !== undefined
+      ) {
+        payload.entregado_a =
+          updates.areaDestino
+      }
+
+      // --------------------------------------------------------
+      // Seguimiento
+      // --------------------------------------------------------
+
+      if (
+        updates.seguimiento !== undefined
+      ) {
+        payload.documento_seguimiento =
+          updates.seguimiento
+      }
+
+      // --------------------------------------------------------
+      // Evitar UPDATE vacío
+      // --------------------------------------------------------
+
+      if (
+        Object.keys(payload).length === 0
+      ) {
+        console.warn(
+          'No hay campos para actualizar.'
+        )
+
+        return await this.getById(id)
+      }
+
+      // --------------------------------------------------------
+      // Actualizar Supabase
+      // --------------------------------------------------------
 
       const { data, error } = await supabase
         .from('mesa_partes_2026')
         .update(payload)
         .eq('id', id)
         .select()
-        .single();
+        .single()
 
-      if (error) throw error;
-      return { id: String(data.id), ...data };
+      if (error) {
+        console.error(
+          'Error de Supabase al actualizar expediente:',
+          error
+        )
+
+        throw error
+      }
+
+      if (!data) {
+        return null
+      }
+
+      return transformarExpediente(data)
+
     } catch (error) {
-      console.error('Error al actualizar expediente:', error);
-      return null;
+
+      console.error(
+        'Error al actualizar expediente:',
+        error
+      )
+
+      return null
     }
   },
 
-  async derivar(id: string, areaDestino: string, userId: string, observacion?: string) {
-    // Derivar es simplemente cambiar a quién se entregó
-    return await this.update(id, { areaDestino, entregadoA: areaDestino });
+  // ==========================================================
+  // DERIVAR
+  // ==========================================================
+
+  async derivar(
+    id: string,
+    areaDestino: string,
+    userId: string,
+    observacion?: string
+  ): Promise<Expediente | null> {
+
+    console.log(
+      'Expediente derivado por usuario:',
+      userId
+    )
+
+    let seguimientoExtra = ''
+
+    if (observacion) {
+      seguimientoExtra =
+        ` | Derivado a ${areaDestino}: ${observacion}`
+    }
+
+    const current =
+      await this.getById(id)
+
+    const nuevoSeguimiento =
+      current?.seguimiento
+        ? `${current.seguimiento}${seguimientoExtra}`
+        : seguimientoExtra.replace(' | ', '')
+
+    return await this.update(
+      id,
+      {
+        areaDestino,
+        entregadoA: areaDestino,
+        seguimiento: nuevoSeguimiento || undefined
+      }
+    )
   },
 
-  async atender(id: string, userId: string, observacion?: string) {
-    const current = await this.getById(id);
-    const nuevoSeguimiento = current?.seguimiento 
-      ? `${current.seguimiento} | Atendido: ${observacion}` 
-      : `Atendido: ${observacion}`;
-    return await this.update(id, { seguimiento: nuevoSeguimiento });
+  // ==========================================================
+  // ATENDER
+  // ==========================================================
+
+  async atender(
+    id: string,
+    userId: string,
+    observacion?: string
+  ): Promise<Expediente | null> {
+
+    console.log(
+      'Expediente atendido por usuario:',
+      userId
+    )
+
+    const current =
+      await this.getById(id)
+
+    const texto =
+      observacion
+        ? `Atendido: ${observacion}`
+        : 'Atendido'
+
+    const nuevoSeguimiento =
+      current?.seguimiento
+        ? `${current.seguimiento} | ${texto}`
+        : texto
+
+    return await this.update(
+      id,
+      {
+        seguimiento:
+          nuevoSeguimiento
+      }
+    )
   },
 
-  async archivar(id: string, userId: string, observacion?: string) {
-    // Archivar es mover a "Archivo Central"
-    return await this.update(id, { areaDestino: 'Archivo Central', entregadoA: 'Archivo Central' });
+  // ==========================================================
+  // ARCHIVAR
+  // ==========================================================
+
+  async archivar(
+    id: string,
+    userId: string,
+    observacion?: string
+  ): Promise<Expediente | null> {
+
+    console.log(
+      'Expediente archivado por usuario:',
+      userId
+    )
+
+    const current =
+      await this.getById(id)
+
+    const texto =
+      observacion
+        ? `Archivado: ${observacion}`
+        : 'Archivado'
+
+    const nuevoSeguimiento =
+      current?.seguimiento
+        ? `${current.seguimiento} | ${texto}`
+        : texto
+
+    return await this.update(
+      id,
+      {
+        areaDestino: 'Archivo Central',
+        entregadoA: 'Archivo Central',
+        seguimiento:
+          nuevoSeguimiento
+      }
+    )
   },
 
-  async anular(id: string, userId: string, observacion: string) {
-    const current = await this.getById(id);
-    const nuevoSeguimiento = `ANULADO: ${observacion}`;
-    return await this.update(id, { seguimiento: nuevoSeguimiento, asunto: `(ANULADO) ${current?.asunto}` });
+  // ==========================================================
+  // ANULAR
+  // ==========================================================
+
+  async anular(
+    id: string,
+    userId: string,
+    observacion: string
+  ): Promise<Expediente | null> {
+
+    console.log(
+      'Expediente anulado por usuario:',
+      userId
+    )
+
+    const current =
+      await this.getById(id)
+
+    const asuntoActual =
+      current?.asunto ||
+      'Sin Asunto'
+
+    const nuevoSeguimiento =
+      current?.seguimiento
+        ? `${current.seguimiento} | ANULADO: ${observacion}`
+        : `ANULADO: ${observacion}`
+
+    return await this.update(
+      id,
+      {
+        seguimiento:
+          nuevoSeguimiento,
+
+        asunto:
+          `(ANULADO) ${asuntoActual}`
+      }
+    )
   }
-};
+}
+```
