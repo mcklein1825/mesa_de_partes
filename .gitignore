@@ -1,3 +1,7 @@
-```ts
+```
+# Dependencies
+node_modules/
 
+# Temporary files
+.tmp/
 ```
