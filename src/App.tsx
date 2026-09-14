@@ -298,12 +298,16 @@ function App() {
       }
 
       if (data) {
-        const normalizados: Expediente[] = data.map((item: any) => normalizeExpediente({
+        const normalizados: Expediente[] = data.map((item: any) => {
+          // Lee el nombre desde nombre_apellido primero, luego remitente como fallback
+          const nombreCompleto = item.nombre_apellido || item.remitente || 'Sin nombre';
+          const parts = splitRemitente(nombreCompleto);
+          return normalizeExpediente({
           id: item.id,
           fechaIngreso: item.fecha_ingreso || '',
-          remitente: item.remitente || '',
-          remitenteNombre: item.remitente_nombre || '',
-          remitenteCargo: item.remitente_cargo || '',
+          remitente: nombreCompleto,
+          remitenteNombre: item.remitente_nombre || parts.nombre || nombreCompleto,
+          remitenteCargo: item.remitente_cargo || parts.cargo || '',
           documento: item.documento || '',
           tipo: item.tipo || '',
           asunto: item.asunto || '',
@@ -335,7 +339,7 @@ function App() {
           fechaHoraRecepcion: item.fecha_hora_recepcion || '',
           constanciaRecepcion: item.constancia_recepcion || '',
           historial: item.historial || []
-        }))
+        })})
         setExpedientes(normalizados)
       }
       setLoadingDb(false)
