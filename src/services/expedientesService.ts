@@ -1,11 +1,9 @@
-// CORRECCIÓN 1: Ruta corregida (de '../lib' a './')
-import { supabase } from '../lib/supabaseClient'; 
+import { supabase } from '../lib/supabaseClient'; // O la ruta que estés usando './supabaseClient'
 
 export const expedientesService = {
-  // Obtener todos los expedientes
+  // 1. Obtener todos los expedientes
   async getAll() {
     try {
-      // CORRECCIÓN 2: Tabla cambiada de 'expedientes' a 'mesa_partes_2026'
       const { data, error } = await supabase
         .from('mesa_partes_2026') 
         .select('*')
@@ -13,10 +11,8 @@ export const expedientesService = {
 
       if (error) throw error;
 
-      // Mapeo adaptado a tu tabla real (nro_exp, fecha, etc.)
-      // Si tu frontend espera un objeto "Expediente" complejo, aquí lo construimos
       return data.map((item: any) => ({
-        id: item.id.toString(), // Convertir bigserial a string si es necesario
+        id: item.id.toString(), 
         numeroExpediente: item.nro_exp ? `EXP-2026-${item.nro_exp}` : `EXP-2026-${item.id}`,
         fechaIngreso: item.fecha,
         remitente: item.nombre_apellido,
@@ -26,9 +22,8 @@ export const expedientesService = {
         entregadoA: item.entregado_a,
         seguimiento: item.documento_seguimiento,
         created_at: item.created_at,
-        // Campos por defecto para que no falle tu UI si los usa
         estado: 'Pendiente', 
-        areaDestino: 'Mesa de Partes',
+        areaDestino: item.entregado_a || 'Mesa de Partes',
         historial: []
       }));
     } catch (error) {
@@ -37,7 +32,7 @@ export const expedientesService = {
     }
   },
 
-  // Obtener uno por ID
+  // 2. Obtener uno por ID (Corregido)
   async getById(id: string) {
     try {
       const { data, error } = await supabase
@@ -51,7 +46,7 @@ export const expedientesService = {
 
       return {
         id: data.id.toString(),
-        numeroExpediente: data.nro_exp,
+        numeroExpediente: data.nro_exp ? `EXP-2026-${data.nro_exp}` : `EXP-2026-${data.id}`,
         fechaIngreso: data.fecha,
         remitente: data.nombre_apellido,
         asunto: data.asunto,
@@ -59,7 +54,10 @@ export const expedientesService = {
         recibido: data.recibido,
         entregadoA: data.entregado_a,
         seguimiento: data.documento_seguimiento,
-        created_at: data.created_at
+        created_at: data.created_at,
+        estado: 'Pendiente',
+        areaDestino: data.entregado_a || 'Mesa de Partes',
+        historial: []
       };
     } catch (error) {
       console.error('Error al obtener expediente:', error);
@@ -67,33 +65,42 @@ export const expedientesService = {
     }
   },
 
-  // Crear nuevo expediente
+  // 3. Crear nuevo expediente (Corregido y a prueba de fallos)
   async create(expediente: any) {
     try {
-      // Tu tabla usa bigserial para el ID, así que no lo insertamos manualmente.
-      // Asumimos que 'nro_exp' se genera o lo pasas en el objeto.
+      let nextNroExp = expediente.numeroExpediente;
       
+      if (!nextNroExp) {
+        const { data: lastRecord } = await supabase
+          .from('mesa_partes_2026')
+          .select('nro_exp')
+          .order('nro_exp', { ascending: false })
+          .limit(1)
+          .maybeSingle(); 
+        
+        nextNroExp = lastRecord?.nro_exp ? lastRecord.nro_exp + 1 : 1531; 
+      }
+
       const { data, error } = await supabase
         .from('mesa_partes_2026')
         .insert([{
-          nro_exp: expediente.numeroExpediente || null, // Si tienes lógica de correlativo
+          nro_exp: nextNroExp, 
           fecha: expediente.fechaIngreso || new Date().toISOString().split('T')[0],
-          nombre_apellido: expediente.remitente || '',
-          asunto: expediente.asunto || '',
-          documentos: expediente.documentos || '',
-          recibido: expediente.recibido || '',
-          entregado_a: expediente.entregadoA || '',
-          documento_seguimiento: expediente.seguimiento || ''
+          nombre_apellido: expediente.remitente || null,
+          asunto: expediente.asunto || null,
+          documentos: expediente.documentos || null,
+          recibido: expediente.recibido || null,
+          entregado_a: expediente.entregadoA || null,
+          documento_seguimiento: expediente.seguimiento || null
         }])
         .select()
         .single();
 
       if (error) throw error;
       
-      // Retornamos el formato que espera tu frontend
       return {
         id: data.id.toString(),
-        numeroExpediente: data.nro_exp,
+        numeroExpediente: `EXP-2026-${data.nro_exp}`,
         ...expediente
       };
     } catch (error) {
@@ -102,19 +109,16 @@ export const expedientesService = {
     }
   },
 
-  // Actualizar expediente (Adaptado a columnas reales)
+  // 4. Actualizar expediente
   async update(id: string, updates: any) {
     try {
       const payload: any = {};
       
-      // Mapeo manual de los campos del frontend a la BD
       if (updates.remitente) payload.nombre_apellido = updates.remitente;
       if (updates.asunto) payload.asunto = updates.asunto;
       if (updates.documentos) payload.documentos = updates.documentos;
       if (updates.entregadoA) payload.entregado_a = updates.entregado_a;
       if (updates.seguimiento) payload.documento_seguimiento = updates.seguimiento;
-      
-      // Si hay cambio de estado lógico (ej. derivar), actualizamos 'entregado_a'
       if (updates.areaDestino) payload.entregado_a = updates.areaDestino;
 
       const { data, error } = await supabase
@@ -132,19 +136,17 @@ export const expedientesService = {
     }
   },
 
-  // Derivar (Usa update internamente)
+  // 5. Derivar
   async derivar(id: string, areaDestino: string, userId: string, observacion?: string) {
     return await this.update(id, {
       areaDestino,
-      entregadoA: areaDestino, // Guarda en la columna real
+      entregadoA: areaDestino, 
       observacion
     });
   },
 
-  // Atender
+  // 6. Atender
   async atender(id: string, userId: string, observacion?: string) {
-    // Como tu tabla simple no tiene columna "estado", simulamos la atención
-    // agregando una nota en "documento_seguimiento" o dejando 'entregado_a' como final.
     const current = await this.getById(id);
     const nuevoSeguimiento = current?.seguimiento 
       ? `${current.seguimiento} | Atendido: ${observacion}` 
@@ -155,7 +157,7 @@ export const expedientesService = {
     });
   },
 
-  // Archivar (Simulado moviendo a un área "Archivo")
+  // 7. Archivar
   async archivar(id: string, userId: string, observacion?: string) {
     return await this.update(id, {
       areaDestino: 'Archivo Central',
@@ -164,7 +166,7 @@ export const expedientesService = {
     });
   },
 
-  // Anular
+  // 8. Anular
   async anular(id: string, userId: string, observacion: string) {
     const current = await this.getById(id);
     const nuevoSeguimiento = `ANULADO: ${observacion}`;
