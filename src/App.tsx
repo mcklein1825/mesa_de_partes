@@ -283,9 +283,6 @@ function App() {
   const userPermissions = ROLE_PERMISSIONS[currentUser.rol]
   const [view, setView] = useState<View>('nuevo')
   
-  const userPermissions = ROLE_PERMISSIONS[currentUser.rol]
-  const [view, setView] = useState<View>('nuevo')
-  
   // ESTADO Y LECTURA CONECTADA A TU TABLA 'expedientes'
   const [expedientes, setExpedientes] = useState<Expediente[]>([])
   const [loadingDb, setLoadingDb] = useState(true)
