@@ -638,15 +638,17 @@ function App() {
       )
       .toUpperCase()
   }, [])
-
- const matchesQuery =
-  `${item.id} EXP-2026-${String(item.id).padStart(5, '0')} ${item.asunto}`
-    .toLowerCase()
-    .includes(
-      query
-        .trim()
-        .toLowerCase()
-    )
+const filteredExpedientes = useMemo(
+  () =>
+    expedientes.filter(item => {
+      const matchesQuery =
+        `${item.id} EXP-2026-${String(item.id).padStart(5, '0')} ${item.asunto}`
+          .toLowerCase()
+          .includes(
+            query
+              .trim()
+              .toLowerCase()
+          )
         const matchesArea =
           areaFilter === 'Todas' ||
           getAreaDestino(item) ===
