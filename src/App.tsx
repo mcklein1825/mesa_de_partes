@@ -85,6 +85,7 @@ type HistoryEntry = {
 
 type Expediente = {
   id: string
+  nroExp: string
   fechaIngreso?: string
   remitente: string
   documento: string
@@ -566,6 +567,7 @@ function App() {
 
             return normalizeExpediente({
               id: String(item.id || ''),
+              nroExp: String(item.nro_exp || ''),
               fechaIngreso:
                 item.fecha_ingreso || '',
               remitente:
@@ -849,7 +851,8 @@ const nextId = `EXP-${currentYear}-${String(nextNumber).padStart(5, '0')}`
       )
 
     const newExpediente: Expediente = {
-      id: nextId,
+      id: '',
+      nroExp: String(nextNumber),
       fechaIngreso:
         fechaFormateada,
       remitente,
@@ -998,12 +1001,14 @@ const nextId = `EXP-${currentYear}-${String(nextNumber).padStart(5, '0')}`
         newExpediente
       )
 
-    const { error } =
+    const { data: insertedData, error } =
       await supabase
         .from(
           'mesa_partes_2026'
         )
         .insert({
+          nro_exp:
+            newExpediente.nroExp,
           fecha_ingreso:
             fechaIngreso,
           nombre_apellido:
@@ -1076,9 +1081,11 @@ const nextId = `EXP-${currentYear}-${String(nextNumber).padStart(5, '0')}`
             newExpediente.constanciaRecepcion,
           historial:
             newExpediente.historial
-        })
+          })
+            .select()
+            .single()
 
-    setIsSaving(false)
+setIsSaving(false)
 
     if (error) {
       console.error(
@@ -1093,11 +1100,22 @@ const nextId = `EXP-${currentYear}-${String(nextNumber).padStart(5, '0')}`
       return
     }
 
-    setExpedientes(prev => [
-      newExpediente,
-      ...prev
-    ])
+const expedienteInsertado =
+  insertedData
+    ? normalizeExpediente({
+        ...newExpediente,
+        id: String(insertedData.id),
+        nroExp: String(
+          insertedData.nro_exp ||
+            newExpediente.nroExp
+        )
+      })
+    : newExpediente
 
+setExpedientes(prev => [
+  expedienteInsertado,
+  ...prev
+])
     form.reset()
 
     setView(
