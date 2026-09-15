@@ -2848,19 +2848,16 @@ function ExpedientesView({
                                 Derivar a...
                               </option>
 
-                              {areas.map(
-                                area => (
-                                  <option
-                                    key={
-                                      area
-                                    }
-                                  >
-                                    {
-                                      area
-                                    }
-                                  </option>
-                                )
-                              )}
+                            {areas.map(
+                              area => (
+                                <option
+                                  key={area}
+                                  value={area}
+                                >
+                                  {area} — {AREA_RESPONSABLES[area]}
+                                </option>
+                              )
+                            )}
                             </select>
 
                             <button
