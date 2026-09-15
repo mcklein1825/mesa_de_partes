@@ -122,11 +122,21 @@ type Expediente = {
 }
 
 export const areas = [
-  'Dirección General',
-  'Recursos Humanos',
+  'Unidad Académica',
   'Administración',
-  'Oficina de TI',
-  'Asesoría Jurídica'
+  'Secretaría Académica',
+  'Unidad de Bienestar del Estudiante',
+  'Unidad de Investigación',
+  'Unidad de Formación Continua',
+  'Área de Calidad',
+  'Electrónica Industrial',
+  'Gestión Administrativa',
+  'Contabilidad',
+  'Desarrollo de Sistemas de Información',
+  'Electricidad',
+  'Construcción Civil',
+  'Mecatrónica Automotriz',
+  'Mecánica de Producción'
 ]
 
 const splitRemitente = (value: string) => {
