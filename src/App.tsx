@@ -1085,20 +1085,21 @@ const nextId = `EXP-${currentYear}-${String(nextNumber).padStart(5, '0')}`
             .select()
             .single()
 
+if (error) {
+  console.error(
+    'Error insertando expediente:',
+    error
+  )
+
+  notify(
+    `No se pudo registrar el expediente: ${error.message}`
+  )
+
+  setIsSaving(false)
+  return
+}
+
 setIsSaving(false)
-
-    if (error) {
-      console.error(
-        'Error insertando expediente:',
-        error
-      )
-
-      notify(
-        `No se pudo registrar el expediente: ${error.message}`
-      )
-
-      return
-    }
 
 const expedienteInsertado =
   insertedData
@@ -1116,15 +1117,14 @@ setExpedientes(prev => [
   expedienteInsertado,
   ...prev
 ])
-    form.reset()
 
-    setView(
-      'expedientes'
-    )
+form.reset()
 
-    notify(
-      `Expediente ${nextId} registrado correctamente`
-    )
+setView('expedientes')
+
+notify(
+  `Expediente ${nextId} registrado correctamente`
+)
   }
 
   const deriveExpediente = (
