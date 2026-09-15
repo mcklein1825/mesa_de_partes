@@ -760,10 +760,12 @@ const filteredExpedientes = useMemo(
     const data =
       new FormData(form)
 
-  const nextNumber = expedientes.reduce(
+ const nextNumber = expedientes.reduce(
   (highest, item) => {
-    const numero = Number(item.id)
-    return Number.isFinite(numero) ? Math.max(highest, numero) : highest
+    const numero = Number(item.nroExp)
+    return Number.isFinite(numero)
+      ? Math.max(highest, numero)
+      : highest
   },
   0
 ) + 1
