@@ -80,6 +80,7 @@ type HistoryEntry = {
   accion: string
   observacion: string
   responsable: string
+  responsableDestino?: string
 }
 
 type Expediente = {
