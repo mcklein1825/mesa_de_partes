@@ -1198,24 +1198,26 @@ const nextId = `EXP-${currentYear}-${String(nextNumber).padStart(5, '0')}`
         createInitialHistory(
           expediente
         )),
-      {
-        fechaHora:
-          timestamp,
-        fechaSalida:
-          timestamp,
-        fechaIngreso:
-          timestamp,
-        areaOrigen:
-          'Mesa de Partes',
-        areaDestino:
-          targetArea,
-        accion:
-          'Derivado para atención',
-        observacion:
-      `Expediente enviado a ${targetArea}. Responsable: ${responsable}.`,
-        responsable:
-          `${currentUser.nombre} - ${currentUser.area || ''}`
-      }
+    {
+          fechaHora:
+            timestamp,
+          fechaSalida:
+            timestamp,
+          fechaIngreso:
+            timestamp,
+          areaOrigen:
+            'Mesa de Partes',
+          areaDestino:
+            targetArea,
+          accion:
+            'Derivado para atención',
+          observacion:
+            `Expediente enviado a ${targetArea}. Responsable: ${responsable}.`,
+          responsable:
+            `${currentUser.nombre} - ${currentUser.area || ''}`,
+          responsableDestino:
+            responsable
+    }
     ]
 
     const { error } =
@@ -3131,16 +3133,21 @@ function TrackingModal({
                     </b>
                   </p>
 
-                  <small className="timeline-responsible">
-                    Responsable:{' '}
+                 {entry.responsableDestino && (
+                    <small className="timeline-responsible">
+                      Responsable del área:{' '}
+                      {entry.responsableDestino}
+                    </small>
+                  )}
+                  
+                  <small>
+                    Realizado por:{' '}
                     {entry.responsable ||
                       'No registrado'}
                   </small>
-
+                  
                   <small>
-                    {
-                      entry.observacion
-                    }
+                    {entry.observacion}
                   </small>
                 </div>
               </div>
