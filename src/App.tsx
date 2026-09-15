@@ -202,6 +202,8 @@ const getRemitenteCargo = (item: Expediente) =>
 
 const getAreaDestino = (item: Expediente) =>
   item.areaDestino || item.entregadoA || item.area || 'Pendiente de asignación'
+const formatNroExp = (nroExp: string) =>
+  `EXP-2026-${String(nroExp).padStart(5, '0')}`
 
 const getRecordedResponsible = (item: Expediente) => {
   const followUp = item.documentoSeguimiento || ''
