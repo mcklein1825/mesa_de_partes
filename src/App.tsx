@@ -138,7 +138,52 @@ export const areas = [
   'Mecatrónica Automotriz',
   'Mecánica de Producción'
 ]
+const AREA_RESPONSABLES: Record<string, string> = {
+  'Unidad Académica':
+    'Ing. NÓSSER JURADO GUILLÉN',
 
+  'Administración':
+    'CPC MARICELA OLIVARES MANDUJANO',
+
+  'Secretaría Académica':
+    'Ing. AMADEO ANTONIO PAZSOLÁN',
+
+  'Unidad de Bienestar del Estudiante':
+    'Mag. JOSÉ LUIS RAZO QUISPE',
+
+  'Unidad de Investigación':
+    'Lic. LUIS RAMÍREZ CHUQUIHUANGA',
+
+  'Unidad de Formación Continua':
+    'Lic. TEODORO PILLACA DÍAZ',
+
+  'Área de Calidad':
+    'Ing. JOSÉ GUTIÉRREZ BARAHONA',
+
+  'Electrónica Industrial':
+    'Ing. LUIS ALBERTO ROJAS CAHUA',
+
+  'Gestión Administrativa':
+    'Dr. SIDNEY LUCAS TAMAYO',
+
+  'Contabilidad':
+    'CPC DOMENICA QUISPE DIAZ',
+
+  'Desarrollo de Sistemas de Información':
+    'Ing. BENJAMÍN HUANCA PACHAURI',
+
+  'Electricidad':
+    'Lic. LUIS CARHUANCHO PALOMINO',
+
+  'Construcción Civil':
+    'Arq. VIRGINIA AZAHUANCHE ASMAT',
+
+  'Mecatrónica Automotriz':
+    'Mag. JIM PALOMARES ANSELMO',
+
+  'Mecánica de Producción':
+    'Lic. RIGOBERTO HUARACHA CASAS'
+}
 const splitRemitente = (value: string) => {
   const [name, ...cargo] = value.split(/\s*-\s*/, 2)
   return {
@@ -1127,6 +1172,8 @@ const nextId = `EXP-${currentYear}-${String(nextNumber).padStart(5, '0')}`
       id,
       area: targetArea
     } = pendingAction
+    const responsable =
+  AREA_RESPONSABLES[targetArea] || targetArea
 
     const expediente =
       expedientes.find(
@@ -1183,7 +1230,7 @@ const nextId = `EXP-${currentYear}-${String(nextNumber).padStart(5, '0')}`
           area_destino:
             targetArea,
           entregado_a:
-            targetArea,
+            responsable,
           historial
         })
         .eq(
