@@ -702,7 +702,7 @@ const filteredExpedientes = useMemo(
   () =>
     expedientes.filter(item => {
       const matchesQuery =
-        `${item.id} EXP-2026-${String(item.id).padStart(5, '0')} ${item.asunto}`
+        `${item.nroExp} ${formatNroExp(item.nroExp)} ${item.asunto}`
           .toLowerCase()
           .includes(
             query
@@ -2219,7 +2219,7 @@ function Dashboard({
                     >
                       <td>
                         <b className="exp-id">
-                          {`EXP-2026-${String(item.id).padStart(5, '0')}`}
+                          {formatNroExp(item.nroExp)}
                         </b>
                         <small>
                           {item.fecha}
@@ -2339,7 +2339,7 @@ function Dashboard({
 
                       <div>
                         <b>
-                          {`EXP-2026-${String(item.id).padStart(5, '0')}`}
+                          {formatNroExp(item.nroExp)}
                         </b>
 
                         <p>
@@ -2741,7 +2741,7 @@ function ExpedientesView({
                     >
                     <td>
                       <b className="exp-id">
-                        {`EXP-2026-${String(item.id).padStart(5, '0')}`}
+                        {formatNroExp(item.nroExp)}
                       </b>
                     </td>
 
@@ -3039,7 +3039,7 @@ function TrackingModal({
             </p>
 
             <h2>
-              {`EXP-2026-${String(item.id).padStart(5, '0')}`}
+              {formatNroExp(item.nroExp)}
             </h2>
 
             <p>
