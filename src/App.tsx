@@ -1882,9 +1882,22 @@ const nextId = `EXP-${currentYear}-${String(nextNumber).padStart(5, '0')}`
               'derive' ? (
                 <>
                   <p>
-                    ¿Está seguro que desea derivar este expediente al área seleccionada?
+                    ¿Está seguro que desea derivar este expediente?
                   </p>
-
+                  
+                  <p className="confirmation-detail">
+                    <strong>Área destino:</strong>{' '}
+                    {pendingAction.area}
+                  </p>
+                  
+                  <p className="confirmation-detail">
+                    <strong>Responsable:</strong>{' '}
+                    {pendingAction.area
+                      ? AREA_RESPONSABLES[pendingAction.area] ||
+                        pendingAction.area
+                      : 'No asignado'}
+                  </p>
+                  
                   <p className="confirmation-detail">
                     Esta acción no se puede deshacer.
                   </p>
