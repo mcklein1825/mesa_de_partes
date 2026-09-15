@@ -356,7 +356,7 @@ const calculateAverageResolutionTime = (
 
 const exportReportToCSV = (expedientes: Expediente[]) => {
   const headers = [
-    'ID',
+    'Nro. Expediente',
     'Fecha',
     'Remitente',
     'Asunto',
@@ -367,7 +367,7 @@ const exportReportToCSV = (expedientes: Expediente[]) => {
   ]
 
   const rows = expedientes.map(e => [
-    e.id,
+    formatNroExp(e.nroExp),
     e.fechaIngreso || e.fecha,
     getRemitenteNombre(e),
     `"${e.asunto.replace(/"/g, '""')}"`,
@@ -938,15 +938,8 @@ const nextId = `EXP-${currentYear}-${String(nextNumber).padStart(5, '0')}`
           ) || ''
         ),
       modalidadRecepcion:
-        String(
-          data.get(
-            'canalRecepcion'
-          ) || ''
-        )
-          .toLowerCase()
-          .includes('virtual')
-          ? 'Virtual'
-          : 'Presencial',
+      String(
+        data.get('canalRecepcion') || ''),
       entregadoA: '',
       documentoSeguimiento:
         String(
@@ -964,7 +957,7 @@ const nextId = `EXP-${currentYear}-${String(nextNumber).padStart(5, '0')}`
         Number(
           data.get(
             'folios'
-          ) || 0
+          ) || 1
         ),
       anexos:
         Number(
@@ -3553,32 +3546,33 @@ const [
 
   <div className="form-grid attachment-grid">
 
-    <label>
-      Archivo
+<div>
+  <label>
+    Archivo
+  </label>
 
-      <label className="file-button">
-        ▣ Seleccionar archivo
+  <label className="file-button">
+    ▣ Seleccionar archivo
 
-        <input
-          name="archivo"
-          type="file"
-          accept=".pdf,.jpg,.jpeg,.png"
-          required
-          onChange={event =>
-            setSelectedFileName(
-              event.target.files?.[0]
-                ?.name || ''
-            )
-          }
-        />
-      </label>
+    <input
+      name="archivo"
+      type="file"
+      accept=".pdf,.jpg,.jpeg,.png"
+      required
+      onChange={event =>
+        setSelectedFileName(
+          event.target.files?.[0]?.name || ''
+        )
+      }
+    />
+  </label>
 
-      <small>
-        {selectedFileName
-          ? `Seleccionado: ${selectedFileName}`
-          : 'Máximo 5 MB.'}
-      </small>
-    </label>
+  <small>
+    {selectedFileName
+      ? `Seleccionado: ${selectedFileName}`
+      : 'Máximo 5 MB.'}
+  </small>
+</div>
 
 
     <label>
