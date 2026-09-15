@@ -3201,10 +3201,15 @@ function NewExpediente({
   onCancel: () => void
   isSaving: boolean
 }) {
-  const [
-    selectedFileName,
-    setSelectedFileName
-  ] = useState('')
+const [
+  selectedFileName,
+  setSelectedFileName
+] = useState('')
+
+const [
+  showExtraFields,
+  setShowExtraFields
+] = useState(false)
 
   return (
     <div className="legacy-form-page">
@@ -3223,345 +3228,410 @@ function NewExpediente({
         </div>
 
         <section className="panel form-panel">
-          <div className="panel-header">
-            <div>
-              <h2>
-                Datos del trámite
-              </h2>
+  <div className="panel-header">
+    <div>
+      <h2>
+        Datos del trámite
+      </h2>
 
-              <p>
-                Complete los datos solicitados para registrar el expediente.
-              </p>
-            </div>
-          </div>
+      <p>
+        Complete los datos solicitados para registrar el expediente.
+      </p>
+    </div>
+  </div>
 
-          <div className="form-grid">
-            <label>
-              Fecha de ingreso
-              <input
-                name="fechaIngreso"
-                type="date"
-                required
-                defaultValue={
-                  todayInputValue()
-                }
-              />
-            </label>
+  <div className="form-grid">
+    <label>
+      Fecha de ingreso
+      <input
+        name="fechaIngreso"
+        type="date"
+        required
+        defaultValue={
+          todayInputValue()
+        }
+      />
+    </label>
 
-            <label>
-              Trámite
-              <select
-                name="tipo"
-                required
-              >
-                <option value="">
-                  Seleccione el tipo
-                </option>
-                <option>
-                  Solicitud
-                </option>
-                <option>
-                  Oficio
-                </option>
-                <option>
-                  Memorando
-                </option>
-                <option>
-                  Informe
-                </option>
-                <option>
-                  Carta
-                </option>
-                <option>
-                  Resolución
-                </option>
-              </select>
-            </label>
+    <label>
+      Trámite
+      <select
+        name="tipo"
+        required
+      >
+        <option value="">
+          Seleccione el tipo
+        </option>
 
-            <label className="wide">
-              Nombre / apellido o razón social
-              <input
-                name="remitente"
-                required
-                placeholder="Ingrese el nombre completo o razón social."
-              />
-            </label>
+        <option>
+          Solicitud
+        </option>
 
-            <label>
-              Cargo del remitente
-              <input
-                name="cargoRemitente"
-                placeholder="Cargo o función del remitente"
-              />
-            </label>
+        <option>
+          Oficio
+        </option>
 
-            <label>
-              Representante (si aplica)
-              <input
-                name="representante"
-                placeholder="Nombre del representante"
-              />
-            </label>
+        <option>
+          Memorando
+        </option>
 
-            <label>
-              Cargo del representante
-              <input
-                name="cargoRepresentante"
-                placeholder="Cargo"
-              />
-            </label>
+        <option>
+          Informe
+        </option>
 
-            <label className="wide">
-              Asunto de la solicitud
-              <input
-                name="asunto"
-                required
-                placeholder="Registre en forma clara el asunto por el cual ingresa el documento."
-              />
-            </label>
+        <option>
+          Carta
+        </option>
 
-            <label className="wide">
-              Documentos
-              <input
-                name="documentos"
-                required
-                placeholder="Ej. Oficio Múltiple N.° 00129-2025-MINEDU/..."
-              />
-            </label>
-          </div>
-        </section>
+        <option>
+          Resolución
+        </option>
+      </select>
+    </label>
 
-        <section className="panel form-panel">
-          <div className="section-strip">
-            ▣ Datos del administrado
-          </div>
+    <label className="wide">
+      Nombre / apellido o razón social
+      <input
+        name="remitente"
+        required
+        placeholder="Ingrese el nombre completo o razón social."
+      />
+    </label>
 
-          <div className="form-grid">
-            <label>
-              Tipo de documento
-              <select name="tipoDocumento">
-                <option>
-                  RUC
-                </option>
-                <option>
-                  DNI
-                </option>
-                <option>
-                  CE
-                </option>
-              </select>
-            </label>
+    <label>
+      Cargo del remitente
+      <input
+        name="cargoRemitente"
+        placeholder="Cargo o función del remitente"
+      />
+    </label>
 
-            <label>
-              Número de documento
-              <div className="inline-field">
-                <input
-                  name="numeroDocumento"
-                  placeholder="Número de documento"
-                />
+    <label className="wide">
+      Asunto de la solicitud
+      <input
+        name="asunto"
+        required
+        placeholder="Registre en forma clara el asunto por el cual ingresa el documento."
+      />
+    </label>
 
-                <button
-                  type="button"
-                  className="legacy-blue-button"
-                >
-                  ⌕ Validar
-                </button>
-              </div>
-            </label>
+    <label className="wide">
+      Documentos
+      <input
+        name="documentos"
+        required
+        placeholder="Ej. Oficio Múltiple N.° 00129-2025-MINEDU/..."
+      />
+    </label>
+  </div>
+</section>
 
-            <label className="wide">
-              Contenido
-              <textarea
-                name="contenido"
-                placeholder="Ingrese el detalle de la solicitud"
-                rows={3}
-              />
-            </label>
 
-            <label className="wide">
-              Dirección
-              <input
-                name="direccion"
-                placeholder="Ingrese la Dirección"
-              />
-            </label>
+{/* BOTÓN CAMPOS EXTRA */}
+<div className="extra-fields-toggle">
+  <button
+    type="button"
+    className="extra-fields-button"
+    onClick={() =>
+      setShowExtraFields(
+        !showExtraFields
+      )
+    }
+  >
+    {showExtraFields
+      ? '− Ocultar campos extra'
+      : '＋ Mostrar campos extra'}
+  </button>
+</div>
 
-            <label>
-              Correo electrónico
-              <input
-                name="correo"
-                type="email"
-                placeholder="Correo electrónico"
-              />
-            </label>
 
-            <label>
-              Celular
-              <input
-                name="celular"
-                placeholder="Teléfono de contacto"
-              />
-            </label>
+{/* CAMPOS EXTRA */}
+{showExtraFields && (
+  <section className="panel form-panel">
+    <div className="section-strip">
+      ▣ Datos del administrado
+    </div>
 
-            <label>
-              Folios
-              <input
-                name="folios"
-                type="number"
-                min="1"
-                required
-                defaultValue="1"
-              />
-            </label>
+    <div className="form-grid">
 
-            <label>
-              Anexos
-              <input
-                name="anexos"
-                type="number"
-                min="0"
-                required
-                defaultValue="0"
-              />
-            </label>
+      <label>
+        Tipo de documento
+        <select
+          name="tipoDocumento"
+        >
+          <option value="RUC">
+            RUC
+          </option>
 
-            <label>
-              Prioridad
-              <select
-                name="prioridad"
-                required
-              >
-                <option>
-                  Normal
-                </option>
-                <option>
-                  Alta
-                </option>
-              </select>
-            </label>
-          </div>
-        </section>
+          <option value="DNI">
+            DNI
+          </option>
 
-        <section className="panel form-panel">
-          <div className="section-strip">
-            ▣ Recepción y seguimiento
-          </div>
+          <option value="CE">
+            CE
+          </option>
+        </select>
+      </label>
 
-          <div className="form-grid">
-            <label>
-              Recibido presencial/virtual
-              <select
-                name="canalRecepcion"
-                required
-              >
-                <option value="">
-                  Seleccione el canal
-                </option>
-                <option>
-                  Físico
-                </option>
-                <option>
-                  Plataforma SINAD
-                </option>
-                <option>
-                  Virtual
-                </option>
-                <option>
-                  Presencial
-                </option>
-              </select>
-            </label>
 
-            <label className="wide">
-              Documento seguimiento
-              <input
-                name="documentoSeguimiento"
-                placeholder="Ej. Informe técnico o memorando"
-              />
-            </label>
-          </div>
-        </section>
+      <label>
+        Número de documento
 
-        <section className="panel form-panel">
-          <div className="section-strip">
-            ▣ Archivos a Adjuntar
-          </div>
+        <div className="inline-field">
+          <input
+            name="numeroDocumento"
+            placeholder="Número de documento"
+          />
 
-          <div className="form-grid attachment-grid">
-            <label>
-              Archivo
-
-              <label className="file-button">
-                ▣ Seleccionar archivo
-
-                <input
-                  name="archivo"
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  required
-                  onChange={event =>
-                    setSelectedFileName(
-                      event.target.files?.[0]
-                        ?.name || ''
-                    )
-                  }
-                />
-              </label>
-
-              <small>
-                {selectedFileName
-                  ? `Seleccionado: ${selectedFileName}`
-                  : 'Máximo 5 MB.'}
-              </small>
-            </label>
-
-            <label>
-              Descripción del archivo
-              <input
-                name="archivoDescripcion"
-                placeholder="Descripción del archivo"
-              />
-            </label>
-          </div>
-        </section>
-
-        <div className="form-actions">
           <button
             type="button"
-            className="legacy-light-button"
-            onClick={
-              onCancel
-            }
-          >
-            ‹ Anterior
-          </button>
-
-          <button
-            type="submit"
             className="legacy-blue-button"
-            disabled={isSaving}
           >
-            ✓ Enviar
-          </button>
-
-          <button
-            type="reset"
-            className="legacy-blue-button"
-            disabled={isSaving}
-            onClick={() =>
-              setSelectedFileName(
-                ''
-              )
-            }
-          >
-            ▰ Limpiar
+            ⌕ Validar
           </button>
         </div>
-      </form>
-    </div>
-  )
-}
+      </label>
 
+
+      {/* REPRESENTANTE */}
+      <label>
+        Representante (si aplica)
+        <input
+          name="representante"
+          placeholder="Nombre del representante"
+        />
+      </label>
+
+
+      {/* CARGO REPRESENTANTE */}
+      <label>
+        Cargo del representante
+        <input
+          name="cargoRepresentante"
+          placeholder="Cargo"
+        />
+      </label>
+
+
+      <label className="wide">
+        Contenido
+        <textarea
+          name="contenido"
+          placeholder="Ingrese el detalle de la solicitud"
+          rows={3}
+        />
+      </label>
+
+
+      <label className="wide">
+        Dirección
+        <input
+          name="direccion"
+          placeholder="Ingrese la Dirección"
+        />
+      </label>
+
+
+      <label>
+        Correo electrónico
+        <input
+          name="correo"
+          type="email"
+          placeholder="Correo electrónico"
+        />
+      </label>
+
+
+      <label>
+        Celular
+        <input
+          name="celular"
+          placeholder="Teléfono de contacto"
+        />
+      </label>
+
+
+      <label>
+        Folios
+        <input
+          name="folios"
+          type="number"
+          min="1"
+          required
+          defaultValue="1"
+        />
+      </label>
+
+
+      <label>
+        Anexos
+        <input
+          name="anexos"
+          type="number"
+          min="0"
+          required
+          defaultValue="0"
+        />
+      </label>
+
+
+      <label>
+        Prioridad
+        <select
+          name="prioridad"
+          required
+        >
+          <option value="Normal">
+            Normal
+          </option>
+
+          <option value="Alta">
+            Alta
+          </option>
+        </select>
+      </label>
+
+    </div>
+  </section>
+)}
+
+
+{/* RECEPCIÓN Y SEGUIMIENTO — SIEMPRE VISIBLE */}
+<section className="panel form-panel">
+  <div className="section-strip">
+    ▣ Recepción y seguimiento
+  </div>
+
+  <div className="form-grid">
+
+    <label>
+      Recibido presencial/virtual
+      <select
+        name="canalRecepcion"
+        required
+      >
+        <option value="">
+          Seleccione el canal
+        </option>
+
+        <option>
+          Físico
+        </option>
+
+        <option>
+          Plataforma SINAD
+        </option>
+
+        <option>
+          Virtual
+        </option>
+
+        <option>
+          Presencial
+        </option>
+      </select>
+    </label>
+
+
+    <label className="wide">
+      Documento seguimiento
+      <input
+        name="documentoSeguimiento"
+        placeholder="Ej. Informe técnico o memorando"
+      />
+    </label>
+
+  </div>
+</section>
+
+
+{/* ARCHIVOS — SIEMPRE VISIBLE */}
+<section className="panel form-panel">
+  <div className="section-strip">
+    ▣ Archivos a Adjuntar
+  </div>
+
+  <div className="form-grid attachment-grid">
+
+    <label>
+      Archivo
+
+      <label className="file-button">
+        ▣ Seleccionar archivo
+
+        <input
+          name="archivo"
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png"
+          required
+          onChange={event =>
+            setSelectedFileName(
+              event.target.files?.[0]
+                ?.name || ''
+            )
+          }
+        />
+      </label>
+
+      <small>
+        {selectedFileName
+          ? `Seleccionado: ${selectedFileName}`
+          : 'Máximo 5 MB.'}
+      </small>
+    </label>
+
+
+    <label>
+      Descripción del archivo
+      <input
+        name="archivoDescripcion"
+        placeholder="Descripción del archivo"
+      />
+    </label>
+
+  </div>
+</section>
+
+
+{/* ACCIONES */}
+<div className="form-actions">
+
+  <button
+    type="button"
+    className="legacy-light-button"
+    onClick={
+      onCancel
+    }
+  >
+    ‹ Anterior
+  </button>
+
+
+  <button
+    type="submit"
+    className="legacy-blue-button"
+    disabled={isSaving}
+  >
+    ✓ Enviar
+  </button>
+
+
+  <button
+    type="reset"
+    className="legacy-blue-button"
+    disabled={isSaving}
+    onClick={() =>
+      setSelectedFileName('')
+    }
+  >
+    ▰ Limpiar
+  </button>
+
+</div>
+
+</form>
+</div>
+}
 function Reports({
   expedientes,
   notify
@@ -3571,189 +3641,3 @@ function Reports({
     message: string
   ) => void
 }) {
-  const total =
-    expedientes.length
-
-  const avgTime =
-    calculateAverageResolutionTime(
-      expedientes
-    )
-
-  const areaDistribution =
-    areas
-      .map(area => {
-        const count =
-          expedientes.filter(
-            e =>
-              getAreaDestino(
-                e
-              ) === area
-          ).length
-
-        const percentage =
-          total > 0
-            ? Math.round(
-                (count /
-                  total) *
-                  100
-              )
-            : 0
-
-        return {
-          area,
-          count,
-          percentage
-        }
-      })
-      .filter(
-        item =>
-          item.count > 0
-      )
-
-  const handleExport =
-    () => {
-      exportReportToCSV(
-        expedientes
-      )
-
-      notify(
-        'Reporte exportado correctamente'
-      )
-    }
-
-  return (
-    <>
-      <div className="page-heading compact">
-        <div>
-          <p className="eyebrow">
-            ANÁLISIS Y SEGUIMIENTO
-          </p>
-
-          <h1>
-            Reportes
-          </h1>
-
-          <p className="muted">
-            Indicadores de gestión de la mesa de partes.
-          </p>
-        </div>
-
-        <button
-          className="outline-button"
-          onClick={
-            handleExport
-          }
-        >
-          ↓ Exportar reporte
-        </button>
-      </div>
-
-      <section className="stats-grid">
-        <StatCard
-          label="Total registrados"
-          value={total}
-          detail={`Año ${new Date().getFullYear()}`}
-          tone="purple"
-          icon="▤"
-        />
-
-        <StatCard
-          label="Pendientes"
-          value={
-            expedientes.filter(
-              item =>
-                item.estado ===
-                'Pendiente'
-            ).length
-          }
-          detail="Por derivar"
-          tone="orange"
-          icon="◷"
-        />
-
-        <StatCard
-          label="Atendidos"
-          value={
-            expedientes.filter(
-              item =>
-                item.estado ===
-                'Atendido'
-            ).length
-          }
-          detail="Con seguimiento"
-          tone="green"
-          icon="✓"
-        />
-
-        <StatCard
-          label="Tiempo promedio"
-          value={avgTime}
-          detail="Días de atención"
-          tone="blue"
-          icon="◴"
-        />
-      </section>
-
-      <section className="panel report-panel">
-        <div className="panel-header">
-          <div>
-            <h2>
-              Distribución por área
-            </h2>
-
-            <p>
-              Expedientes registrados durante el periodo actual
-            </p>
-          </div>
-        </div>
-
-        {areaDistribution.length >
-        0 ? (
-          areaDistribution.map(
-            ({
-              area,
-              count,
-              percentage
-            }) => (
-              <div
-                className="bar-row"
-                key={area}
-              >
-                <span>
-                  {area}
-                </span>
-
-                <div>
-                  <i
-                    style={{
-                      width: `${percentage}%`
-                    }}
-                  />
-                </div>
-
-                <b>
-                  {count}
-                </b>
-              </div>
-            )
-          )
-        ) : (
-          <div
-            className="empty-state"
-            style={{
-              padding:
-                '20px',
-              textAlign:
-                'center'
-            }}
-          >
-            No hay datos para mostrar
-          </div>
-        )}
-      </section>
-    </>
-  )
-}
-
-export default App
-
