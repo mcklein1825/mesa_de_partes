@@ -1211,7 +1211,7 @@ const nextId = `EXP-${currentYear}-${String(nextNumber).padStart(5, '0')}`
         accion:
           'Derivado para atención',
         observacion:
-          'Expediente enviado al área responsable para su revisión.',
+      `Expediente enviado a ${targetArea}. Responsable: ${responsable}.`,
         responsable:
           `${currentUser.nombre} - ${currentUser.area || ''}`
       }
