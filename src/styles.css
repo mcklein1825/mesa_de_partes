@@ -128,6 +128,61 @@
 .tracking-attachment small{width:100%;color:#71818a;font-size:11px;margin-left:98px}
 .saving-notice{position:sticky;top:0;z-index:5;margin:0 0 12px;padding:11px 14px;border:2px solid #2b809a;border-radius:6px;background:#e8f6f8;color:#15596b;font-size:12px;font-weight:700;text-align:center}
 .tracking-close{display:block;margin:8px 28px 24px;margin-left:auto}
+/* Modal de confirmación de acciones */
+.confirmation-modal{
+  width:min(520px,100%);
+  background:#fff;
+  border:2px solid #8ebdce;
+  border-radius:10px;
+  box-shadow:0 18px 50px #102c3e55;
+  overflow:hidden;
+}
+
+.confirmation-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+  padding:18px 24px;
+  background:#f3f8fa;
+  border-bottom:2px solid #8ebdce;
+}
+
+.confirmation-header h2{
+  margin:0;
+  color:#193140;
+  font:800 20px 'Plus Jakarta Sans';
+}
+
+.confirmation-body{
+  padding:22px 24px 10px;
+}
+
+.confirmation-body p{
+  margin:0 0 14px;
+  color:#3c5661;
+  font-size:13px;
+  line-height:1.5;
+}
+
+.confirmation-body .confirmation-detail{
+  color:#657680;
+  font-size:12px;
+  margin-bottom:8px;
+}
+
+.confirmation-body strong{
+  color:#304954;
+}
+
+.confirmation-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  padding:16px 24px 20px;
+  border-top:1px solid #d8e3e7;
+  background:#fbfdfe;
+}
 @media (max-width:800px){.sidebar{width:68px;padding-left:8px;padding-right:8px}.brand{padding-left:8px;padding-right:8px}.brand>div:last-child,.menu-label,.nav-item:not(.active)::after,.secure-note,.user-mini div:not(.avatar){display:none}.nav-item{justify-content:center;padding:0}.nav-icon{width:auto}.topbar{padding:0 14px}.portal-links{gap:2px}.portal-links button{font-size:10px;padding:8px}.page{padding:24px 12px}.stats-grid{grid-template-columns:1fr 1fr}.toolbar{flex-wrap:wrap}.result-count{margin-left:0}.list-panel table{min-width:1800px}}
 @media (max-width:900px){.portal-shell .filter-input{width:180px}.tracking-summary{grid-template-columns:1fr}.timeline-card-header{align-items:flex-start;flex-direction:column;gap:4px}}
 
