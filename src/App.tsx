@@ -651,8 +651,7 @@ function App() {
               archivo:
                 item.archivo ||
                 'Sin adjunto',
-              archivoData:
-                item.archivo_data || '',
+              archivoData: '',
               archivoTipo:
                 item.archivo_tipo || '',
               archivoTamano:
