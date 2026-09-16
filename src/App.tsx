@@ -2513,7 +2513,103 @@ function DocumentLink({
   const [cargando, setCargando] =
     useState(false)
 
-  // AQUÍ PEGAS EL CÓDIGO LARGO DE ARRIBA
+    const abrirArchivo = async () => {
+    if (cargando) return
+
+    setCargando(true)
+
+    try {
+      const { data, error } = await supabase
+        .from('mesa_partes_2026')
+        .select(
+          'archivo_data, archivo_tipo, archivo'
+        )
+        .eq('id', item.id)
+        .single()
+
+      if (error) {
+        console.error(
+          'Error al cargar archivo:',
+          error
+        )
+        alert('No se pudo cargar el archivo.')
+        return
+      }
+
+      if (!data?.archivo_data) {
+        alert(
+          'Este expediente no tiene el archivo almacenado.'
+        )
+        return
+      }
+
+      let base64 = data.archivo_data
+
+      if (base64.includes(',')) {
+        base64 = base64.split(',')[1]
+      }
+
+      const byteCharacters = atob(base64)
+
+      const byteNumbers = new Array(
+        byteCharacters.length
+      )
+
+      for (
+        let i = 0;
+        i < byteCharacters.length;
+        i++
+      ) {
+        byteNumbers[i] =
+          byteCharacters.charCodeAt(i)
+      }
+
+      const byteArray = new Uint8Array(
+        byteNumbers
+      )
+
+      const blob = new Blob(
+        [byteArray],
+        {
+          type:
+            data.archivo_tipo ||
+            'application/pdf'
+        }
+      )
+
+      const url =
+        URL.createObjectURL(blob)
+
+      const nuevaVentana =
+        window.open(url, '_blank')
+
+      if (!nuevaVentana) {
+        URL.revokeObjectURL(url)
+
+        alert(
+          'El navegador bloqueó la ventana emergente.'
+        )
+
+        return
+      }
+
+      setTimeout(() => {
+        URL.revokeObjectURL(url)
+      }, 60000)
+
+    } catch (error) {
+      console.error(
+        'Error inesperado al abrir archivo:',
+        error
+      )
+
+      alert(
+        'Ocurrió un error al abrir el archivo.'
+      )
+    } finally {
+      setCargando(false)
+    }
+  }
 
   if (
     !item.archivo ||
