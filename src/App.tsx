@@ -538,12 +538,51 @@ function App() {
     const cargarDeSupabase = async () => {
       setLoadingDb(true)
 
-      const { data, error } = await supabase
-        .from('mesa_partes_2026')
-        .select('*')
-        .order('nro_exp', {
-          ascending: false
-        })
+     const { data, error } = await supabase
+      .from('mesa_partes_2026')
+      .select(`
+        id,
+        nro_exp,
+        fecha,
+        fecha_ingreso,
+        nombre_apellido,
+        remitente,
+        remitente_nombre,
+        remitente_cargo,
+        documento,
+        tipo,
+        asunto,
+        contenido,
+        area,
+        area_destino,
+        estado,
+        plazo,
+        prioridad,
+        archivo,
+        archivo_tipo,
+        archivo_tamano,
+        archivo_descripcion,
+        documentos,
+        modalidad_recepcion,
+        entregado_a,
+        documento_seguimiento,
+        canal_recepcion,
+        folios,
+        anexos,
+        direccion,
+        correo,
+        celular,
+        representante,
+        cargo_representante,
+        usuario_registro,
+        fecha_hora_recepcion,
+        constancia_recepcion,
+        historial,
+        es_duplicado
+      `)
+      .order('nro_exp', {
+        ascending: false
+      })
 
       if (error) {
         console.error(
