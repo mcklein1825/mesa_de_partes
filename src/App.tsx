@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo, useRef, useCallback, FormEvent } from 'react'
 import { supabase } from './lib/supabaseClient'
 import UserSelectModal from './components/UserSelectModal'
@@ -3228,6 +3227,10 @@ const [
   showExtraFields,
   setShowExtraFields
 ] = useState(false)
+const [
+  modoDuplicado,
+  setModoDuplicado
+] = useState(false)
 
   return (
     <div className="legacy-form-page">
@@ -3235,6 +3238,28 @@ const [
         className="form-layout"
         onSubmit={onSubmit}
       >
+        <div className="duplicate-toggle">
+  <label
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
+      cursor: 'pointer'
+    }}
+  >
+    <input
+      type="checkbox"
+      checked={modoDuplicado}
+      onChange={(e) =>
+        setModoDuplicado(e.target.checked)
+      }
+    />
+
+    <span>
+      Duplicar expediente existente
+    </span>
+  </label>
+</div>
         {isSaving && (
           <div className="saving-notice">
             Guardando archivo y expediente en Supabase...
