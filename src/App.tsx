@@ -3231,6 +3231,83 @@ const [
   modoDuplicado,
   setModoDuplicado
 ] = useState(false)
+  const [
+  duplicadoBusqueda,
+  setDuplicadoBusqueda
+] = useState('')
+
+const [
+  duplicadoResultados,
+  setDuplicadoResultados
+] = useState<any[]>([])
+
+const [
+  duplicadoSeleccionado,
+  setDuplicadoSeleccionado
+] = useState<any | null>(null)
+
+const [
+  buscandoDuplicado,
+  setBuscandoDuplicado
+] = useState(false)
+const buscarExpedientesDuplicado =
+  async () => {
+    const termino =
+      duplicadoBusqueda.trim()
+
+    if (!termino) {
+      setDuplicadoResultados([])
+      return
+    }
+
+    setBuscandoDuplicado(true)
+
+    try {
+      const esNumero =
+        /^\d+$/.test(termino)
+
+      let query =
+        supabase
+          .from('mesa_partes_2026')
+          .select(
+            'id, nro_exp, fecha, nombre_apellido, asunto'
+          )
+          .limit(10)
+
+      if (esNumero) {
+        query = query.eq(
+          'nro_exp',
+          Number(termino)
+        )
+      } else {
+        query = query.or(
+          `nombre_apellido.ilike.%${termino}%,asunto.ilike.%${termino}%`
+        )
+      }
+
+      const {
+        data,
+        error
+      } = await query
+
+      if (error) {
+        console.error(
+          'Error buscando expediente para duplicar:',
+          error
+        )
+
+        setDuplicadoResultados([])
+
+        return
+      }
+
+      setDuplicadoResultados(
+        data || []
+      )
+    } finally {
+      setBuscandoDuplicado(false)
+    }
+  }
 
   return (
     <div className="legacy-form-page">
@@ -3260,6 +3337,141 @@ const [
     </span>
   </label>
 </div>
+        
+    {modoDuplicado && (
+  <div className="duplicate-search-panel">
+    <label>
+      Buscar expediente a duplicar
+
+      <div
+        style={{
+          display: 'flex',
+          gap: '10px',
+          marginTop: '8px'
+        }}
+      >
+        <input
+          type="text"
+          value={duplicadoBusqueda}
+          onChange={(e) =>
+            setDuplicadoBusqueda(
+              e.target.value
+            )
+          }
+          placeholder="N.º de expediente, nombre o asunto"
+        />
+
+        <button
+          type="button"
+          onClick={
+            buscarExpedientesDuplicado
+          }
+          disabled={buscandoDuplicado}
+        >
+          {buscandoDuplicado
+            ? 'Buscando...'
+            : 'Buscar'}
+        </button>
+      </div>
+    </label>
+
+    {duplicadoResultados.length > 0 && (
+      <div
+        style={{
+          display: 'grid',
+          gap: '10px',
+          marginTop: '15px'
+        }}
+      >
+        {duplicadoResultados.map(
+          (item) => (
+            <div
+              key={item.id}
+              style={{
+                padding: '12px',
+                border: '1px solid #ddd',
+                borderRadius: '8px'
+              }}
+            >
+              <strong>
+                {formatNroExp(
+                  String(item.nro_exp)
+                )}
+              </strong>
+
+              <div>
+                {item.nombre_apellido ||
+                  'Sin nombre'}
+              </div>
+
+              <div>
+                {item.asunto ||
+                  'Sin asunto'}
+              </div>
+
+              <div>
+                {item.fecha || 'Sin fecha'}
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setDuplicadoSeleccionado(
+                    item
+                  )
+                }
+              >
+                Seleccionar
+              </button>
+            </div>
+          )
+        )}
+      </div>
+    )}
+
+    {duplicadoSeleccionado && (
+      <div
+        style={{
+          marginTop: '15px',
+          padding: '12px',
+          borderRadius: '8px',
+          border: '1px solid #ccc'
+        }}
+      >
+        <strong>
+          Expediente seleccionado:
+        </strong>
+
+        <div>
+          {formatNroExp(
+            String(
+              duplicadoSeleccionado.nro_exp
+            )
+          )}
+        </div>
+
+        <div>
+          {duplicadoSeleccionado
+            .nombre_apellido}
+        </div>
+
+        <input
+          type="hidden"
+          name="duplicadoDesdeId"
+          value={
+            duplicadoSeleccionado.id
+          }
+        />
+
+        <input
+          type="hidden"
+          name="esDuplicado"
+          value="true"
+        />
+      </div>
+    )}
+  </div>
+)}    
         {isSaving && (
           <div className="saving-notice">
             Guardando archivo y expediente en Supabase...
