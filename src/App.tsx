@@ -102,7 +102,7 @@ type Expediente = {
   archivoTamano?: number
   archivoDescripcion?: string
   documentos?: string
-  modalidadRecepcion?: 'Presencial' | 'Virtual' | 'Físico' | 'Plataforma SINAD'
+  modalidadRecepcion?: string
   entregadoA?: string
   documentoSeguimiento?: string
   canalRecepcion?: string
