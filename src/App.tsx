@@ -764,18 +764,6 @@ const filteredExpedientes = useMemo(
     const data =
       new FormData(form)
 
- const nextNumber = expedientes.reduce(
-  (highest, item) => {
-    const numero = Number(item.nroExp)
-    return Number.isFinite(numero)
-      ? Math.max(highest, numero)
-      : highest
-  },
-  0
-) + 1
-
-const currentYear = new Date().getFullYear()
-const nextId = `EXP-${currentYear}-${String(nextNumber).padStart(5, '0')}`
 
     const selectedFile =
       data.get('archivo')
@@ -818,6 +806,35 @@ const nextId = `EXP-${currentYear}-${String(nextNumber).padStart(5, '0')}`
       setIsSaving(false)
       return
     }
+    const {
+      data: nextNumber,
+      error: nextNumberError
+    } = await supabase.rpc(
+      'obtener_siguiente_nro_exp'
+    )
+
+    if (
+      nextNumberError ||
+      !Number.isInteger(nextNumber)
+    ) {
+      console.error(
+        'Error obteniendo número de expediente:',
+        nextNumberError
+      )
+
+      notify(
+        'No se pudo obtener el número de expediente. Intente nuevamente.'
+      )
+
+      setIsSaving(false)
+      return
+    }
+
+    const currentYear =
+      new Date().getFullYear()
+
+    const nextId =
+      `EXP-${currentYear}-${String(nextNumber).padStart(5, '0')}`
 
     const fechaIngreso =
       String(
