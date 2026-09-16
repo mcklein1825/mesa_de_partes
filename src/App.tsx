@@ -86,6 +86,7 @@ type HistoryEntry = {
 type Expediente = {
   id: string
   nroExp: string
+  esDuplicado?: boolean
   fechaIngreso?: string
   remitente: string
   documento: string
@@ -202,8 +203,13 @@ const getRemitenteCargo = (item: Expediente) =>
 
 const getAreaDestino = (item: Expediente) =>
   item.areaDestino || item.entregadoA || item.area || 'Pendiente de asignación'
-const formatNroExp = (nroExp: string) =>
-  `EXP-2026-${String(nroExp).padStart(5, '0')}`
+const formatNroExp = (
+  nroExp: string,
+  esDuplicado = false
+) =>
+  `EXP-2026-${String(nroExp).padStart(5, '0')}${
+    esDuplicado ? ' *' : ''
+  }`
 
 const getRecordedResponsible = (item: Expediente) => {
   const followUp = item.documentoSeguimiento || ''
@@ -570,6 +576,8 @@ function App() {
             return normalizeExpediente({
               id: String(item.id || ''),
               nroExp: String(item.nro_exp || ''),
+              esDuplicado:
+                Boolean(item.es_duplicado),
               fechaIngreso:
                 item.fecha_ingreso || '',
               remitente:
