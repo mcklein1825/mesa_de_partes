@@ -3395,6 +3395,10 @@ const [
   duplicadoSeleccionado,
   setDuplicadoSeleccionado
 ] = useState<any | null>(null)
+  
+const [numeroExpedienteClonado,
+       setNumeroExpedienteClonado
+] = useState('')
 
 const [
   buscandoDuplicado,
@@ -3567,6 +3571,16 @@ const buscarExpedientesDuplicado =
                 type="button"
                 onClick={() => {
                   setDuplicadoSeleccionado(item)
+              
+                  const numero = formatNroExp(
+                    String(item.nro_exp)
+                  )
+              
+                  setNumeroExpedienteClonado(
+                    numero.endsWith('*')
+                      ? numero
+                      : `${numero}*`
+                  )
                 }}
               >
                 Seleccionar
@@ -3602,6 +3616,22 @@ const buscarExpedientesDuplicado =
           {duplicadoSeleccionado
             .nombre_apellido}
         </div>
+        <div
+          style={{
+            marginTop: '10px',
+            padding: '10px',
+            borderRadius: '6px',
+            background: '#f5f5f5'
+          }}
+        >
+  <strong>
+    Nuevo expediente:
+  </strong>
+
+  <div>
+    {numeroExpedienteClonado}
+  </div>
+</div>
 
         <input
           type="hidden"
