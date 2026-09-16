@@ -2510,20 +2510,27 @@ function DocumentLink({
 }: {
   item: Expediente
 }) {
-  if (!item.archivoData) {
-    return (
-      <span
-        className="table-cell-text"
-        title={
-          item.documentos ||
-          item.archivo
-        }
-      >
-        {item.documentos ||
-          item.archivo}
-      </span>
-    )
-  }
+  if (!item.archivo || item.archivo === 'Sin adjunto') {
+  return (
+    <span
+      className="table-cell-text"
+      title={item.documentos || 'Sin documento'}
+    >
+      {item.documentos || 'Sin documento'}
+    </span>
+  )
+}
+
+if (!item.archivoData) {
+  return (
+    <span
+      className="table-cell-text"
+      title={item.archivo}
+    >
+      ▣ {item.archivo}
+    </span>
+  )
+}
 
   return (
     <a
