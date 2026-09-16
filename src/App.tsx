@@ -3565,11 +3565,9 @@ const buscarExpedientesDuplicado =
 
               <button
                 type="button"
-                onClick={() =>
-                  setDuplicadoSeleccionado(
-                    item
-                  )
-                }
+                onClick={() => {
+                  setDuplicadoSeleccionado(item)
+                }}
               >
                 Seleccionar
               </button>
