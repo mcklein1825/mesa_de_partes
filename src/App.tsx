@@ -2510,40 +2510,122 @@ function DocumentLink({
 }: {
   item: Expediente
 }) {
-  if (!item.archivo || item.archivo === 'Sin adjunto') {
-  return (
-    <span
-      className="table-cell-text"
-      title={item.documentos || 'Sin documento'}
-    >
-      {item.documentos || 'Sin documento'}
-    </span>
-  )
-}
+  const [cargando, setCargando] =
+    useState(false)
 
-if (!item.archivoData) {
-  return (
-    <span
-      className="table-cell-text"
-      title={item.archivo}
-    >
-      ▣ {item.archivo}
-    </span>
-  )
-}
+  const abrirArchivo = async () => {
+    if (cargando) return
 
-  return (
-    <a
-      className="document-link"
-      href={
-        item.archivoData
+    setCargando(true)
+
+    try {
+      const { data, error } = await supabase
+        .from('mesa_partes_2026')
+        .select('archivo_data, archivo_tipo, archivo')
+        .eq('id', item.id)
+        .single()
+
+      if (error) {
+        console.error(
+          'Error al cargar archivo:',
+          error
+        )
+        alert('No se pudo cargar el archivo.')
+        return
       }
-      target="_blank"
-      rel="noreferrer"
+
+      if (!data?.archivo_data) {
+        alert('Este expediente no tiene el archivo almacenado.')
+        return
+      }
+
+      const nuevaVentana =
+        window.open('', '_blank')
+
+      if (!nuevaVentana) {
+        alert(
+          'El navegador bloqueó la ventana emergente. Permite ventanas emergentes para este sitio.'
+        )
+        return
+      }
+
+      nuevaVentana.document.write(`
+        <html>
+          <head>
+            <title>${data.archivo || 'Documento'}</title>
+            <style>
+              html, body {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+              }
+
+              iframe {
+                width: 100%;
+                height: 100%;
+                border: 0;
+              }
+            </style>
+          </head>
+          <body>
+            <iframe src="${data.archivo_data}"></iframe>
+          </body>
+        </html>
+      `)
+
+      nuevaVentana.document.close()
+    } catch (error) {
+      console.error(
+        'Error inesperado al abrir archivo:',
+        error
+      )
+
+      alert('Ocurrió un error al abrir el archivo.')
+    } finally {
+      setCargando(false)
+    }
+  }
+
+  if (
+    !item.archivo ||
+    item.archivo === 'Sin adjunto'
+  ) {
+    return (
+      <span
+        className="table-cell-text"
+        title={
+          item.documentos ||
+          'Sin documento'
+        }
+      >
+        {item.documentos ||
+          'Sin documento'}
+      </span>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      className="document-link"
+      onClick={abrirArchivo}
+      disabled={cargando}
       title={`Abrir ${item.archivo}`}
+      style={{
+        border: 'none',
+        background: 'none',
+        padding: 0,
+        cursor: cargando
+          ? 'wait'
+          : 'pointer'
+      }}
     >
-      ▣ {item.archivo}
-    </a>
+      {cargando
+        ? '⏳ Cargando...'
+        : `▣ ${item.archivo}`}
+    </button>
   )
 }
 
