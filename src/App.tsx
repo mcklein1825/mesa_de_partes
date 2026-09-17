@@ -449,12 +449,42 @@ function MemosView({
   expediente,
   memos,
   onBack,
-  onNewMemo
+  onNewMemo,
+  showMemoForm,
+  memoNro,
+  setMemoNro,
+  memoFecha,
+  setMemoFecha,
+  memoDestinatario,
+  setMemoDestinatario,
+  memoAsunto,
+  setMemoAsunto,
+  memoSecretaria,
+  setMemoSecretaria,
+  memoAreaDestino,
+  setMemoAreaDestino,
+  onSaveMemo,
+  onCancelMemo
 }: {
   expediente: Expediente | null
   memos: Memo[]
   onBack: () => void
   onNewMemo: () => void
+  showMemoForm: boolean
+  memoNro: string
+  setMemoNro: (value: string) => void
+  memoFecha: string
+  setMemoFecha: (value: string) => void
+  memoDestinatario: string
+  setMemoDestinatario: (value: string) => void
+  memoAsunto: string
+  setMemoAsunto: (value: string) => void
+  memoSecretaria: string
+  setMemoSecretaria: (value: string) => void
+  memoAreaDestino: string
+  setMemoAreaDestino: (value: string) => void
+  onSaveMemo: () => void
+  onCancelMemo: () => void
 }) {
   if (!expediente) {
     return (
@@ -537,7 +567,134 @@ function MemosView({
         </div>
 
       </div>
+{showMemoForm && (
+  <div className="detail-card">
 
+    <div className="section-header">
+      <div>
+        <h2>Nuevo Memo</h2>
+        <p>
+          Registrar un nuevo Memo relacionado
+          con este expediente.
+        </p>
+      </div>
+    </div>
+
+    <div className="detail-grid">
+
+      <div>
+        <label>N.º Memo</label>
+
+        <input
+          type="text"
+          value={memoNro}
+          onChange={e =>
+            setMemoNro(e.target.value)
+          }
+          placeholder="Ej. MEMO-001-2026"
+        />
+      </div>
+
+      <div>
+        <label>Fecha</label>
+
+        <input
+          type="date"
+          value={memoFecha}
+          onChange={e =>
+            setMemoFecha(e.target.value)
+          }
+        />
+      </div>
+
+      <div>
+        <label>Destinatario</label>
+
+        <input
+          type="text"
+          value={memoDestinatario}
+          onChange={e =>
+            setMemoDestinatario(
+              e.target.value
+            )
+          }
+          placeholder="Nombre del destinatario"
+        />
+      </div>
+
+      <div>
+        <label>Secretaría</label>
+
+        <input
+          type="text"
+          value={memoSecretaria}
+          onChange={e =>
+            setMemoSecretaria(
+              e.target.value
+            )
+          }
+          placeholder="Secretaría"
+        />
+      </div>
+
+      <div>
+        <label>Área destino</label>
+
+        <input
+          type="text"
+          value={memoAreaDestino}
+          onChange={e =>
+            setMemoAreaDestino(
+              e.target.value
+            )
+          }
+          placeholder="Área de destino"
+        />
+      </div>
+
+      <div>
+        <label>Asunto</label>
+
+        <input
+          type="text"
+          value={memoAsunto}
+          onChange={e =>
+            setMemoAsunto(
+              e.target.value
+            )
+          }
+          placeholder="Asunto del Memo"
+        />
+      </div>
+
+    </div>
+
+    <div
+      style={{
+        display: 'flex',
+        gap: '10px',
+        marginTop: '20px'
+      }}
+    >
+
+      <button
+        className="primary-button"
+        onClick={onSaveMemo}
+      >
+        Guardar Memo
+      </button>
+
+      <button
+        className="action-link"
+        onClick={onCancelMemo}
+      >
+        Cancelar
+      </button>
+
+    </div>
+
+  </div>
+)}
       <div className="table-section">
 
         <div className="section-header">
@@ -766,6 +923,11 @@ const [memoFecha, setMemoFecha] =
   useState(
     todayInputValue()
   )
+const [showMemoForm, setShowMemoForm] =
+  useState(false)
+
+const [memoAreaDestino, setMemoAreaDestino] =
+  useState('')
 
 const [memoFormData, setMemoFormData] = useState<{
   nroMemo: string
@@ -1959,7 +2121,166 @@ const openNewMemo = () => {
 
   setShowMemoForm(true)
 }
+const cancelNewMemo = () => {
+  setShowMemoForm(false)
+}
 
+const saveNewMemo = async () => {
+  if (!memoExpediente) {
+    notify(
+      'No se seleccionó ningún expediente'
+    )
+    return
+  }
+
+  if (!memoNro.trim()) {
+    notify(
+      'Ingrese el número de Memo'
+    )
+    return
+  }
+
+  if (!memoFecha) {
+    notify(
+      'Seleccione la fecha del Memo'
+    )
+    return
+  }
+
+  const expedienteId =
+    Number(memoExpediente.id)
+
+  if (Number.isNaN(expedienteId)) {
+    notify(
+      'El ID del expediente no es válido'
+    )
+    return
+  }
+
+  const nroExpediente =
+    memoExpediente.nroExp.startsWith(
+      'EXP-'
+    )
+      ? memoExpediente.nroExp
+      : `EXP-2026-${memoExpediente.nroExp.padStart(
+          5,
+          '0'
+        )}`
+
+  setIsSaving(true)
+
+  try {
+    const { data, error } =
+      await supabase
+        .from('memos')
+        .insert({
+          nro_memo:
+            memoNro.trim(),
+
+          expediente_id:
+            expedienteId,
+
+          nro_expediente:
+            nroExpediente,
+
+          fecha:
+            memoFecha,
+
+          destinatario:
+            memoDestinatario.trim() ||
+            null,
+
+          asunto:
+            memoAsunto.trim() ||
+            null,
+
+          secretaria:
+            memoSecretaria.trim() ||
+            null,
+
+          area_destino:
+            memoAreaDestino.trim() ||
+            null,
+
+          recepcionado_por:
+            null,
+
+          fecha_recepcion:
+            null,
+
+          estado:
+            'Enviado'
+        })
+        .select()
+        .single()
+
+    if (error) {
+      console.error(
+        'Error guardando Memo:',
+        error
+      )
+
+      notify(
+        'No se pudo guardar el Memo'
+      )
+
+      return
+    }
+
+    if (data) {
+      const memoNuevo: Memo = {
+        id: String(data.id),
+        nroMemo:
+          data.nro_memo || '',
+        expedienteId:
+          String(data.expediente_id),
+        nroExpediente:
+          data.nro_expediente || '',
+        fecha:
+          data.fecha || '',
+        destinatario:
+          data.destinatario || '',
+        asunto:
+          data.asunto || '',
+        secretaria:
+          data.secretaria || '',
+        areaDestino:
+          data.area_destino || '',
+        recepcionadoPor:
+          data.recepcionado_por || '',
+        fechaRecepcion:
+          data.fecha_recepcion || '',
+        estado:
+          data.estado || 'Enviado',
+        createdAt:
+          data.created_at
+      }
+
+      setMemos(prev => [
+        memoNuevo,
+        ...prev
+      ])
+    }
+
+    setShowMemoForm(false)
+
+    notify(
+      'Memo registrado correctamente'
+    )
+
+  } catch (error) {
+    console.error(
+      'Error inesperado guardando Memo:',
+      error
+    )
+
+    notify(
+      'Ocurrió un error al guardar el Memo'
+    )
+  } finally {
+    setIsSaving(false)
+  }
+}
 const completeExpediente = (
     id: string
   ) => {
@@ -2480,6 +2801,27 @@ const completeExpediente = (
                     setView('expedientes')
                   }
                   onNewMemo={openNewMemo}
+                  showMemoForm={showMemoForm}
+                  memoNro={memoNro}
+                  setMemoNro={setMemoNro}
+                  memoFecha={memoFecha}
+                  setMemoFecha={setMemoFecha}
+                  memoDestinatario={memoDestinatario}
+                  setMemoDestinatario={
+                    setMemoDestinatario
+                  }
+                  memoAsunto={memoAsunto}
+                  setMemoAsunto={setMemoAsunto}
+                  memoSecretaria={memoSecretaria}
+                  setMemoSecretaria={
+                    setMemoSecretaria
+                  }
+                  memoAreaDestino={memoAreaDestino}
+                  setMemoAreaDestino={
+                    setMemoAreaDestino
+                  }
+                  onSaveMemo={saveNewMemo}
+                  onCancelMemo={cancelNewMemo}
                 />
               )}
               {view ===
