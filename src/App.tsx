@@ -82,6 +82,22 @@ type HistoryEntry = {
   responsableDestino?: string
 }
 
+type Memo = {
+  id: string
+  nroMemo: string
+  expedienteId: string
+  nroExpediente: string
+  fecha: string
+  destinatario: string
+  asunto: string
+  secretaria: string
+  areaDestino: string
+  recepcionadoPor: string
+  fechaRecepcion: string
+  estado: 'Enviado' | 'Recepcionado' | 'Atendido' | 'Anulado'
+  createdAt?: string
+}
+
 type Expediente = {
   id: string
   nroExp: string
@@ -463,11 +479,22 @@ function App() {
     useState(false)
 
   const [pendingAction, setPendingAction] =
-    useState<{
-      type: 'derive' | 'complete' | 'archive'
-      id: string
-      area?: string
-    } | null>(null)
+  useState<{
+    type: 'derive' | 'complete' | 'archive'
+    id: string
+    area?: string
+  } | null>(null)
+
+const [memos, setMemos] = useState<Memo[]>([])
+
+const [memoFormData, setMemoFormData] = useState<{
+  nroMemo: string
+  fecha: string
+  destinatario: string
+  asunto: string
+  secretaria: string
+  areaDestino: string
+} | null>(null)
 
   const notify = useCallback((message: string) => {
     setToast(message)
@@ -598,109 +625,156 @@ function App() {
         return
       }
 
-      if (data) {
-        const normalizados: Expediente[] =
-          data.map((item: any) => {
-            const nombreCompleto =
-              item.nombre_apellido ||
-              item.remitente ||
-              'Sin nombre'
+if (data) {
+  const normalizados: Expediente[] =
+    data.map((item: any) => {
+      const nombreCompleto =
+        item.nombre_apellido ||
+        item.remitente ||
+        'Sin nombre'
 
-            const parts =
-              splitRemitente(
-                nombreCompleto
-              )
-
-            return normalizeExpediente({
-              id: String(item.id || ''),
-              nroExp: String(item.nro_exp || ''),
-              esDuplicado:
-                Boolean(item.es_duplicado),
-              fechaIngreso:
-                item.fecha_ingreso || '',
-              remitente:
-                nombreCompleto,
-              remitenteNombre:
-                item.remitente_nombre ||
-                parts.nombre ||
-                nombreCompleto,
-              remitenteCargo:
-                item.remitente_cargo ||
-                parts.cargo ||
-                '',
-              documento:
-                item.documento || '',
-              tipo:
-                item.tipo || '',
-              asunto:
-                item.asunto || '',
-              contenido:
-                item.contenido || '',
-              area:
-                item.area || '',
-              areaDestino:
-                item.area_destino || '',
-              estado:
-                item.estado || 'Pendiente',
-              fecha:
-                item.fecha || '',
-              plazo:
-                item.plazo || '',
-              prioridad:
-                item.prioridad || 'Normal',
-              archivo:
-                item.archivo ||
-                'Sin adjunto',
-              archivoData: '',
-              archivoTipo:
-                item.archivo_tipo || '',
-              archivoTamano:
-                item.archivo_tamano || 0,
-              archivoDescripcion:
-                item.archivo_descripcion || '',
-              documentos:
-                item.documentos || '',
-              modalidadRecepcion:
-                item.modalidad_recepcion || undefined,
-              entregadoA:
-                item.entregado_a || '',
-              documentoSeguimiento:
-                item.documento_seguimiento || '',
-              canalRecepcion:
-                item.canal_recepcion || '',
-              folios:
-                item.folios ?? 1,
-              anexos:
-                item.anexos ?? 0,
-              direccion:
-                item.direccion || '',
-              correo:
-                item.correo || '',
-              celular:
-                item.celular || '',
-              representante:
-                item.representante || '',
-              cargoRepresentante:
-                item.cargo_representante || '',
-              usuarioRegistro:
-                item.usuario_registro || '',
-              fechaHoraRecepcion:
-                item.fecha_hora_recepcion || '',
-              constanciaRecepcion:
-                item.constancia_recepcion || '',
-              historial:
-                Array.isArray(item.historial)
-                  ? item.historial
-                  : []
-            })
-          })
-
-        setExpedientes(
-          normalizados
+      const parts =
+        splitRemitente(
+          nombreCompleto
         )
-      }
 
-      setLoadingDb(false)
+      return normalizeExpediente({
+        id: String(item.id || ''),
+        nroExp: String(item.nro_exp || ''),
+        esDuplicado:
+          Boolean(item.es_duplicado),
+        fechaIngreso:
+          item.fecha_ingreso || '',
+        remitente:
+          nombreCompleto,
+        remitenteNombre:
+          item.remitente_nombre ||
+          parts.nombre ||
+          nombreCompleto,
+        remitenteCargo:
+          item.remitente_cargo ||
+          parts.cargo ||
+          '',
+        documento:
+          item.documento || '',
+        tipo:
+          item.tipo || '',
+        asunto:
+          item.asunto || '',
+        contenido:
+          item.contenido || '',
+        area:
+          item.area || '',
+        areaDestino:
+          item.area_destino || '',
+        estado:
+          item.estado || 'Pendiente',
+        fecha:
+          item.fecha || '',
+        plazo:
+          item.plazo || '',
+        prioridad:
+          item.prioridad || 'Normal',
+        archivo:
+          item.archivo ||
+          'Sin adjunto',
+        archivoData: '',
+        archivoTipo:
+          item.archivo_tipo || '',
+        archivoTamano:
+          item.archivo_tamano || 0,
+        archivoDescripcion:
+          item.archivo_descripcion || '',
+        documentos:
+          item.documentos || '',
+        modalidadRecepcion:
+          item.modalidad_recepcion ||
+          undefined,
+        entregadoA:
+          item.entregado_a || '',
+        documentoSeguimiento:
+          item.documento_seguimiento || '',
+        canalRecepcion:
+          item.canal_recepcion || '',
+        folios:
+          item.folios ?? 1,
+        anexos:
+          item.anexos ?? 0,
+        direccion:
+          item.direccion || '',
+        correo:
+          item.correo || '',
+        celular:
+          item.celular || '',
+        representante:
+          item.representante || '',
+        cargoRepresentante:
+          item.cargo_representante || '',
+        usuarioRegistro:
+          item.usuario_registro || '',
+        fechaHoraRecepcion:
+          item.fecha_hora_recepcion || '',
+        constanciaRecepcion:
+          item.constancia_recepcion || '',
+        historial:
+          Array.isArray(item.historial)
+            ? item.historial
+            : []
+      })
+    })
+
+  setExpedientes(normalizados)
+}
+
+// Cargar Memos
+const {
+  data: memosData,
+  error: memosError
+} = await supabase
+  .from('memos')
+  .select('*')
+  .order('fecha', {
+    ascending: false
+  })
+
+if (memosError) {
+  console.error(
+    'Error cargando memos:',
+    memosError
+  )
+} else if (memosData) {
+  const memosNormalizados: Memo[] =
+    memosData.map((m: any) => ({
+      id: String(m.id),
+      nroMemo: m.nro_memo || '',
+      expedienteId:
+        String(m.expediente_id),
+      nroExpediente:
+        m.nro_expediente || '',
+      fecha:
+        m.fecha || '',
+      destinatario:
+        m.destinatario || '',
+      asunto:
+        m.asunto || '',
+      secretaria:
+        m.secretaria || '',
+      areaDestino:
+        m.area_destino || '',
+      recepcionadoPor:
+        m.recepcionado_por || '',
+      fechaRecepcion:
+        m.fecha_recepcion || '',
+      estado:
+        m.estado || 'Enviado',
+      createdAt:
+        m.created_at
+    }))
+
+  setMemos(memosNormalizados)
+}
+
+setLoadingDb(false)
     }
 
     cargarDeSupabase()
@@ -1229,6 +1303,17 @@ notify(
       return
     }
 
+    // Preparar los datos del Memo
+    setMemoNro('')
+    setMemoFecha(
+      todayInputValue()
+    )
+    setMemoDestinatario('')
+    setMemoSecretaria('')
+    setMemoAsunto(
+      expediente.asunto || ''
+    )
+
     setPendingAction({
       type: 'derive',
       id,
@@ -1236,128 +1321,305 @@ notify(
     })
   }
 
-  const confirmDerive = async () => {
-    if (
-      !pendingAction ||
-      pendingAction.type !== 'derive' ||
-      !pendingAction.area ||
-      !currentUser
-    ) {
-      return
-    }
+const confirmDerive = async () => {
+  if (
+    !pendingAction ||
+    pendingAction.type !== 'derive' ||
+    !pendingAction.area ||
+    !currentUser
+  ) {
+    return
+  }
 
-    const {
-      id,
-      area: targetArea
-    } = pendingAction
-    const responsable =
-  AREA_RESPONSABLES[targetArea] || targetArea
+  const {
+    id,
+    area: targetArea
+  } = pendingAction
 
-    const expediente =
-      expedientes.find(
-        e => e.id === id
-      )
+  const responsable =
+    AREA_RESPONSABLES[targetArea] ||
+    targetArea
 
-    if (!expediente) {
-      notify(
-        'Expediente no encontrado'
-      )
-      return
-    }
+  const expediente =
+    expedientes.find(
+      e => e.id === id
+    )
 
-    const timestamp =
-      new Date().toLocaleString(
-        'es-PE'
-      )
+  if (!expediente) {
+    notify(
+      'Expediente no encontrado'
+    )
+    return
+  }
 
-    const historial = [
-      ...(expediente.historial ||
-        createInitialHistory(
-          expediente
-        )),
+  // Validar datos obligatorios del Memo
+  if (!memoNro.trim()) {
+    notify(
+      'Ingrese el número del Memo'
+    )
+    return
+  }
+
+  if (!memoFecha) {
+    notify(
+      'Ingrese la fecha del Memo'
+    )
+    return
+  }
+
+  if (!memoDestinatario.trim()) {
+    notify(
+      'Ingrese el destinatario del Memo'
+    )
+    return
+  }
+
+  if (!memoAsunto.trim()) {
+    notify(
+      'Ingrese el asunto del Memo'
+    )
+    return
+  }
+
+  if (!memoSecretaria.trim()) {
+    notify(
+      'Ingrese la secretaría del Memo'
+    )
+    return
+  }
+
+  // Validar ID numérico del expediente
+  const expedienteId =
+    Number(expediente.id)
+
+  if (
+    !Number.isInteger(
+      expedienteId
+    )
+  ) {
+    notify(
+      'ID de expediente inválido'
+    )
+    return
+  }
+
+  const timestamp =
+    new Date().toLocaleString(
+      'es-PE'
+    )
+
+  const historial = [
+    ...(expediente.historial ||
+      createInitialHistory(
+        expediente
+      )),
     {
-          fechaHora:
-            timestamp,
-          fechaSalida:
-            timestamp,
-          fechaIngreso:
-            timestamp,
-          areaOrigen:
-            'Mesa de Partes',
-          areaDestino:
-            targetArea,
-          accion:
-            'Derivado para atención',
-          observacion:
-            `Expediente enviado a ${targetArea}. Responsable: ${responsable}.`,
-          responsable:
-            `${currentUser.nombre} - ${currentUser.area || ''}`,
-          responsableDestino:
-            responsable
+      fechaHora:
+        timestamp,
+      fechaSalida:
+        timestamp,
+      fechaIngreso:
+        timestamp,
+      areaOrigen:
+        'Mesa de Partes',
+      areaDestino:
+        targetArea,
+      accion:
+        `Memo ${memoNro.trim()} generado`,
+      observacion:
+        `Se generó el Memo ${memoNro.trim()} para derivar el expediente a ${targetArea}. Responsable: ${responsable}.`,
+      responsable:
+        `${currentUser.nombre} - ${currentUser.area || ''}`,
+      responsableDestino:
+        responsable
     }
-    ]
+  ]
 
-    const { error } =
-      await supabase
-        .from(
-          'mesa_partes_2026'
-        )
-        .update({
-          estado:
-            'En atención',
-          area:
-            targetArea,
-          area_destino:
-            targetArea,
-          entregado_a:
-            responsable,
-          historial
-        })
-        .eq(
-          'id',
-          id
-        )
+  // 1. Crear el Memo
+  const {
+    data: memoCreado,
+    error: memoError
+  } = await supabase
+    .from('memos')
+    .insert({
+      nro_memo:
+        memoNro.trim(),
+      expediente_id:
+        expedienteId,
+      nro_expediente:
+        expediente.nroExp,
+      fecha:
+        memoFecha,
+      destinatario:
+        memoDestinatario.trim(),
+      asunto:
+        memoAsunto.trim(),
+      secretaria:
+        memoSecretaria.trim(),
+      area_destino:
+        targetArea,
+      recepcionado_por:
+        '',
+      fecha_recepcion:
+        null,
+      estado:
+        'Enviado'
+    })
+    .select()
+    .single()
 
-    if (error) {
-      console.error(
-        'Error derivando expediente:',
-        error
-      )
-
-      notify(
-        `No se pudo derivar: ${error.message}`
-      )
-
-      return
-    }
-
-    setExpedientes(prev =>
-      prev.map(item =>
-        item.id === id
-          ? {
-              ...item,
-              estado:
-                'En atención',
-              area:
-                targetArea,
-              areaDestino:
-                targetArea,
-              entregadoA:
-                targetArea,
-              historial
-            }
-          : item
-      )
+  if (memoError) {
+    console.error(
+      'Error creando Memo:',
+      memoError
     )
 
     notify(
-      'Expediente derivado y enviado a En atención'
+      `No se pudo crear el Memo: ${memoError.message}`
     )
 
-    setPendingAction(
-      null
-    )
+    return
   }
+
+  // 2. Actualizar el expediente
+  const {
+    error: expedienteError
+  } = await supabase
+    .from(
+      'mesa_partes_2026'
+    )
+    .update({
+      estado:
+        'En atención',
+      area:
+        targetArea,
+      area_destino:
+        targetArea,
+      entregado_a:
+        responsable,
+      documento_seguimiento:
+        memoNro.trim(),
+      historial
+    })
+    .eq(
+      'id',
+      id
+    )
+
+  // Si falla el expediente,
+  // eliminar el Memo recién creado
+  if (expedienteError) {
+    console.error(
+      'Error actualizando expediente:',
+      expedienteError
+    )
+
+    if (memoCreado?.id) {
+      await supabase
+        .from('memos')
+        .delete()
+        .eq(
+          'id',
+          memoCreado.id
+        )
+    }
+
+    notify(
+      `No se pudo derivar el expediente: ${expedienteError.message}`
+    )
+
+    return
+  }
+
+  // 3. Actualizar el estado local de Memos
+  if (memoCreado) {
+    const nuevoMemo: Memo = {
+      id: String(
+        memoCreado.id
+      ),
+      nroMemo:
+        memoCreado.nro_memo ||
+        memoNro.trim(),
+      expedienteId:
+        String(
+          memoCreado.expediente_id
+        ),
+      nroExpediente:
+        memoCreado.nro_expediente ||
+        expediente.nroExp,
+      fecha:
+        memoCreado.fecha ||
+        memoFecha,
+      destinatario:
+        memoCreado.destinatario ||
+        memoDestinatario.trim(),
+      asunto:
+        memoCreado.asunto ||
+        memoAsunto.trim(),
+      secretaria:
+        memoCreado.secretaria ||
+        memoSecretaria.trim(),
+      areaDestino:
+        memoCreado.area_destino ||
+        targetArea,
+      recepcionadoPor:
+        memoCreado.recepcionado_por ||
+        '',
+      fechaRecepcion:
+        memoCreado.fecha_recepcion ||
+        '',
+      estado:
+        memoCreado.estado ||
+        'Enviado',
+      createdAt:
+        memoCreado.created_at
+    }
+
+    setMemos(prev => [
+      nuevoMemo,
+      ...prev
+    ])
+  }
+
+  // 4. Actualizar el expediente en pantalla
+  setExpedientes(prev =>
+    prev.map(item =>
+      item.id === id
+        ? {
+            ...item,
+            estado:
+              'En atención',
+            area:
+              targetArea,
+            areaDestino:
+              targetArea,
+            entregadoA:
+              responsable,
+            documentoSeguimiento:
+              memoNro.trim(),
+            historial
+          }
+        : item
+    )
+  )
+
+  notify(
+    `Memo ${memoNro.trim()} creado y expediente enviado a En atención`
+  )
+
+  // 5. Limpiar formulario
+  setMemoNro('')
+  setMemoFecha(
+    todayInputValue()
+  )
+  setMemoDestinatario('')
+  setMemoAsunto('')
+  setMemoSecretaria('')
+
+  setPendingAction(
+    null
+  )
+}
 
   const completeExpediente = (
     id: string
