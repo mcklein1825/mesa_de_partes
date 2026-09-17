@@ -444,7 +444,216 @@ const readFileAsDataUrl = (
 
     reader.readAsDataURL(file)
   })
+function MemosView({
+  expediente,
+  memos,
+  onBack
+}: {
+  expediente: Expediente | null
+  memos: Memo[]
+  onBack: () => void
+}) {
+  if (!expediente) {
+    return (
+      <div className="empty-state">
+        No se seleccionó ningún expediente.
+      </div>
+    )
+  }
 
+  const memosDelExpediente =
+    memos.filter(
+      memo =>
+        memo.expedienteId ===
+        expediente.id
+    )
+
+  return (
+    <div className="page-section">
+
+      <div className="section-header">
+        <div>
+          <h1>Memo</h1>
+
+          <p>
+            Expediente Nº {expediente.nroExp}
+          </p>
+        </div>
+
+        <button
+          className="action-link"
+          onClick={onBack}
+        >
+          ← Volver a expedientes
+        </button>
+      </div>
+
+      <div className="detail-card">
+
+        <h2>
+          Información del expediente
+        </h2>
+
+        <div className="detail-grid">
+
+          <div>
+            <strong>
+              Nº Expediente
+            </strong>
+
+            <p>
+              {expediente.nroExp}
+            </p>
+          </div>
+
+          <div>
+            <strong>
+              Remitente
+            </strong>
+
+            <p>
+              {expediente.remitente}
+            </p>
+          </div>
+
+          <div>
+            <strong>
+              Documento
+            </strong>
+
+            <p>
+              {expediente.documento ||
+                'Sin especificar'}
+            </p>
+          </div>
+
+          <div>
+            <strong>
+              Fecha
+            </strong>
+
+            <p>
+              {expediente.fecha}
+            </p>
+          </div>
+
+        </div>
+
+        <div>
+          <strong>
+            Asunto
+          </strong>
+
+          <p>
+            {expediente.asunto ||
+              'Sin asunto'}
+          </p>
+        </div>
+
+      </div>
+
+      <div className="detail-card">
+
+        <div className="section-header">
+
+          <div>
+            <h2>
+              Memos relacionados
+            </h2>
+
+            <p>
+              Memos registrados para este
+              expediente.
+            </p>
+          </div>
+
+        </div>
+
+        {memosDelExpediente.length === 0 ? (
+          <div className="empty-state">
+            Este expediente todavía no
+            tiene Memos registrados.
+          </div>
+        ) : (
+          <div className="table-wrapper">
+
+            <table>
+
+              <thead>
+                <tr>
+                  <th>
+                    Nº Memo
+                  </th>
+
+                  <th>
+                    Fecha
+                  </th>
+
+                  <th>
+                    Destinatario
+                  </th>
+
+                  <th>
+                    Secretaría
+                  </th>
+
+                  <th>
+                    Área destino
+                  </th>
+
+                  <th>
+                    Estado
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+
+                {memosDelExpediente.map(
+                  memo => (
+                    <tr key={memo.id}>
+
+                      <td>
+                        {memo.nroMemo}
+                      </td>
+
+                      <td>
+                        {memo.fecha}
+                      </td>
+
+                      <td>
+                        {memo.destinatario}
+                      </td>
+
+                      <td>
+                        {memo.secretaria}
+                      </td>
+
+                      <td>
+                        {memo.areaDestino ||
+                          'Sin asignar'}
+                      </td>
+
+                      <td>
+                        {memo.estado}
+                      </td>
+
+                    </tr>
+                  )
+                )}
+
+              </tbody>
+
+            </table>
+
+          </div>
+        )}
+
+      </div>
+
+    </div>
+  )
+}
 function App() {
   const [currentUser, setCurrentUser] =
     useState<User | null>(null)
@@ -2192,7 +2401,15 @@ const completeExpediente = (
                 }
                 />
               )}
-
+              {view === 'memos' && (
+                <MemosView
+                  expediente={memoExpediente}
+                  memos={memos}
+                  onBack={() =>
+                    setView('expedientes')
+                  }
+                />
+              )}
               {view ===
                 'nuevo' && (
                 <NewExpediente
