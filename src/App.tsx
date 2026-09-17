@@ -3,8 +3,12 @@ import { supabase } from './lib/supabaseClient'
 import UserSelectModal from './components/UserSelectModal'
 
 type Status = 'Pendiente' | 'En atención' | 'Atendido' | 'Archivado'
-type View = 'inicio' | 'expedientes' | 'nuevo' | 'reportes'
-
+type View =
+  | 'inicio'
+  | 'expedientes'
+  | 'nuevo'
+  | 'reportes'
+  | 'memos'
 export type Role = 'MesaPartes' | 'AreaOperativa' | 'Administrador' | 'Auditor'
 
 export type User = {
@@ -450,6 +454,8 @@ function App() {
 
   const [expedientes, setExpedientes] =
     useState<Expediente[]>([])
+  const [memoExpediente, setMemoExpediente] =
+  useState<Expediente | null>(null)
 
   const [loadingDb, setLoadingDb] =
     useState(true)
@@ -1637,7 +1643,7 @@ const confirmDerive = async () => {
     null
   )
 }
-  const openDocumentType = (
+const openDocumentType = (
   id: string,
   tipo: string
 ) => {
@@ -1660,12 +1666,21 @@ const confirmDerive = async () => {
     return
   }
 
-  notify(
-    `Documento seleccionado: ${tipo}`
-  )
+  if (tipo === 'Memo') {
+    setMemoExpediente(expediente)
+    setView('memos')
+    return
+  }
+
+  if (tipo === 'Oficio') {
+    notify(
+      'La vista de Oficios todavía está en desarrollo'
+    )
+    return
+  }
 }
 
-  const completeExpediente = (
+const completeExpediente = (
     id: string
   ) => {
     if (
