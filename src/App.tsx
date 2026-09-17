@@ -937,12 +937,6 @@ const [memoFormData, setMemoFormData] = useState<{
   secretaria: string
   areaDestino: string
 } | null>(null)
-  const [showMemoForm, setShowMemoForm] =
-  useState(false)
-
-const [memoAreaDestino, setMemoAreaDestino] =
-  useState('')
-
   const notify = useCallback((message: string) => {
     setToast(message)
 
