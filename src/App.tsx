@@ -2187,111 +2187,226 @@ const confirmDerive = async () => {
         />
       )}
 
-      {pendingAction && (
-        <div
-          className="modal-backdrop"
-          role="presentation"
-          onClick={
-            cancelPendingAction
-          }
+{pendingAction && (
+  <div
+    className="modal-backdrop"
+    role="presentation"
+    onClick={cancelPendingAction}
+  >
+    <section
+      className="confirmation-modal"
+      role="dialog"
+      aria-modal="true"
+      onClick={event =>
+        event.stopPropagation()
+      }
+    >
+      <div className="confirmation-header">
+        <h2>
+          {pendingAction.type === 'derive'
+            ? 'Crear Memo y derivar expediente'
+            : 'Confirmar acción'}
+        </h2>
+
+        <button
+          className="modal-close"
+          onClick={cancelPendingAction}
+          aria-label="Cerrar"
         >
-          <section
-            className="confirmation-modal"
-            role="dialog"
-            aria-modal="true"
-            onClick={event =>
-              event.stopPropagation()
+          ×
+        </button>
+      </div>
+
+      <div className="confirmation-body">
+        {pendingAction.type === 'derive' ? (
+          <>
+            <p>
+              Complete los datos del Memo para
+              derivar este expediente.
+            </p>
+
+            <p className="confirmation-detail">
+              <strong>Área destino:</strong>{' '}
+              {pendingAction.area}
+            </p>
+
+            <p className="confirmation-detail">
+              <strong>Responsable:</strong>{' '}
+              {pendingAction.area
+                ? AREA_RESPONSABLES[
+                    pendingAction.area
+                  ] ||
+                  pendingAction.area
+                : 'No asignado'}
+            </p>
+
+            <div
+              className="form-group"
+              style={{
+                marginTop: '16px'
+              }}
+            >
+              <label>
+                Número de Memo *
+              </label>
+
+              <input
+                type="text"
+                value={memoNro}
+                onChange={event =>
+                  setMemoNro(
+                    event.target.value
+                  )
+                }
+                placeholder="Ej. MEMO-001-2026"
+              />
+            </div>
+
+            <div
+              className="form-group"
+              style={{
+                marginTop: '12px'
+              }}
+            >
+              <label>
+                Fecha del Memo *
+              </label>
+
+              <input
+                type="date"
+                value={memoFecha}
+                onChange={event =>
+                  setMemoFecha(
+                    event.target.value
+                  )
+                }
+              />
+            </div>
+
+            <div
+              className="form-group"
+              style={{
+                marginTop: '12px'
+              }}
+            >
+              <label>
+                Destinatario *
+              </label>
+
+              <input
+                type="text"
+                value={memoDestinatario}
+                onChange={event =>
+                  setMemoDestinatario(
+                    event.target.value
+                  )
+                }
+                placeholder="Nombre del destinatario"
+              />
+            </div>
+
+            <div
+              className="form-group"
+              style={{
+                marginTop: '12px'
+              }}
+            >
+              <label>
+                Secretaría *
+              </label>
+
+              <input
+                type="text"
+                value={memoSecretaria}
+                onChange={event =>
+                  setMemoSecretaria(
+                    event.target.value
+                  )
+                }
+                placeholder="Secretaría responsable"
+              />
+            </div>
+
+            <div
+              className="form-group"
+              style={{
+                marginTop: '12px'
+              }}
+            >
+              <label>
+                Asunto del Memo *
+              </label>
+
+              <textarea
+                value={memoAsunto}
+                onChange={event =>
+                  setMemoAsunto(
+                    event.target.value
+                  )
+                }
+                placeholder="Ingrese el asunto del Memo"
+                rows={3}
+              />
+            </div>
+
+            <p
+              className="confirmation-detail"
+              style={{
+                marginTop: '16px'
+              }}
+            >
+              El Memo se guardará vinculado a este
+              expediente y quedará registrado en su
+              seguimiento.
+            </p>
+          </>
+        ) : (
+          <>
+            <p>
+              ¿Está seguro que desea marcar este
+              expediente como atendido?
+            </p>
+
+            <p className="confirmation-detail">
+              Esta acción cambiará el estado del
+              expediente.
+            </p>
+          </>
+        )}
+      </div>
+
+      <div className="confirmation-actions">
+        <button
+          className="outline-button"
+          onClick={cancelPendingAction}
+        >
+          Cancelar
+        </button>
+
+        <button
+          className="primary-button"
+          onClick={() => {
+            if (
+              pendingAction.type ===
+              'derive'
+            ) {
+              confirmDerive()
+            } else if (
+              pendingAction.type ===
+              'complete'
+            ) {
+              confirmComplete()
             }
-          >
-            <div className="confirmation-header">
-              <h2>
-                Confirmar acción
-              </h2>
-
-              <button
-                className="modal-close"
-                onClick={
-                  cancelPendingAction
-                }
-                aria-label="Cerrar"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="confirmation-body">
-              {pendingAction.type ===
-              'derive' ? (
-                <>
-                  <p>
-                    ¿Está seguro que desea derivar este expediente?
-                  </p>
-                  
-                  <p className="confirmation-detail">
-                    <strong>Área destino:</strong>{' '}
-                    {pendingAction.area}
-                  </p>
-                  
-                  <p className="confirmation-detail">
-                    <strong>Responsable:</strong>{' '}
-                    {pendingAction.area
-                      ? AREA_RESPONSABLES[pendingAction.area] ||
-                        pendingAction.area
-                      : 'No asignado'}
-                  </p>
-                  
-                  <p className="confirmation-detail">
-                    Esta acción no se puede deshacer.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p>
-                    ¿Está seguro que desea marcar este expediente como atendido?
-                  </p>
-
-                  <p className="confirmation-detail">
-                    Esta acción cambiará el estado del expediente.
-                  </p>
-                </>
-              )}
-            </div>
-
-            <div className="confirmation-actions">
-              <button
-                className="outline-button"
-                onClick={
-                  cancelPendingAction
-                }
-              >
-                Cancelar
-              </button>
-
-              <button
-                className="primary-button"
-                onClick={() => {
-                  if (
-                    pendingAction.type ===
-                    'derive'
-                  ) {
-                    confirmDerive()
-                  } else if (
-                    pendingAction.type ===
-                    'complete'
-                  ) {
-                    confirmComplete()
-                  }
-                }}
-              >
-                {pendingAction.type ===
-                'derive'
-                  ? '✓ Derivar'
-                  : '✓ Atender'}
-              </button>
-            </div>
-          </section>
-        </div>
-      )}
+          }}
+        >
+          {pendingAction.type === 'derive'
+            ? '✓ Crear Memo y derivar'
+            : '✓ Atender'}
+        </button>
+      </div>
+    </section>
+  </div>
+)}
     </div>
   )
 }
