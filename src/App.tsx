@@ -1277,6 +1277,7 @@ notify(
       )
       return
     }
+    
 
     const expediente =
       expedientes.find(
@@ -1618,6 +1619,33 @@ const confirmDerive = async () => {
 
   setPendingAction(
     null
+  )
+}
+  const openDocumentType = (
+  id: string,
+  tipo: string
+) => {
+  if (!tipo) {
+    notify(
+      'Seleccione el tipo de documento'
+    )
+    return
+  }
+
+  const expediente =
+    expedientes.find(
+      item => item.id === id
+    )
+
+  if (!expediente) {
+    notify(
+      'Expediente no encontrado'
+    )
+    return
+  }
+
+  notify(
+    `Documento seleccionado: ${tipo}`
   )
 }
 
@@ -2117,20 +2145,20 @@ const confirmDerive = async () => {
                   setStatusFilter={
                     setStatusFilter
                   }
-                  onNew={() =>
-                    setView(
-                      'nuevo'
-                    )
-                  }
-                  onDerive={
-                    deriveExpediente
-                  }
-                  onComplete={
-                    completeExpediente
-                  }
-                  onTracking={
-                    setTrackingId
-                  }
+                 onNew={() =>
+                  setView(
+                    'nuevo'
+                  )
+                }
+                onOpenDocumentType={
+                  openDocumentType
+                }
+                onComplete={
+                  completeExpediente
+                }
+                onTracking={
+                  setTrackingId
+                }
                 />
               )}
 
@@ -3041,7 +3069,7 @@ function ExpedientesView({
   statusFilter,
   setStatusFilter,
   onNew,
-  onDerive,
+  onOpenDocumentType,
   onComplete,
   onTracking
 }: {
@@ -3056,10 +3084,10 @@ function ExpedientesView({
   statusFilter: string
   setStatusFilter: (v: string) => void
   onNew: () => void
-  onDerive: (
-    id: string,
-    area: string
-  ) => void
+  onOpenDocumentType: (
+  id: string,
+  tipo: string
+) => void
   onComplete: (
     id: string
   ) => void
@@ -3078,6 +3106,12 @@ function ExpedientesView({
   ] = useState<
     Record<string, string>
   >({})
+  const [
+  selectedDocumentTypeById,
+  setSelectedDocumentTypeById
+] = useState<
+  Record<string, string>
+>({})
 
   const pageCount =
     Math.max(
@@ -3406,56 +3440,44 @@ function ExpedientesView({
                         {item.estado ===
                         'Pendiente' ? (
                           <>
-                            <select
-                              className="action-area-select"
-                              value={
-                                selectedAreaById[
-                                  item.id
-                                ] ||
-                                ''
-                              }
-                              onChange={event =>
-                                setSelectedAreaById(
-                                  {
-                                    ...selectedAreaById,
-                                    [item.id]:
-                                      event
-                                        .target
-                                        .value
-                                  }
-                                )
-                              }
-                            >
-                              <option value="">
-                                Derivar a...
-                              </option>
-
-                            {areas.map(
-                              area => (
-                                <option
-                                  key={area}
-                                  value={area}
-                                >
-                                  {area} — {AREA_RESPONSABLES[area]}
+                            <div className="document-type-actions">
+                              <select
+                                className="action-area-select"
+                                value={
+                                  selectedDocumentTypeById[item.id] || ''
+                                }
+                                onChange={event =>
+                                  setSelectedDocumentTypeById({
+                                    ...selectedDocumentTypeById,
+                                    [item.id]: event.target.value
+                                  })
+                                }
+                              >
+                                <option value="">
+                                  Tipo de documento...
                                 </option>
-                              )
-                            )}
-                            </select>
-
-                            <button
-                              className="action-link"
-                              onClick={() =>
-                                onDerive(
-                                  item.id,
-                                  selectedAreaById[
-                                    item.id
-                                  ] ||
-                                    ''
-                                )
-                              }
-                            >
-                              Derivar
-                            </button>
+                            
+                                <option value="Oficio">
+                                  Oficio
+                                </option>
+                            
+                                <option value="Memo">
+                                  Memo
+                                </option>
+                              </select>
+                            
+                              <button
+                                className="action-link"
+                                onClick={() =>
+                                  onOpenDocumentType(
+                                    item.id,
+                                    selectedDocumentTypeById[item.id] || ''
+                                  )
+                                }
+                              >
+                                Abrir
+                              </button>
+                            </div>
                           </>
                         ) : item.estado ===
                           'En atención' ? (
