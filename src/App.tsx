@@ -448,11 +448,13 @@ const readFileAsDataUrl = (
 function MemosView({
   expediente,
   memos,
-  onBack
+  onBack,
+  onNewMemo
 }: {
   expediente: Expediente | null
   memos: Memo[]
   onBack: () => void
+  onNewMemo: () => void
 }) {
   if (!expediente) {
     return (
@@ -504,7 +506,9 @@ function MemosView({
             </strong>
 
             <p>
-              {expediente.nroExp}
+              {expediente.nroExp.startsWith('EXP-')
+                ? expediente.nroExp
+                : `EXP-2026-${expediente.nroExp.padStart(5, '0')}`}
             </p>
           </div>
 
@@ -558,11 +562,7 @@ function MemosView({
 
           <button
             className="primary-button"
-            onClick={() =>
-              alert(
-                'Formulario de nuevo Memo próximamente'
-              )
-            }
+            onClick={onNewMemo}
           >
             ＋ Nuevo Memo
           </button>
@@ -775,6 +775,11 @@ const [memoFormData, setMemoFormData] = useState<{
   secretaria: string
   areaDestino: string
 } | null>(null)
+  const [showMemoForm, setShowMemoForm] =
+  useState(false)
+
+const [memoAreaDestino, setMemoAreaDestino] =
+  useState('')
 
   const notify = useCallback((message: string) => {
     setToast(message)
@@ -1937,6 +1942,23 @@ const openDocumentType = (
     return
   }
 }
+const openNewMemo = () => {
+  if (!memoExpediente) {
+    notify(
+      'No se seleccionó ningún expediente'
+    )
+    return
+  }
+
+  setMemoNro('')
+  setMemoFecha(todayInputValue())
+  setMemoDestinatario('')
+  setMemoAsunto(memoExpediente.asunto || '')
+  setMemoSecretaria('')
+  setMemoAreaDestino('')
+
+  setShowMemoForm(true)
+}
 
 const completeExpediente = (
     id: string
@@ -2457,6 +2479,7 @@ const completeExpediente = (
                   onBack={() =>
                     setView('expedientes')
                   }
+                  onNewMemo={openNewMemo}
                 />
               )}
               {view ===
