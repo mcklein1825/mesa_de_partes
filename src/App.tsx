@@ -486,6 +486,22 @@ function App() {
   } | null>(null)
 
 const [memos, setMemos] = useState<Memo[]>([])
+const [memoNro, setMemoNro] =
+  useState('')
+
+const [memoDestinatario, setMemoDestinatario] =
+  useState('')
+
+const [memoAsunto, setMemoAsunto] =
+  useState('')
+
+const [memoSecretaria, setMemoSecretaria] =
+  useState('')
+
+const [memoFecha, setMemoFecha] =
+  useState(
+    todayInputValue()
+  )
 
 const [memoFormData, setMemoFormData] = useState<{
   nroMemo: string
