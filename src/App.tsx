@@ -444,6 +444,7 @@ const readFileAsDataUrl = (
 
     reader.readAsDataURL(file)
   })
+
 function MemosView({
   expediente,
   memos,
@@ -469,14 +470,18 @@ function MemosView({
     )
 
   return (
-    <div className="page-section">
+    <div className="page">
 
-      <div className="section-header">
+      <div className="page-header">
+
         <div>
-          <h1>Memo</h1>
+          <h1>
+            Memos
+          </h1>
 
           <p>
-            Expediente Nº {expediente.nroExp}
+            Consulta y gestiona los Memos
+            relacionados con expedientes.
           </p>
         </div>
 
@@ -486,19 +491,16 @@ function MemosView({
         >
           ← Volver a expedientes
         </button>
+
       </div>
 
       <div className="detail-card">
-
-        <h2>
-          Información del expediente
-        </h2>
 
         <div className="detail-grid">
 
           <div>
             <strong>
-              Nº Expediente
+              Expediente
             </strong>
 
             <p>
@@ -512,47 +514,27 @@ function MemosView({
             </strong>
 
             <p>
-              {expediente.remitente}
-            </p>
-          </div>
-
-          <div>
-            <strong>
-              Documento
-            </strong>
-
-            <p>
-              {expediente.documento ||
+              {expediente.remitente ||
                 'Sin especificar'}
             </p>
           </div>
 
           <div>
             <strong>
-              Fecha
+              Asunto
             </strong>
 
             <p>
-              {expediente.fecha}
+              {expediente.asunto ||
+                'Sin asunto'}
             </p>
           </div>
 
         </div>
 
-        <div>
-          <strong>
-            Asunto
-          </strong>
-
-          <p>
-            {expediente.asunto ||
-              'Sin asunto'}
-          </p>
-        </div>
-
       </div>
 
-      <div className="detail-card">
+      <div className="table-section">
 
         <div className="section-header">
 
@@ -562,59 +544,107 @@ function MemosView({
             </h2>
 
             <p>
-              Memos registrados para este
-              expediente.
+              {memosDelExpediente.length}{' '}
+              Memo
+              {memosDelExpediente.length !== 1
+                ? 's'
+                : ''}{' '}
+              registrado
+              {memosDelExpediente.length !== 1
+                ? 's'
+                : ''}
             </p>
           </div>
+
+          <button
+            className="primary-button"
+            onClick={() =>
+              alert(
+                'Formulario de nuevo Memo próximamente'
+              )
+            }
+          >
+            ＋ Nuevo Memo
+          </button>
 
         </div>
 
         {memosDelExpediente.length === 0 ? (
+
           <div className="empty-state">
-            Este expediente todavía no
-            tiene Memos registrados.
+            No existen Memos registrados
+            para este expediente.
           </div>
+
         ) : (
+
           <div className="table-wrapper">
 
             <table>
 
               <thead>
+
                 <tr>
+
                   <th>
-                    Nº Memo
+                    N.º MEMO
                   </th>
 
                   <th>
-                    Fecha
+                    N.º EXPEDIENTE
                   </th>
 
                   <th>
-                    Destinatario
+                    FECHA
                   </th>
 
                   <th>
-                    Secretaría
+                    DESTINATARIO
                   </th>
 
                   <th>
-                    Área destino
+                    ASUNTO
                   </th>
 
                   <th>
-                    Estado
+                    SECRETARÍA
                   </th>
+
+                  <th>
+                    ÁREA DESTINO
+                  </th>
+
+                  <th>
+                    RECEPCIONADO POR
+                  </th>
+
+                  <th>
+                    FECHA RECEPCIÓN
+                  </th>
+
+                  <th>
+                    ESTADO
+                  </th>
+
                 </tr>
+
               </thead>
 
               <tbody>
 
                 {memosDelExpediente.map(
                   memo => (
-                    <tr key={memo.id}>
+
+                    <tr
+                      key={memo.id}
+                    >
 
                       <td>
                         {memo.nroMemo}
+                      </td>
+
+                      <td>
+                        {memo.nroExpediente}
                       </td>
 
                       <td>
@@ -622,16 +652,33 @@ function MemosView({
                       </td>
 
                       <td>
-                        {memo.destinatario}
+                        {memo.destinatario ||
+                          '—'}
                       </td>
 
                       <td>
-                        {memo.secretaria}
+                        {memo.asunto ||
+                          '—'}
+                      </td>
+
+                      <td>
+                        {memo.secretaria ||
+                          '—'}
                       </td>
 
                       <td>
                         {memo.areaDestino ||
-                          'Sin asignar'}
+                          '—'}
+                      </td>
+
+                      <td>
+                        {memo.recepcionadoPor ||
+                          '—'}
+                      </td>
+
+                      <td>
+                        {memo.fechaRecepcion ||
+                          '—'}
                       </td>
 
                       <td>
@@ -639,6 +686,7 @@ function MemosView({
                       </td>
 
                     </tr>
+
                   )
                 )}
 
@@ -647,6 +695,7 @@ function MemosView({
             </table>
 
           </div>
+
         )}
 
       </div>
