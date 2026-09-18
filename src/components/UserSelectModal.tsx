@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { User, Role, areas } from '../App';
+import { User, Role } from '../types'
+import { areas } from '../constants'
 import { usuariosService } from '../services/usuarioService';
 
 interface UserSelectModalProps {
