@@ -637,16 +637,17 @@ export default function App() {
     count={expedientes.filter(item => item.estado === 'Pendiente').length}
   />
   <NavItem
-    icon="▥"
-    label="Memos"
-    active={view === 'memos'}
-    onClick={() => {
-      setMemoExpediente(null)
-      setShowMemoForm(false)
-      setView('memos')
-    }}
-    count={memos.length}
-  />
+  icon="▥"
+  label="Memos"
+  active={view === 'memos'}
+  onClick={() => {
+    setMemoExpediente(null)
+    setShowMemoForm(false)
+    setShowMemoSelector(false)
+    setView('memos')
+  }}
+  count={memos.length}
+/>
 
   <NavItem
     icon="＋"
