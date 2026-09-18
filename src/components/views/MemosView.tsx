@@ -7,7 +7,6 @@ export default function MemosView({
   expedientes,
   areaOptions,
   memos,
-  onBack,
   onNewMemo,
   showMemoForm,
   showMemoSelector,
@@ -100,7 +99,7 @@ export default function MemosView({
 
   /*
    * =========================================================
-   * FILTROS DEL DASHBOARD
+   * FILTROS
    * =========================================================
    */
 
@@ -176,7 +175,12 @@ export default function MemosView({
 
   /*
    * =========================================================
-   * NUEVO MEMO → SELECCIONAR EXPEDIENTE
+   * NUEVO MEMO
+   *
+   * Esta vista SOLO aparece cuando se pulsa:
+   * + Nuevo Memo
+   *
+   * No se muestra al entrar normalmente a Memos.
    * =========================================================
    */
 
@@ -221,10 +225,11 @@ export default function MemosView({
             </div>
 
           </div>
+
           <ExpedienteSelector
             expedientes={expedientes}
             value={null}
-            onChange={(selectedExpediente) => {
+            onChange={selectedExpediente => {
               if (!selectedExpediente) {
                 return
               }
@@ -276,6 +281,7 @@ export default function MemosView({
         <div className="detail-card">
 
           <div className="section-header">
+
             <div>
               <h2>Expediente relacionado</h2>
 
@@ -283,6 +289,7 @@ export default function MemosView({
                 El Memo quedará vinculado a este expediente.
               </p>
             </div>
+
           </div>
 
           <div className="detail-grid">
@@ -438,10 +445,15 @@ export default function MemosView({
     )
   }
 
- 
   /*
    * =========================================================
-   * DASHBOARD PRINCIPAL DE MEMOS
+   * DASHBOARD PRINCIPAL
+   *
+   * ESTA ES LA VISTA NORMAL DE "MEMOS".
+   *
+   * Aquí aparecen TODOS los Memos registrados.
+   * No depende de seleccionar expediente.
+   * No depende de elegir tipo de documento.
    * =========================================================
    */
 
@@ -509,6 +521,7 @@ export default function MemosView({
                 {secretaria}
               </option>
             ))}
+
           </select>
 
           <select
@@ -530,6 +543,7 @@ export default function MemosView({
                 {area}
               </option>
             ))}
+
           </select>
 
           <select
@@ -551,6 +565,7 @@ export default function MemosView({
                 {estado}
               </option>
             ))}
+
           </select>
 
           <span className="result-count">
@@ -564,7 +579,6 @@ export default function MemosView({
           <table>
 
             <thead>
-
               <tr>
                 <th>N.º MEMO</th>
                 <th>N.º EXPEDIENTE</th>
@@ -577,13 +591,11 @@ export default function MemosView({
                 <th>FECHA RECEPCIÓN</th>
                 <th>ESTADO</th>
               </tr>
-
             </thead>
 
             <tbody>
 
               {pageItems.map(memo => (
-
                 <tr key={memo.id}>
 
                   <td>
@@ -653,7 +665,6 @@ export default function MemosView({
                   </td>
 
                 </tr>
-
               ))}
 
             </tbody>
@@ -719,3 +730,4 @@ export default function MemosView({
     </div>
   )
 }
+
