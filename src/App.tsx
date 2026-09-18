@@ -12,7 +12,6 @@ import {
   readFileAsDataUrl, getAreaDestino, getRemitenteNombre 
 } from './utils/expedienteHelpers'
 
-// Vistas
 import DashboardView from './components/views/DashboardView'
 import ExpedientesView from './components/views/ExpedientesView'
 import MemosView from './components/views/MemosView'
@@ -41,12 +40,16 @@ export default function App() {
   const [pendingAction, setPendingAction] = useState<{ type: 'derive' | 'complete' | 'archive'; id: string; area?: string } | null>(null)
 
   const [memos, setMemos] = useState<Memo[]>([])
+  const [expedienteDocumentos, setExpedienteDocumentos] = useState<
+  { expedienteId: string; tipoDocumento: 'Memo' | 'Oficio' }[]
+>([])
   const [memoNro, setMemoNro] = useState('')
   const [memoDestinatario, setMemoDestinatario] = useState('')
   const [memoAsunto, setMemoAsunto] = useState('')
   const [memoSecretaria, setMemoSecretaria] = useState('')
   const [memoFecha, setMemoFecha] = useState(todayInputValue())
   const [showMemoForm, setShowMemoForm] = useState(false)
+  const [showMemoSelector, setShowMemoSelector] = useState(false)
   const [memoAreaDestino, setMemoAreaDestino] = useState('')
   const [memoFormData, setMemoFormData] = useState<{ nroMemo: string; fecha: string; destinatario: string; asunto: string; secretaria: string; areaDestino: string } | null>(null)
 
@@ -151,6 +154,23 @@ export default function App() {
         }))
         setMemos(memosNormalizados)
       }
+
+      // Cargar el tipo de documento asignado a cada expediente
+      const { data: documentosData, error: documentosError } = await supabase
+        .from('expediente_documentos')
+        .select('expediente_id, tipo_documento')
+
+      if (documentosError) {
+        console.error('Error cargando tipos de documento:', documentosError)
+      } else if (documentosData) {
+        setExpedienteDocumentos(
+          documentosData.map((item: any) => ({
+            expedienteId: String(item.expediente_id),
+            tipoDocumento: item.tipo_documento as 'Memo' | 'Oficio'
+          }))
+        )
+      }
+
       setLoadingDb(false)
     }
     cargarDeSupabase()
@@ -362,65 +382,197 @@ export default function App() {
     setPendingAction(null)
   }
 
-  const openDocumentType = (id: string, tipo: string) => {
-    if (!tipo) { notify('Seleccione el tipo de documento'); return }
-    const expediente = expedientes.find(item => item.id === id)
-    if (!expediente) { notify('Expediente no encontrado'); return }
-    if (tipo === 'Memo') { setMemoExpediente(expediente); setView('memos'); return }
-    if (tipo === 'Oficio') { notify('La vista de Oficios todavía está en desarrollo'); return }
+  const openDocumentType = async (id: string, tipo: string) => {
+  if (!tipo) {
+    notify('Seleccione el tipo de documento')
+    return
   }
 
-  const openNewMemo = () => {
-    if (!memoExpediente) { notify('No se seleccionó ningún expediente'); return }
-    setMemoNro(''); setMemoFecha(todayInputValue()); setMemoDestinatario(''); setMemoAsunto(memoExpediente.asunto || ''); setMemoSecretaria(''); setMemoAreaDestino('')
-    setShowMemoForm(true)
+  const expediente = expedientes.find(item => item.id === id)
+
+  if (!expediente) {
+    notify('Expediente no encontrado')
+    return
   }
+
+  const expedienteId = Number(expediente.id)
+
+  if (Number.isNaN(expedienteId)) {
+    notify('El ID del expediente no es válido')
+    return
+  }
+
+  try {
+    const { data, error } = await supabase.rpc(
+      'asignar_tipo_documento',
+      {
+        p_expediente_id: expedienteId,
+        p_tipo_documento: tipo
+      }
+    )
+
+    if (error) {
+      console.error('Error asignando tipo de documento:', error)
+      notify(error.message)
+      return
+    }
+
+    if (data) {
+      setExpedienteDocumentos(prev => [
+        ...prev,
+        {
+          expedienteId: String(data.expediente_id),
+          tipoDocumento: data.tipo_documento as 'Memo' | 'Oficio'
+        }
+      ])
+    }
+
+        if (tipo === 'Memo') {
+      setMemoExpediente(expediente)
+      setShowMemoSelector(false)
+      setShowMemoForm(true)
+      setView('memos')
+      return
+    }
+
+    if (tipo === 'Oficio') {
+      notify('Oficio asignado correctamente. La vista de Oficios todavía está en desarrollo.')
+      return
+    }
+
+  } catch (error) {
+    console.error('Error inesperado asignando documento:', error)
+    notify('No se pudo asignar el tipo de documento')
+  }
+}
+  const openNewMemo = () => {
+  setMemoNro('')
+  setMemoFecha(todayInputValue())
+  setMemoDestinatario('')
+  setMemoAsunto(memoExpediente?.asunto || '')
+  setMemoSecretaria('')
+  setMemoAreaDestino('')
+
+  if (memoExpediente) {
+    setShowMemoSelector(false)
+    setShowMemoForm(true)
+    return
+  }
+
+  setShowMemoSelector(true)
+  setShowMemoForm(false)
+}
 
   const cancelNewMemo = () => setShowMemoForm(false)
 
   const saveNewMemo = async () => {
-    if (!memoExpediente) { notify('No se seleccionó ningún expediente'); return }
-    if (!memoNro.trim() || !memoFecha) { notify('Complete los campos obligatorios del Memo'); return }
-    const expedienteId = Number(memoExpediente.id)
-    if (Number.isNaN(expedienteId)) { notify('El ID del expediente no es válido'); return }
-
-    const nroExpediente = memoExpediente.nroExp.startsWith('EXP-') ? memoExpediente.nroExp : `EXP-2026-${memoExpediente.nroExp.padStart(5, '0')}`
-    setIsSaving(true)
-
-    try {
-      const { data, error } = await supabase.from('memos').insert({
-        nro_memo: memoNro.trim(), expediente_id: expedienteId, nro_expediente: nroExpediente,
-        fecha: memoFecha, destinatario: memoDestinatario.trim() || null, asunto: memoAsunto.trim() || null,
-        secretaria: memoSecretaria.trim() || null, area_destino: memoAreaDestino.trim() || null,
-        recepcionado_por: null, fecha_recepcion: null, estado: 'Enviado'
-      }).select().single()
-
-      if (error) {
-        console.error('Error guardando Memo:', error)
-        notify('No se pudo guardar el Memo')
-        return
-      }
-
-      if (data) {
-        const memoNuevo: Memo = {
-          id: String(data.id), nroMemo: data.nro_memo || '', expedienteId: String(data.expediente_id),
-          nroExpediente: data.nro_expediente || '', fecha: data.fecha || '', destinatario: data.destinatario || '',
-          asunto: data.asunto || '', secretaria: data.secretaria || '', areaDestino: data.area_destino || '',
-          recepcionadoPor: data.recepcionado_por || '', fechaRecepcion: data.fecha_recepcion || '',
-          estado: data.estado || 'Enviado', createdAt: data.created_at
-        }
-        setMemos(prev => [memoNuevo, ...prev])
-      }
-      setShowMemoForm(false)
-      notify('Memo registrado correctamente')
-    } catch (error) {
-      console.error('Error inesperado guardando Memo:', error)
-      notify('Ocurrió un error al guardar el Memo')
-    } finally {
-      setIsSaving(false)
-    }
+  if (!memoExpediente) {
+    notify('No se seleccionó ningún expediente')
+    return
   }
 
+  if (!memoFecha) {
+    notify('Ingrese la fecha del Memo')
+    return
+  }
+
+  const expedienteId = Number(memoExpediente.id)
+
+  if (Number.isNaN(expedienteId)) {
+    notify('El ID del expediente no es válido')
+    return
+  }
+
+  setIsSaving(true)
+
+  try {
+    // Verificar si el expediente ya tiene un tipo de documento asignado
+    const { data: documentoExistente, error: documentoError } =
+      await supabase
+        .from('expediente_documentos')
+        .select('tipo_documento')
+        .eq('expediente_id', expedienteId)
+        .maybeSingle()
+
+    if (documentoError) {
+      console.error('Error verificando documento:', documentoError)
+      notify('No se pudo verificar el tipo de documento del expediente')
+      return
+    }
+
+    // Si ya tiene un Memo, no permitir otro
+    if (documentoExistente?.tipo_documento === 'Memo') {
+      notify('Este expediente ya tiene un Memo registrado. No se puede crear otro.')
+      setShowMemoForm(false)
+      return
+    }
+
+    // Si tiene Oficio, tampoco puede convertirse en Memo
+    if (documentoExistente?.tipo_documento === 'Oficio') {
+      notify('Este expediente ya está registrado como Oficio. No se puede crear un Memo.')
+      setShowMemoForm(false)
+      return
+    }
+
+    const nroExpediente = memoExpediente.nroExp.startsWith('EXP-')
+      ? memoExpediente.nroExp
+      : `EXP-2026-${memoExpediente.nroExp.padStart(5, '0')}`
+
+    const { data, error } = await supabase.rpc('registrar_memo', {
+      p_expediente_id: expedienteId,
+      p_nro_expediente: nroExpediente,
+      p_fecha: memoFecha,
+      p_destinatario: memoDestinatario.trim() || '',
+      p_asunto: memoAsunto.trim() || '',
+      p_secretaria: memoSecretaria.trim() || '',
+      p_area_destino: memoAreaDestino.trim() || ''
+    })
+
+    if (error) {
+      console.error('Error guardando Memo:', error)
+      notify(`No se pudo guardar el Memo: ${error.message}`)
+      return
+    }
+
+    if (data) {
+      const memoNuevo: Memo = {
+        id: String(data.id),
+        nroMemo: data.nro_memo || '',
+        expedienteId: String(data.expediente_id),
+        nroExpediente: data.nro_expediente || '',
+        fecha: data.fecha || '',
+        destinatario: data.destinatario || '',
+        asunto: data.asunto || '',
+        secretaria: data.secretaria || '',
+        areaDestino: data.area_destino || '',
+        recepcionadoPor: data.recepcionado_por || '',
+        fechaRecepcion: data.fecha_recepcion || '',
+        estado: data.estado || 'Enviado',
+        createdAt: data.created_at
+      }
+
+      setMemos(prev => [memoNuevo, ...prev])
+
+      setMemoNro('')
+      setMemoFecha(todayInputValue())
+      setMemoDestinatario('')
+      setMemoAsunto('')
+      setMemoSecretaria('')
+      setMemoAreaDestino('')
+
+      // Muy importante: cerrar el formulario después de registrar
+      setShowMemoForm(false)
+
+      notify(`Memo ${memoNuevo.nroMemo} registrado correctamente`)
+    }
+
+  } catch (error) {
+    console.error('Error inesperado guardando Memo:', error)
+    notify('Ocurrió un error al guardar el Memo')
+  } finally {
+    setIsSaving(false)
+  }
+}
   const completeExpediente = (id: string) => {
     if (!userPermissions?.puedeAtender) { notify('No tiene permisos para atender expedientes'); return }
     const expediente = expedientes.find(e => e.id === id)
@@ -470,11 +622,46 @@ export default function App() {
         </div>
         <div className="menu-label">MENÚ PRINCIPAL</div>
         <nav className="nav-menu">
-          <NavItem icon="⌂" label="Inicio" active={view === 'inicio'} onClick={() => setView('inicio')} />
-          <NavItem icon="▤" label="Expedientes" active={view === 'expedientes'} onClick={() => setView('expedientes')} count={expedientes.filter(item => item.estado === 'Pendiente').length} />
-          <NavItem icon="＋" label="Nuevo expediente" active={view === 'nuevo'} onClick={() => setView('nuevo')} />
-          <NavItem icon="▥" label="Reportes" active={view === 'reportes'} onClick={() => setView('reportes')} />
-        </nav>
+  <NavItem
+    icon="⌂"
+    label="Inicio"
+    active={view === 'inicio'}
+    onClick={() => setView('inicio')}
+  />
+
+  <NavItem
+    icon="▤"
+    label="Expedientes"
+    active={view === 'expedientes'}
+    onClick={() => setView('expedientes')}
+    count={expedientes.filter(item => item.estado === 'Pendiente').length}
+  />
+  <NavItem
+    icon="▥"
+    label="Memos"
+    active={view === 'memos'}
+    onClick={() => {
+      setMemoExpediente(null)
+      setShowMemoForm(false)
+      setView('memos')
+    }}
+    count={memos.length}
+  />
+
+  <NavItem
+    icon="＋"
+    label="Nuevo expediente"
+    active={view === 'nuevo'}
+    onClick={() => setView('nuevo')}
+  />
+
+  <NavItem
+    icon="▥"
+    label="Reportes"
+    active={view === 'reportes'}
+    onClick={() => setView('reportes')}
+  />
+</nav>
         <div className="sidebar-footer">
           <div className="secure-note">
             <span>⌁</span>
@@ -529,19 +716,60 @@ export default function App() {
                   items={filteredExpedientes} query={query} setQuery={setQuery} areaFilter={areaFilter} 
                   areaOptions={areaOptions} setAreaFilter={setAreaFilter} remitenteFilter={remitenteFilter} 
                   setRemitenteFilter={setRemitenteFilter} statusFilter={statusFilter} setStatusFilter={setStatusFilter} 
-                  onNew={() => setView('nuevo')} onOpenDocumentType={openDocumentType} onComplete={completeExpediente} onTracking={setTrackingId} 
+                  onNew={() => setView('nuevo')} onOpenDocumentType={openDocumentType} onComplete={completeExpediente} expedienteDocumentos={expedienteDocumentos} onTracking={setTrackingId} 
                 />
               )}
-              {view === 'memos' && (
-                <MemosView 
-                  expediente={memoExpediente} memos={memos} onBack={() => setView('expedientes')} onNewMemo={openNewMemo} 
-                  showMemoForm={showMemoForm} memoNro={memoNro} setMemoNro={setMemoNro} memoFecha={memoFecha} 
-                  setMemoFecha={setMemoFecha} memoDestinatario={memoDestinatario} setMemoDestinatario={setMemoDestinatario} 
-                  memoAsunto={memoAsunto} setMemoAsunto={setMemoAsunto} memoSecretaria={memoSecretaria} 
-                  setMemoSecretaria={setMemoSecretaria} memoAreaDestino={memoAreaDestino} setMemoAreaDestino={setMemoAreaDestino} 
-                  onSaveMemo={saveNewMemo} onCancelMemo={cancelNewMemo} 
-                />
-              )}
+         {view === 'memos' && (
+  <MemosView
+    expediente={memoExpediente}
+    expedientes={expedientes}
+    areaOptions={areaOptions}
+    memos={memos}
+    showMemoSelector={showMemoSelector}
+    onBack={() => {
+      setMemoExpediente(null)
+      setShowMemoForm(false)
+      setShowMemoSelector(false)
+      setView('expedientes')
+    }}
+    onNewMemo={openNewMemo}
+    onCloseMemoSelector={() => {
+      setShowMemoSelector(false)
+    }}
+    showMemoForm={showMemoForm}
+    memoNro={memoNro}
+    setMemoNro={setMemoNro}
+    memoFecha={memoFecha}
+    setMemoFecha={setMemoFecha}
+    memoDestinatario={memoDestinatario}
+    setMemoDestinatario={setMemoDestinatario}
+    memoAsunto={memoAsunto}
+    setMemoAsunto={setMemoAsunto}
+    memoSecretaria={memoSecretaria}
+    setMemoSecretaria={setMemoSecretaria}
+    memoAreaDestino={memoAreaDestino}
+    setMemoAreaDestino={setMemoAreaDestino}
+    onSaveMemo={saveNewMemo}
+    onCancelMemo={cancelNewMemo}
+    onSelectExpediente={(expediente) => {
+      setMemoExpediente(expediente)
+
+      if (expediente) {
+        setMemoNro('')
+        setMemoFecha(todayInputValue())
+        setMemoDestinatario('')
+        setMemoAsunto(expediente.asunto || '')
+        setMemoSecretaria('')
+        setMemoAreaDestino('')
+        setShowMemoSelector(false)
+        setShowMemoForm(true)
+      } else {
+        setShowMemoSelector(false)
+        setShowMemoForm(false)
+      }
+    }}
+  />
+)}
               {view === 'nuevo' && <NewExpedienteView onSubmit={addExpediente} onCancel={() => setView('inicio')} isSaving={isSaving} />}
               {view === 'reportes' && <ReportsView expedientes={expedientes} notify={notify} />}
             </>

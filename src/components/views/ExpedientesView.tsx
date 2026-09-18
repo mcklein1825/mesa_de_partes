@@ -7,10 +7,15 @@ import StatusBadge from '../common/StatusBadge'
 export default function ExpedientesView({
   items, query, setQuery, areaFilter, areaOptions, setAreaFilter,
   remitenteFilter, setRemitenteFilter, statusFilter, setStatusFilter,
-  onNew, onOpenDocumentType, onComplete, onTracking
+  onNew, onOpenDocumentType, onComplete, onTracking,
+  expedienteDocumentos
 }: {
   items: Expediente[]
   query: string
+    expedienteDocumentos: {
+    expedienteId: string
+    tipoDocumento: 'Memo' | 'Oficio'
+  }[]
   setQuery: (v: string) => void
   areaFilter: string
   areaOptions: string[]
