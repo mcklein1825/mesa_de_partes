@@ -683,10 +683,45 @@ export default function App() {
             <strong>Mesa de Partes Virtual</strong>
           </div>
           <nav className="portal-links">
-            <button className={view === 'nuevo' ? 'selected' : ''} onClick={() => setView('nuevo')}>Registro de Expediente</button>
-            <button className={view === 'expedientes' ? 'selected' : ''} onClick={() => setView('expedientes')}>Consulta de Expedientes</button>
-            <button className={view === 'reportes' ? 'selected' : ''} onClick={() => setView('reportes')}>Reportes</button>
-            <button className={view === 'inicio' ? 'selected' : ''} onClick={() => setView('inicio')}>Inicio</button>
+            <button
+              className={view === 'nuevo' ? 'selected' : ''}
+              onClick={() => setView('nuevo')}
+            >
+              Registro de Expediente
+            </button>
+
+            <button
+              className={view === 'expedientes' ? 'selected' : ''}
+              onClick={() => setView('expedientes')}
+            >
+              Consulta de Expedientes
+            </button>
+
+            <button
+              className={view === 'memos' ? 'selected' : ''}
+              onClick={() => {
+                setMemoExpediente(null)
+                setShowMemoForm(false)
+                setShowMemoSelector(false)
+                setView('memos')
+              }}
+            >
+              Memos
+            </button>
+
+            <button
+              className={view === 'reportes' ? 'selected' : ''}
+              onClick={() => setView('reportes')}
+            >
+              Reportes
+            </button>
+
+            <button
+              className={view === 'inicio' ? 'selected' : ''}
+              onClick={() => setView('inicio')}
+            >
+              Inicio
+            </button>
           </nav>
           <div className="top-actions">
             <button className="profile-button" onClick={() => setShowProfile(!showProfile)}>
