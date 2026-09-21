@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo, useRef, useCallback, FormEvent } from 'react'
 import { supabase } from './lib/supabaseClient'
 import UserSelectModal from './components/UserSelectModal'
-
+import OficiosView from './components/views/OficiosView'
+import NuevoOficioView from './components/views/NuevoOficioView'
 // Tipos y Constantes
-import { User, View, Expediente, Memo } from './types'
+import { User, View, Expediente, Memo, Oficio } from './types'
 import { ROLE_PERMISSIONS, areas, AREA_RESPONSABLES } from './constants'
 
 // Utilidades
@@ -27,6 +28,7 @@ export default function App() {
   const [view, setView] = useState<View>('nuevo')
   const [expedientes, setExpedientes] = useState<Expediente[]>([])
   const [memoExpediente, setMemoExpediente] = useState<Expediente | null>(null)
+  const [oficioExpediente, setOficioExpediente] = useState<Expediente | null>(null)
   const [loadingDb, setLoadingDb] = useState(true)
 
   const [query, setQuery] = useState('')
@@ -40,6 +42,8 @@ export default function App() {
   const [pendingAction, setPendingAction] = useState<{ type: 'derive' | 'complete' | 'archive'; id: string; area?: string } | null>(null)
 
   const [memos, setMemos] = useState<Memo[]>([])
+  const [oficios, setOficios] = useState<Oficio[]>([])
+  const [showOficioForm, setShowOficioForm] = useState(false)
   const [expedienteDocumentos, setExpedienteDocumentos] = useState<
   { expedienteId: string; tipoDocumento: 'Memo' | 'Oficio' }[]
 >([])
@@ -141,7 +145,38 @@ export default function App() {
         setExpedientes(normalizados)
       }
 
-      const { data: memosData, error: memosError } = await supabase.from('memos').select('*').order('fecha', { ascending: false })
+      const { data: memosData, error: memosError } =
+  await supabase
+    .from('memos')
+    .select('*')
+    .order('id', { ascending: false })
+
+console.log('MEMOS CARGADOS DESDE SUPABASE:', memosData)
+console.log('ERROR MEMOS:', memosError)
+
+if (memosError) {
+  console.error('Error cargando memos:', memosError)
+} else if (memosData) {
+  const memosNormalizados: Memo[] = memosData.map((m: any) => ({
+    id: String(m.id),
+    nroMemo: m.nro_memo || '',
+    expedienteId: String(m.expediente_id),
+    nroExpediente: m.nro_expediente || '',
+    fecha: m.fecha || '',
+    destinatario: m.destinatario || '',
+    asunto: m.asunto || '',
+    secretaria: m.secretaria || '',
+    areaDestino: m.area_destino || '',
+    recepcionadoPor: m.recepcionado_por || '',
+    fechaRecepcion: m.fecha_recepcion || '',
+    estado: m.estado || 'Enviado',
+    createdAt: m.created_at
+  }))
+
+  console.log('MEMOS NORMALIZADOS:', memosNormalizados)
+
+  setMemos(memosNormalizados)
+}
       if (memosError) {
         console.error('Error cargando memos:', memosError)
       } else if (memosData) {
@@ -154,7 +189,35 @@ export default function App() {
         }))
         setMemos(memosNormalizados)
       }
+      const { data: oficiosData, error: oficiosError } = await supabase
+  .from('oficios')
+  .select('*')
+  .order('id', { ascending: false })
 
+if (oficiosError) {
+  console.error('Error cargando oficios:', oficiosError)
+} else if (oficiosData) {
+  const oficiosNormalizados: Oficio[] = oficiosData.map((item: any) => ({
+    id: String(item.id),
+    nRegistro: String(item.n_registro ?? ''),
+    expedienteId: String(item.expediente_id ?? ''),
+    nroExpediente: String(item.nro_expediente ?? ''),
+    fecha: item.fecha ?? '',
+    destinatario: item.destinatario ?? '',
+    asuntoTipo: item.asunto_tipo ?? '',
+    asuntoDetalle: item.asunto_detalle ?? '',
+    responsable: item.responsable ?? '',
+    codigoOad: item.codigo_oad ?? '',
+    codigoOgesup: item.codigo_ogesup ?? '',
+    anio: Number(item.anio ?? new Date().getFullYear()),
+    areaDestino: item.area_destino ?? '',
+    estado: item.estado ?? 'Enviado',
+    fechaRegistro: item.fecha_registro ?? '',
+    createdAt: item.created_at ?? ''
+  }))
+
+  setOficios(oficiosNormalizados)
+}
       // Cargar el tipo de documento asignado a cada expediente
       const { data: documentosData, error: documentosError } = await supabase
         .from('expediente_documentos')
@@ -436,10 +499,10 @@ export default function App() {
     }
 
     if (tipo === 'Oficio') {
-      notify('Oficio asignado correctamente. La vista de Oficios todavía está en desarrollo.')
+      setOficioExpediente(expediente)
+      setView('oficios')
       return
     }
-
   } catch (error) {
     console.error('Error inesperado asignando documento:', error)
     notify('No se pudo asignar el tipo de documento')
@@ -648,6 +711,15 @@ export default function App() {
   }}
   count={memos.length}
 />
+  <NavItem
+  icon="▤"
+  label="Oficios"
+  active={view === 'oficios'}
+  onClick={() => {
+    setView('oficios')
+  }}
+  count={oficios.length}
+/>
 
   <NavItem
     icon="＋"
@@ -802,6 +874,93 @@ export default function App() {
       } else {
         setShowMemoSelector(false)
         setShowMemoForm(false)
+      }
+    }}
+  />
+)}
+{view === 'oficios' && !showOficioForm && (
+  <OficiosView
+    oficios={oficios}
+    oficioExpediente={oficioExpediente}
+    onNuevoOficio={() => {
+      setShowOficioForm(true)
+    }}
+  />
+)}
+
+{view === 'oficios' && showOficioForm && (
+  <NuevoOficioView
+    expediente={oficioExpediente}
+    onCancelar={() => {
+      setShowOficioForm(false)
+      setOficioExpediente(null)
+    }}
+    onGuardar={async datos => {
+      try {
+        const { data, error } = await supabase
+          .from('oficios')
+          .insert({
+            expediente_id: Number(datos.expedienteId),
+            nro_expediente: datos.nroExpediente,
+            fecha: datos.fecha,
+            destinatario: datos.destinatario,
+            asunto_tipo: datos.asuntoTipo,
+            asunto_detalle: datos.asuntoDetalle,
+            responsable: datos.responsable,
+            codigo_oad: datos.codigoOad,
+            codigo_ogesup: datos.codigoOgesup,
+            anio: datos.anio,
+            area_destino: datos.areaDestino
+          })
+          .select()
+          .single()
+
+        if (error) {
+          console.error('Error guardando oficio:', error)
+          alert(`No se pudo guardar el oficio: ${error.message}`)
+          return
+        }
+
+        console.log('Oficio guardado:', data)
+
+        const { data: oficiosActualizados, error: errorOficios } = await supabase
+          .from('oficios')
+          .select('*')
+          .order('id', { ascending: false })
+
+        if (errorOficios) {
+          console.error('Error actualizando lista de oficios:', errorOficios)
+        } else if (oficiosActualizados) {
+          const oficiosNormalizados: Oficio[] = oficiosActualizados.map((item: any) => ({
+            id: String(item.id),
+            nRegistro: String(item.n_registro ?? ''),
+            expedienteId: String(item.expediente_id ?? ''),
+            nroExpediente: String(item.nro_expediente ?? ''),
+            fecha: item.fecha ?? '',
+            destinatario: item.destinatario ?? '',
+            asuntoTipo: item.asunto_tipo ?? '',
+            asuntoDetalle: item.asunto_detalle ?? '',
+            responsable: item.responsable ?? '',
+            codigoOad: item.codigo_oad ?? '',
+            codigoOgesup: item.codigo_ogesup ?? '',
+            anio: Number(item.anio ?? new Date().getFullYear()),
+            areaDestino: item.area_destino ?? '',
+            estado: item.estado ?? 'Enviado',
+            fechaRegistro: item.fecha_registro ?? '',
+            createdAt: item.created_at ?? ''
+          }))
+
+          setOficios(oficiosNormalizados)
+        }
+
+        setShowOficioForm(false)
+        setOficioExpediente(null)
+        setView('oficios')
+
+        alert('Oficio registrado correctamente.')
+      } catch (error) {
+        console.error('Error inesperado guardando oficio:', error)
+        alert('Ocurrió un error al guardar el oficio.')
       }
     }}
   />

@@ -1,5 +1,5 @@
 export type Status = 'Pendiente' | 'En atención' | 'Atendido' | 'Archivado'
-export type View = 'inicio' | 'expedientes' | 'nuevo' | 'reportes' | 'memos'
+export type View = 'inicio' | 'expedientes' | 'nuevo' | 'reportes' | 'memos' | 'oficios'
 export type Role = 'MesaPartes' | 'AreaOperativa' | 'Administrador' | 'Auditor'
 
 export type User = {
@@ -36,6 +36,25 @@ export type Memo = {
   recepcionadoPor: string
   fechaRecepcion: string
   estado: 'Enviado' | 'Recepcionado' | 'Atendido' | 'Anulado'
+  createdAt?: string
+}
+
+export type Oficio = {
+  id: string
+  nRegistro: string
+  expedienteId: string
+  nroExpediente: string
+  fecha: string
+  destinatario: string
+  asuntoTipo: string
+  asuntoDetalle: string
+  responsable: string
+  codigoOad: string
+  codigoOgesup: string
+  anio: number
+  areaDestino: string
+  estado: 'Enviado' | 'Recepcionado' | 'Atendido' | 'Anulado'
+  fechaRegistro?: string
   createdAt?: string
 }
 
