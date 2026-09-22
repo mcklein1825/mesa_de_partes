@@ -11,12 +11,14 @@ export default function ExpedienteSelector({
   expedientes,
   value,
   onChange,
-  areaOptions
+  areaOptions,
+  expedientesExcluidos = []
 }: {
   expedientes: Expediente[]
   value: Expediente | null
   onChange: (expediente: Expediente | null) => void
   areaOptions: string[]
+  expedientesExcluidos?: string[]
 }) {
   const [query, setQuery] = useState('')
   const [areaFilter, setAreaFilter] = useState('Todas')
@@ -32,6 +34,9 @@ export default function ExpedienteSelector({
 
     return expedientes
       .filter(item => {
+        if (expedientesExcluidos.includes(String(item.id))) {
+          return false
+        }
         const nroExp = formatNroExp(item.nroExp).toLowerCase()
         const nroOriginal = item.nroExp.toLowerCase()
         const asunto = (item.asunto || '').toLowerCase()

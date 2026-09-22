@@ -135,18 +135,12 @@ export default function ExpedientesView({
                     <td className="actions-cell">
                       <button className="tracking-button" onClick={() => onTracking(item.id)}>◉ Ver seguimiento</button>
                       {item.estado === 'Pendiente' ? (
-                        <div className="document-type-actions">
-                          <select
-                            className="action-area-select"
-                            value={selectedDocumentTypeById[item.id] || ''}
-                            onChange={event => setSelectedDocumentTypeById({ ...selectedDocumentTypeById, [item.id]: event.target.value })}
-                          >
-                            <option value="">Tipo de documento...</option>
-                            <option value="Oficio">Oficio</option>
-                            <option value="Memo">Memo</option>
-                          </select>
-                          <button className="action-link" onClick={() => onOpenDocumentType(item.id, selectedDocumentTypeById[item.id] || '')}>Abrir</button>
-                        </div>
+                        <button
+                          className="action-link"
+                          onClick={() => onOpenDocumentType(item.id, 'Memo')}
+                        >
+                          Crear Memo
+                        </button>
                       ) : item.estado === 'En atención' ? (
                         <button className="action-link" onClick={() => onComplete(item.id)}>Atender</button>
                       ) : null}

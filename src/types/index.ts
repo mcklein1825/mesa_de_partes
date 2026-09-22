@@ -22,8 +22,8 @@ export type HistoryEntry = {
   responsable: string
   responsableDestino?: string
 }
-
 export type Memo = {
+
   id: string
   nroMemo: string
   expedienteId: string
@@ -33,12 +33,16 @@ export type Memo = {
   asunto: string
   secretaria: string
   areaDestino: string
+  responsable: string
+  cargo: string
+  instruccion: string
+  plazo: string
   recepcionadoPor: string
   fechaRecepcion: string
   estado: 'Enviado' | 'Recepcionado' | 'Atendido' | 'Anulado'
   createdAt?: string
-}
 
+}
 export type Oficio = {
   id: string
   nRegistro: string

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Expediente, Memo } from '../../types'
 import ExpedienteSelector from '../common/ExpedienteSelector'
+import { obtenerResponsablePorArea } from '../../utils/areasResponsables'
 
 export default function MemosView({
   expediente,
@@ -22,6 +23,10 @@ export default function MemosView({
   setMemoSecretaria,
   memoAreaDestino,
   setMemoAreaDestino,
+  memoInstruccion,
+  setMemoInstruccion,
+  memoPlazo,
+  setMemoPlazo,
   onSaveMemo,
   onCancelMemo,
   onSelectExpediente,
@@ -47,6 +52,10 @@ export default function MemosView({
   setMemoSecretaria: (value: string) => void
   memoAreaDestino: string
   setMemoAreaDestino: (value: string) => void
+  memoInstruccion: string
+  setMemoInstruccion: (value: string) => void
+  memoPlazo: string
+  setMemoPlazo: (value: string) => void
   onSaveMemo: () => void
   onCancelMemo: () => void
   onSelectExpediente: (expediente: Expediente | null) => void
@@ -59,7 +68,7 @@ export default function MemosView({
   const [page, setPage] = useState(1)
 
   const pageSize = 20
-
+  const responsableMemo = obtenerResponsablePorArea(memoAreaDestino)
   /*
    * =========================================================
    * OPCIONES DE FILTROS
@@ -96,6 +105,9 @@ export default function MemosView({
       )
     ).sort()
   }, [memos])
+  const expedientesConMemo = useMemo(() => {
+  return memos.map(memo => String(memo.expedienteId))
+}, [memos])
 
   /*
    * =========================================================
@@ -237,6 +249,7 @@ export default function MemosView({
               onSelectExpediente(selectedExpediente)
             }}
             areaOptions={areaOptions}
+            expedientesExcluidos={expedientesConMemo}
           />
 
         </div>
@@ -390,13 +403,46 @@ export default function MemosView({
             <div>
               <label>Área destino</label>
 
-              <input
-                type="text"
+              <select
                 value={memoAreaDestino}
                 onChange={e =>
                   setMemoAreaDestino(e.target.value)
                 }
-                placeholder="Área de destino"
+              >
+                <option value="">
+                  Seleccione un área
+                </option>
+
+                {areaOptions.map(area => (
+                  <option
+                    key={area}
+                    value={area}
+                  >
+                    {area}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label>Responsable</label>
+
+              <input
+                type="text"
+                value={responsableMemo?.responsable || ''}
+                readOnly
+                placeholder="Se asignará según el área"
+              />
+            </div>
+
+            <div>
+              <label>Cargo</label>
+
+              <input
+                type="text"
+                value={responsableMemo?.cargo || ''}
+                readOnly
+                placeholder="Se asignará según el área"
               />
             </div>
 
@@ -412,7 +458,31 @@ export default function MemosView({
                 placeholder="Asunto del Memo"
               />
             </div>
+            <div>
+              <label>Instrucción</label>
 
+              <textarea
+                value={memoInstruccion}
+                onChange={e =>
+                  setMemoInstruccion(e.target.value)
+                }
+                placeholder="Indique las instrucciones para el área responsable"
+                rows={4}
+              />
+            </div>
+
+            <div>
+              <label>Plazo</label>
+
+              <input
+                type="text"
+                value={memoPlazo}
+                onChange={e =>
+                  setMemoPlazo(e.target.value)
+                }
+                placeholder="Ej. 5 días hábiles"
+              />
+            </div>
           </div>
 
           <div
@@ -587,6 +657,9 @@ export default function MemosView({
                 <th>ASUNTO</th>
                 <th>SECRETARÍA</th>
                 <th>ÁREA DESTINO</th>
+                <th>RESPONSABLE</th>
+                <th>CARGO</th>
+                <th>PLAZO</th>
                 <th>RECEPCIONADO POR</th>
                 <th>FECHA RECEPCIÓN</th>
                 <th>ESTADO</th>
@@ -641,18 +714,40 @@ export default function MemosView({
                     </span>
                   </td>
 
-                  <td>
-                    <span
-                      className="table-cell-text"
-                      title={memo.areaDestino}
-                    >
-                      {memo.areaDestino || '—'}
-                    </span>
-                  </td>
+                 <td>
+                  <span
+                    className="table-cell-text"
+                    title={memo.areaDestino}
+                  >
+                    {memo.areaDestino || '—'}
+                  </span>
+                </td>
 
-                  <td>
-                    {memo.recepcionadoPor || '—'}
-                  </td>
+                <td>
+                  <span
+                    className="table-cell-text"
+                    title={memo.responsable || ''}
+                  >
+                    {memo.responsable || '—'}
+                  </span>
+                </td>
+
+                <td>
+                  <span
+                    className="table-cell-text"
+                    title={memo.cargo || ''}
+                  >
+                    {memo.cargo || '—'}
+                  </span>
+                </td>
+
+                <td>
+                  {memo.plazo || '—'}
+                </td>
+
+                <td>
+                  {memo.recepcionadoPor || '—'}
+                </td>
 
                   <td>
                     {memo.fechaRecepcion || '—'}

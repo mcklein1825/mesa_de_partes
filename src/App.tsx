@@ -12,6 +12,7 @@ import {
   normalizeExpediente, formatDate, todayInputValue, addDays, 
   readFileAsDataUrl, getAreaDestino, getRemitenteNombre 
 } from './utils/expedienteHelpers'
+import { obtenerResponsablePorArea } from './utils/areasResponsables'
 
 import DashboardView from './components/views/DashboardView'
 import ExpedientesView from './components/views/ExpedientesView'
@@ -55,6 +56,18 @@ export default function App() {
   const [showMemoForm, setShowMemoForm] = useState(false)
   const [showMemoSelector, setShowMemoSelector] = useState(false)
   const [memoAreaDestino, setMemoAreaDestino] = useState('')
+  const [memoResponsable, setMemoResponsable] = useState('')
+  const [memoCargo, setMemoCargo] = useState('')
+  const [memoInstruccion, setMemoInstruccion] = useState('')
+  const [memoPlazo, setMemoPlazo] = useState('')
+  const responsableMemo = useMemo(
+  () => obtenerResponsablePorArea(memoAreaDestino),
+  [memoAreaDestino]
+)
+useEffect(() => {
+  setMemoResponsable(responsableMemo?.responsable || '')
+  setMemoCargo(responsableMemo?.cargo || '')
+}, [responsableMemo])
   const [memoFormData, setMemoFormData] = useState<{ nroMemo: string; fecha: string; destinatario: string; asunto: string; secretaria: string; areaDestino: string } | null>(null)
 
   const notify = useCallback((message: string) => {
@@ -158,20 +171,24 @@ if (memosError) {
   console.error('Error cargando memos:', memosError)
 } else if (memosData) {
   const memosNormalizados: Memo[] = memosData.map((m: any) => ({
-    id: String(m.id),
-    nroMemo: m.nro_memo || '',
-    expedienteId: String(m.expediente_id),
-    nroExpediente: m.nro_expediente || '',
-    fecha: m.fecha || '',
-    destinatario: m.destinatario || '',
-    asunto: m.asunto || '',
-    secretaria: m.secretaria || '',
-    areaDestino: m.area_destino || '',
-    recepcionadoPor: m.recepcionado_por || '',
-    fechaRecepcion: m.fecha_recepcion || '',
-    estado: m.estado || 'Enviado',
-    createdAt: m.created_at
-  }))
+  id: String(m.id),
+  nroMemo: m.nro_memo || '',
+  expedienteId: String(m.expediente_id),
+  nroExpediente: m.nro_expediente || '',
+  fecha: m.fecha || '',
+  destinatario: m.destinatario || '',
+  asunto: m.asunto || '',
+  secretaria: m.secretaria || '',
+  areaDestino: m.area_destino || '',
+  responsable: m.responsable || '',
+  cargo: m.cargo || '',
+  instruccion: m.instruccion || '',
+  plazo: m.plazo || '',
+  recepcionadoPor: m.recepcionado_por || '',
+  fechaRecepcion: m.fecha_recepcion || '',
+  estado: m.estado || 'Enviado',
+  createdAt: m.created_at
+}))
 
   console.log('MEMOS NORMALIZADOS:', memosNormalizados)
 
@@ -181,11 +198,23 @@ if (memosError) {
         console.error('Error cargando memos:', memosError)
       } else if (memosData) {
         const memosNormalizados: Memo[] = memosData.map((m: any) => ({
-          id: String(m.id), nroMemo: m.nro_memo || '', expedienteId: String(m.expediente_id),
-          nroExpediente: m.nro_expediente || '', fecha: m.fecha || '', destinatario: m.destinatario || '',
-          asunto: m.asunto || '', secretaria: m.secretaria || '', areaDestino: m.area_destino || '',
-          recepcionadoPor: m.recepcionado_por || '', fechaRecepcion: m.fecha_recepcion || '',
-          estado: m.estado || 'Enviado', createdAt: m.created_at
+          id: String(m.id),
+          nroMemo: m.nro_memo || '',
+          expedienteId: String(m.expediente_id),
+          nroExpediente: m.nro_expediente || '',
+          fecha: m.fecha || '',
+          destinatario: m.destinatario || '',
+          asunto: m.asunto || '',
+          secretaria: m.secretaria || '',
+          areaDestino: m.area_destino || '',
+          responsable: m.responsable || '',
+          cargo: m.cargo || '',
+          instruccion: m.instruccion || '',
+          plazo: m.plazo || '',
+          recepcionadoPor: m.recepcionado_por || '',
+          fechaRecepcion: m.fecha_recepcion || '',
+          estado: m.estado || 'Enviado',
+          createdAt: m.created_at
         }))
         setMemos(memosNormalizados)
       }
@@ -401,8 +430,13 @@ if (oficiosError) {
     const { data: memoCreado, error: memoError } = await supabase.from('memos').insert({
       nro_memo: memoNro.trim(), expediente_id: expedienteId, nro_expediente: expediente.nroExp,
       fecha: memoFecha, destinatario: memoDestinatario.trim(), asunto: memoAsunto.trim(),
-      secretaria: memoSecretaria.trim(), area_destino: targetArea, recepcionado_por: '',
-      fecha_recepcion: null, estado: 'Enviado'
+      secretaria: memoSecretaria.trim(),
+      area_destino: targetArea,
+      responsable: responsable,
+      cargo: '',
+      recepcionado_por: '',
+      fecha_recepcion: null,
+      estado: 'Enviado'
     }).select().single()
 
     if (memoError) {
@@ -425,12 +459,33 @@ if (oficiosError) {
 
     if (memoCreado) {
       const nuevoMemo: Memo = {
-        id: String(memoCreado.id), nroMemo: memoCreado.nro_memo || memoNro.trim(),
-        expedienteId: String(memoCreado.expediente_id), nroExpediente: memoCreado.nro_expediente || expediente.nroExp,
-        fecha: memoCreado.fecha || memoFecha, destinatario: memoCreado.destinatario || memoDestinatario.trim(),
-        asunto: memoCreado.asunto || memoAsunto.trim(), secretaria: memoCreado.secretaria || memoSecretaria.trim(),
-        areaDestino: memoCreado.area_destino || targetArea, recepcionadoPor: memoCreado.recepcionado_por || '',
-        fechaRecepcion: memoCreado.fecha_recepcion || '', estado: memoCreado.estado || 'Enviado', createdAt: memoCreado.created_at
+
+        id: String(memoCreado.id),
+        nroMemo: memoCreado.nro_memo || memoNro.trim(),
+
+        expedienteId: String(memoCreado.expediente_id),
+        nroExpediente: memoCreado.nro_expediente || expediente.nroExp,
+
+        fecha: memoCreado.fecha || memoFecha,
+        destinatario: memoCreado.destinatario || memoDestinatario.trim(),
+
+        asunto: memoCreado.asunto || memoAsunto.trim(),
+        secretaria: memoCreado.secretaria || memoSecretaria.trim(),
+
+        areaDestino: memoCreado.area_destino || targetArea,
+
+        responsable: memoCreado.responsable || '',
+        cargo: memoCreado.cargo || '',
+
+        instruccion: memoCreado.instruccion || '',
+        plazo: memoCreado.plazo || '',
+
+        recepcionadoPor: memoCreado.recepcionado_por || '',
+        fechaRecepcion: memoCreado.fecha_recepcion || '',
+
+        estado: memoCreado.estado || 'Enviado',
+
+        createdAt: memoCreado.created_at
       }
       setMemos(prev => [nuevoMemo, ...prev])
     }
@@ -445,12 +500,7 @@ if (oficiosError) {
     setPendingAction(null)
   }
 
-  const openDocumentType = async (id: string, tipo: string) => {
-  if (!tipo) {
-    notify('Seleccione el tipo de documento')
-    return
-  }
-
+  const openDocumentType = (id: string, tipo: string) => {
   const expediente = expedientes.find(item => item.id === id)
 
   if (!expediente) {
@@ -458,70 +508,43 @@ if (oficiosError) {
     return
   }
 
-  const expedienteId = Number(expediente.id)
+  if (tipo === 'Memo') {
+    setMemoExpediente(expediente)
 
-  if (Number.isNaN(expedienteId)) {
-    notify('El ID del expediente no es válido')
+    setMemoNro('')
+    setMemoFecha(todayInputValue())
+    setMemoDestinatario('')
+    setMemoAsunto(expediente.asunto || '')
+    setMemoSecretaria('')
+    setMemoAreaDestino('')
+    setMemoResponsable('')
+    setMemoCargo('')
+    setMemoInstruccion('')
+    setMemoPlazo('')
+
+    setShowMemoSelector(false)
+    setShowMemoForm(true)
+    setView('memos')
+
     return
   }
 
-  try {
-    const { data, error } = await supabase.rpc(
-      'asignar_tipo_documento',
-      {
-        p_expediente_id: expedienteId,
-        p_tipo_documento: tipo
-      }
-    )
-
-    if (error) {
-      console.error('Error asignando tipo de documento:', error)
-      notify(error.message)
-      return
-    }
-
-    if (data) {
-      setExpedienteDocumentos(prev => [
-        ...prev,
-        {
-          expedienteId: String(data.expediente_id),
-          tipoDocumento: data.tipo_documento as 'Memo' | 'Oficio'
-        }
-      ])
-    }
-
-        if (tipo === 'Memo') {
-      setMemoExpediente(expediente)
-      setShowMemoSelector(false)
-      setShowMemoForm(true)
-      setView('memos')
-      return
-    }
-
-    if (tipo === 'Oficio') {
-      setOficioExpediente(expediente)
-      setView('oficios')
-      return
-    }
-  } catch (error) {
-    console.error('Error inesperado asignando documento:', error)
-    notify('No se pudo asignar el tipo de documento')
-  }
+  notify('Tipo de documento no disponible')
 }
-  const openNewMemo = () => {
+
+const openNewMemo = () => {
   setMemoNro('')
   setMemoFecha(todayInputValue())
   setMemoDestinatario('')
   setMemoAsunto(memoExpediente?.asunto || '')
   setMemoSecretaria('')
   setMemoAreaDestino('')
+  setMemoResponsable('')
+  setMemoCargo('')
+  setMemoInstruccion('')
+  setMemoPlazo('')
 
-  if (memoExpediente) {
-    setShowMemoSelector(false)
-    setShowMemoForm(true)
-    return
-  }
-
+  setMemoExpediente(null)
   setShowMemoSelector(true)
   setShowMemoForm(false)
 }
@@ -539,6 +562,26 @@ if (oficiosError) {
     return
   }
 
+  if (!memoAreaDestino.trim()) {
+    notify('Seleccione el área destino')
+    return
+  }
+
+  if (!memoResponsable.trim()) {
+    notify('No se pudo determinar el responsable del área seleccionada')
+    return
+  }
+
+  if (!memoInstruccion.trim()) {
+    notify('Ingrese la instrucción del Memo')
+    return
+  }
+
+  if (!memoPlazo.trim()) {
+    notify('Ingrese el plazo del Memo')
+    return
+  }
+
   const expedienteId = Number(memoExpediente.id)
 
   if (Number.isNaN(expedienteId)) {
@@ -549,34 +592,6 @@ if (oficiosError) {
   setIsSaving(true)
 
   try {
-    // Verificar si el expediente ya tiene un tipo de documento asignado
-    const { data: documentoExistente, error: documentoError } =
-      await supabase
-        .from('expediente_documentos')
-        .select('tipo_documento')
-        .eq('expediente_id', expedienteId)
-        .maybeSingle()
-
-    if (documentoError) {
-      console.error('Error verificando documento:', documentoError)
-      notify('No se pudo verificar el tipo de documento del expediente')
-      return
-    }
-
-    // Si ya tiene un Memo, no permitir otro
-    if (documentoExistente?.tipo_documento === 'Memo') {
-      notify('Este expediente ya tiene un Memo registrado. No se puede crear otro.')
-      setShowMemoForm(false)
-      return
-    }
-
-    // Si tiene Oficio, tampoco puede convertirse en Memo
-    if (documentoExistente?.tipo_documento === 'Oficio') {
-      notify('Este expediente ya está registrado como Oficio. No se puede crear un Memo.')
-      setShowMemoForm(false)
-      return
-    }
-
     const nroExpediente = memoExpediente.nroExp.startsWith('EXP-')
       ? memoExpediente.nroExp
       : `EXP-2026-${memoExpediente.nroExp.padStart(5, '0')}`
@@ -585,10 +600,14 @@ if (oficiosError) {
       p_expediente_id: expedienteId,
       p_nro_expediente: nroExpediente,
       p_fecha: memoFecha,
-      p_destinatario: memoDestinatario.trim() || '',
-      p_asunto: memoAsunto.trim() || '',
-      p_secretaria: memoSecretaria.trim() || '',
-      p_area_destino: memoAreaDestino.trim() || ''
+      p_destinatario: memoDestinatario.trim(),
+      p_asunto: memoAsunto.trim(),
+      p_secretaria: memoSecretaria.trim(),
+      p_area_destino: memoAreaDestino.trim(),
+      p_responsable: memoResponsable.trim(),
+      p_cargo: memoCargo.trim(),
+      p_instruccion: memoInstruccion.trim(),
+      p_plazo: memoPlazo.trim()
     })
 
     if (error) {
@@ -608,6 +627,10 @@ if (oficiosError) {
         asunto: data.asunto || '',
         secretaria: data.secretaria || '',
         areaDestino: data.area_destino || '',
+        responsable: data.responsable || '',
+        cargo: data.cargo || '',
+        instruccion: data.instruccion || '',
+        plazo: data.plazo || '',
         recepcionadoPor: data.recepcionado_por || '',
         fechaRecepcion: data.fecha_recepcion || '',
         estado: data.estado || 'Enviado',
@@ -616,14 +639,68 @@ if (oficiosError) {
 
       setMemos(prev => [memoNuevo, ...prev])
 
+      const historialActual = Array.isArray(memoExpediente.historial)
+        ? memoExpediente.historial
+        : []
+
+      const nuevoHistorial = [
+        ...historialActual,
+        {
+          fechaHora: new Date().toISOString(),
+          fechaIngreso: memoFecha,
+          areaOrigen: 'Mesa de Partes',
+          areaDestino: memoAreaDestino.trim(),
+          accion: 'Derivado para atención',
+          observacion: `Expediente derivado mediante Memo ${memoNuevo.nroMemo}.`,
+          responsable: memoResponsable.trim()
+        }
+      ]
+
+      const { error: expedienteError } = await supabase
+        .from('mesa_partes_2026')
+        .update({
+          estado: 'En atención',
+          area: memoAreaDestino.trim(),
+          area_destino: memoAreaDestino.trim(),
+          entregado_a: memoResponsable.trim(),
+          documento_seguimiento: memoNuevo.nroMemo,
+          historial: nuevoHistorial
+        })
+        .eq('id', expedienteId)
+
+      if (expedienteError) {
+        console.error('Error actualizando expediente después del Memo:', expedienteError)
+        notify(`Memo registrado, pero no se pudo actualizar el expediente: ${expedienteError.message}`)
+        return
+      }
+
+      setExpedientes(prev =>
+        prev.map(item =>
+          item.id === memoExpediente.id
+            ? {
+                ...item,
+                estado: 'En atención',
+                area: memoAreaDestino.trim(),
+                areaDestino: memoAreaDestino.trim(),
+                entregadoA: memoResponsable.trim(),
+                documentoSeguimiento: memoNuevo.nroMemo,
+                historial: nuevoHistorial
+              }
+            : item
+        )
+      )
+
       setMemoNro('')
       setMemoFecha(todayInputValue())
       setMemoDestinatario('')
       setMemoAsunto('')
       setMemoSecretaria('')
       setMemoAreaDestino('')
+      setMemoResponsable('')
+      setMemoCargo('')
+      setMemoInstruccion('')
+      setMemoPlazo('')
 
-      // Muy importante: cerrar el formulario después de registrar
       setShowMemoForm(false)
 
       notify(`Memo ${memoNuevo.nroMemo} registrado correctamente`)
@@ -857,6 +934,10 @@ if (oficiosError) {
     setMemoSecretaria={setMemoSecretaria}
     memoAreaDestino={memoAreaDestino}
     setMemoAreaDestino={setMemoAreaDestino}
+    memoInstruccion={memoInstruccion}
+    setMemoInstruccion={setMemoInstruccion}
+    memoPlazo={memoPlazo}
+    setMemoPlazo={setMemoPlazo}
     onSaveMemo={saveNewMemo}
     onCancelMemo={cancelNewMemo}
     onSelectExpediente={(expediente) => {
@@ -869,6 +950,10 @@ if (oficiosError) {
         setMemoAsunto(expediente.asunto || '')
         setMemoSecretaria('')
         setMemoAreaDestino('')
+        setMemoResponsable('')
+        setMemoCargo('')
+        setMemoInstruccion('')
+        setMemoPlazo('')
         setShowMemoSelector(false)
         setShowMemoForm(true)
       } else {

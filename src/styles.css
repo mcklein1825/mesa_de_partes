@@ -58,7 +58,7 @@
 .list-panel td:nth-child(5){min-width:220px;max-width:300px}
 .list-panel td:nth-child(6),.list-panel td:nth-child(7),.list-panel td:nth-child(8){min-width:180px;max-width:240px}
 .list-panel table{table-layout:fixed}
-.list-panel th:nth-child(1){width:145px}.list-panel th:nth-child(2){width:115px}.list-panel th:nth-child(3){width:280px}.list-panel th:nth-child(4){width:340px}.list-panel th:nth-child(5){width:280px}.list-panel th:nth-child(6){width:190px}.list-panel th:nth-child(7){width:210px}.list-panel th:nth-child(8){width:220px}.list-panel th:nth-child(9){width:125px}.list-panel th:nth-child(10){width:170px}
+.list-panel th:nth-child(1){width:145px}.list-panel th:nth-child(2){width:115px}.list-panel th:nth-child(3){width:280px}.list-panel th:nth-child(4){width:340px}.list-panel th:nth-child(5){width:280px}.list-panel th:nth-child(6){width:190px}.list-panel th:nth-child(7){width:210px}.list-panel th:nth-child(8){width:220px}.list-panel th:nth-child(9){width:125px}.list-panel th:nth-child(10){width:220px}
 .table-cell-text{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .table-cell-group{display:block;min-width:0;max-width:100%;line-height:1.4}.table-cell-group small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.35;margin-top:5px}
 .list-panel .exp-id{white-space:nowrap;line-height:1.35}
@@ -89,9 +89,28 @@
 /* Filtros, acciones y enlaces de documentos de la consulta. */
 .portal-shell .filter-input{height:44px;width:205px;border:2px solid #adbec6;border-radius:6px;padding:0 12px;color:#52636c;background:#fff;font-size:14px}
 .portal-shell .filter-input:focus{outline:0;border-color:#267e9c;box-shadow:0 0 0 2px #267e9c2b}
-.actions-cell{display:table-cell;vertical-align:top;min-width:170px}
-.actions-cell .tracking-button,.actions-cell .action-link{display:block;margin:0 0 9px;text-align:left}
-.actions-cell .action-link:last-child,.actions-cell .tracking-button:last-child{margin-bottom:0}
+.actions-cell{
+  display:table-cell;
+  vertical-align:top;
+  min-width:220px;
+  width:220px;
+  padding:14px 16px;
+}
+
+.actions-cell .tracking-button,
+.actions-cell .action-link{
+  display:block;
+  width:max-content;
+  max-width:100%;
+  margin:0 0 10px;
+  text-align:left;
+  white-space:nowrap;
+}
+
+.actions-cell .action-link:last-child,
+.actions-cell .tracking-button:last-child{
+  margin-bottom:0;
+}
 .action-area-select{display:block;width:150px;height:30px;margin:0 0 9px;padding:4px 6px;border:1px solid #9fb8c1;border-radius:5px;background:#fff;color:#36535f;font-size:11px}
 .tracking-button,.action-link{color:#247f8b;font-size:12px;font-weight:700;white-space:nowrap}
 .tracking-button:hover,.action-link:hover{color:#135b68;text-decoration:underline}
