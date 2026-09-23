@@ -1,9 +1,5 @@
 @import "tailwindcss";
 
-/* ========================================
-   VARIABLES Y REGLAS BASE
-   Tipografía, colores generales y modelo de caja
-   ======================================== */
 :root {
   font-family: 'Segoe UI', Arial, sans-serif;
   color: #172532;
@@ -2157,4 +2153,3 @@ tbody tr:last-child td {
     gap: 4px;
   }
 }
-
