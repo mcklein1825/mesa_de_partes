@@ -39,7 +39,7 @@ export type Memo = {
   plazo: string
   recepcionadoPor: string
   fechaRecepcion: string
-  estado: 'Enviado' | 'Recepcionado' | 'Atendido' | 'Anulado'
+  estado: 'Pendiente' | 'Sin respuesta' | 'Archivado'
   createdAt?: string
 
 }

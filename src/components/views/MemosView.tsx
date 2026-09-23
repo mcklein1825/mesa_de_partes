@@ -30,7 +30,8 @@ export default function MemosView({
   onSaveMemo,
   onCancelMemo,
   onSelectExpediente,
-  onCloseMemoSelector
+  onCloseMemoSelector,
+  onUpdateMemoEstado
 }: {
   expediente: Expediente | null
   expedientes: Expediente[]
@@ -60,6 +61,10 @@ export default function MemosView({
   onCancelMemo: () => void
   onSelectExpediente: (expediente: Expediente | null) => void
   onCloseMemoSelector: () => void
+  onUpdateMemoEstado: (
+  memoId: string,
+  nuevoEstado: Memo['estado']
+) => void
 }) {
   const [query, setQuery] = useState('')
   const [secretariaFilter, setSecretariaFilter] = useState('Todas')
@@ -446,29 +451,17 @@ export default function MemosView({
               />
             </div>
 
-            <div>
-              <label>Asunto</label>
+           <div>
+            <label>Asunto</label>
 
-              <input
-                type="text"
-                value={memoAsunto}
-                onChange={e =>
-                  setMemoAsunto(e.target.value)
-                }
-                placeholder="Asunto del Memo"
-              />
-            </div>
-            <div>
-              <label>Instrucción</label>
-
-              <textarea
-                value={memoInstruccion}
-                onChange={e =>
-                  setMemoInstruccion(e.target.value)
-                }
-                placeholder="Indique las instrucciones para el área responsable"
-                rows={4}
-              />
+            <input
+              type="text"
+              value={memoAsunto}
+              onChange={e =>
+                setMemoAsunto(e.target.value)
+              }
+              placeholder="Asunto del Memo"
+            />
             </div>
 
             <div>
@@ -483,30 +476,29 @@ export default function MemosView({
                 placeholder="Ej. 5 días hábiles"
               />
             </div>
-          </div>
 
-          <div
-            style={{
-              display: 'flex',
-              gap: '10px',
-              marginTop: '20px'
-            }}
-          >
-
-            <button
-              className="primary-button"
-              onClick={onSaveMemo}
+            <div
+              style={{
+                display: 'flex',
+                gap: '10px',
+                marginTop: '20px'
+              }}
             >
-              Guardar Memo
-            </button>
+              <button
+                className="primary-button"
+                onClick={onSaveMemo}
+              >
+                Guardar Memo
+              </button>
 
-            <button
-              className="action-link"
-              onClick={onCancelMemo}
-            >
-              Cancelar
-            </button>
-
+              <button
+                className="action-link"
+                onClick={onCancelMemo}
+              >
+                Cancelar
+              </button>
+            </div>
+          
           </div>
 
         </div>
@@ -754,9 +746,26 @@ export default function MemosView({
                   </td>
 
                   <td>
-                    <span className="status-badge">
-                      {memo.estado}
-                    </span>
+                    <select
+                      className="status-badge"
+                      value={memo.estado}
+                      onChange={e => {
+                        const nuevoEstado = e.target.value as Memo['estado']
+
+                        console.log('CAMBIANDO MEMO:', {
+                          id: memo.id,
+                          nroMemo: memo.nroMemo,
+                          estadoAnterior: memo.estado,
+                          nuevoEstado
+                        })
+
+                        onUpdateMemoEstado(memo.id, nuevoEstado)
+                      }}
+                    >
+                      <option value="Pendiente">Pendiente</option>
+                      <option value="Sin respuesta">Sin respuesta</option>
+                      <option value="Archivado">Archivado</option>
+                    </select>
                   </td>
 
                 </tr>

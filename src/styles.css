@@ -579,9 +579,11 @@ tbody tr:last-child td {
   padding: 5px 8px;
   border-radius: 15px;
   white-space: nowrap;
-  display: inline-flex;
+  display: inline-block;
   align-items: center;
   gap: 5px;
+  border: none;
+  cursor: pointer;
 }
 
 .status-badge i {

@@ -159,41 +159,14 @@ useEffect(() => {
       }
 
       const { data: memosData, error: memosError } =
-  await supabase
-    .from('memos')
-    .select('*')
-    .order('id', { ascending: false })
+        await supabase
+          .from('memos')
+          .select('*')
+          .order('id', { ascending: false })
 
-console.log('MEMOS CARGADOS DESDE SUPABASE:', memosData)
-console.log('ERROR MEMOS:', memosError)
+      console.log('MEMOS CARGADOS DESDE SUPABASE:', memosData)
+      console.log('ERROR MEMOS:', memosError)
 
-if (memosError) {
-  console.error('Error cargando memos:', memosError)
-} else if (memosData) {
-  const memosNormalizados: Memo[] = memosData.map((m: any) => ({
-  id: String(m.id),
-  nroMemo: m.nro_memo || '',
-  expedienteId: String(m.expediente_id),
-  nroExpediente: m.nro_expediente || '',
-  fecha: m.fecha || '',
-  destinatario: m.destinatario || '',
-  asunto: m.asunto || '',
-  secretaria: m.secretaria || '',
-  areaDestino: m.area_destino || '',
-  responsable: m.responsable || '',
-  cargo: m.cargo || '',
-  instruccion: m.instruccion || '',
-  plazo: m.plazo || '',
-  recepcionadoPor: m.recepcionado_por || '',
-  fechaRecepcion: m.fecha_recepcion || '',
-  estado: m.estado || 'Enviado',
-  createdAt: m.created_at
-}))
-
-  console.log('MEMOS NORMALIZADOS:', memosNormalizados)
-
-  setMemos(memosNormalizados)
-}
       if (memosError) {
         console.error('Error cargando memos:', memosError)
       } else if (memosData) {
@@ -213,9 +186,12 @@ if (memosError) {
           plazo: m.plazo || '',
           recepcionadoPor: m.recepcionado_por || '',
           fechaRecepcion: m.fecha_recepcion || '',
-          estado: m.estado || 'Enviado',
+          estado: m.estado || 'Pendiente',
           createdAt: m.created_at
         }))
+
+        console.log('MEMOS NORMALIZADOS:', memosNormalizados)
+
         setMemos(memosNormalizados)
       }
       const { data: oficiosData, error: oficiosError } = await supabase
@@ -436,7 +412,7 @@ if (oficiosError) {
       cargo: '',
       recepcionado_por: '',
       fecha_recepcion: null,
-      estado: 'Enviado'
+      estado: 'Pendiente'
     }).select().single()
 
     if (memoError) {
@@ -483,7 +459,7 @@ if (oficiosError) {
         recepcionadoPor: memoCreado.recepcionado_por || '',
         fechaRecepcion: memoCreado.fecha_recepcion || '',
 
-        estado: memoCreado.estado || 'Enviado',
+        estado: memoCreado.estado || 'Pendiente',
 
         createdAt: memoCreado.created_at
       }
@@ -572,11 +548,6 @@ const openNewMemo = () => {
     return
   }
 
-  if (!memoInstruccion.trim()) {
-    notify('Ingrese la instrucción del Memo')
-    return
-  }
-
   if (!memoPlazo.trim()) {
     notify('Ingrese el plazo del Memo')
     return
@@ -633,7 +604,7 @@ const openNewMemo = () => {
         plazo: data.plazo || '',
         recepcionadoPor: data.recepcionado_por || '',
         fechaRecepcion: data.fecha_recepcion || '',
-        estado: data.estado || 'Enviado',
+        estado: data.estado || 'Pendiente',
         createdAt: data.created_at
       }
 
@@ -711,6 +682,51 @@ const openNewMemo = () => {
     notify('Ocurrió un error al guardar el Memo')
   } finally {
     setIsSaving(false)
+  }
+}
+const updateMemoEstado = async (
+  memoId: string,
+  nuevoEstado: Memo['estado']
+) => {
+  console.log('UPDATE MEMO LLAMADO:', {
+  memoId,
+  nuevoEstado
+})
+  try {
+    const { data, error } = await supabase
+  .from('memos')
+  .update({
+    estado: nuevoEstado
+  })
+  .eq('id', Number(memoId))
+  .select('id, nro_memo, estado')
+
+console.log('RESULTADO REAL DEL UPDATE:', {
+  data,
+  error
+})
+
+    if (error) {
+      console.error('Error actualizando estado del Memo:', error)
+      notify(`No se pudo actualizar el estado: ${error.message}`)
+      return
+    }
+
+    setMemos(prev =>
+      prev.map(memo =>
+        memo.id === memoId
+          ? {
+              ...memo,
+              estado: nuevoEstado
+            }
+          : memo
+      )
+    )
+
+    notify(`Memo actualizado a "${nuevoEstado}"`)
+  } catch (error) {
+    console.error('Error inesperado actualizando Memo:', error)
+    notify('Ocurrió un error al actualizar el estado del Memo')
   }
 }
   const completeExpediente = (id: string) => {
@@ -911,6 +927,7 @@ const openNewMemo = () => {
     areaOptions={areaOptions}
     memos={memos}
     showMemoSelector={showMemoSelector}
+    onUpdateMemoEstado={updateMemoEstado}
     onBack={() => {
       setMemoExpediente(null)
       setShowMemoForm(false)
