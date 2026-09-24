@@ -4,13 +4,13 @@ import UserSelectModal from './components/UserSelectModal'
 import OficiosView from './components/views/OficiosView'
 import NuevoOficioView from './components/views/NuevoOficioView'
 // Tipos y Constantes
-import { User, View, Expediente, Memo, Oficio } from './types'
+import { User, View, Expediente, Memo, Oficio, Status } from './types'
 import { ROLE_PERMISSIONS, areas, AREA_RESPONSABLES } from './constants'
 
 // Utilidades
-import { 
-  normalizeExpediente, formatDate, todayInputValue, addDays, 
-  readFileAsDataUrl, getAreaDestino, getRemitenteNombre 
+import {
+  normalizeExpediente, formatDate, todayInputValue, addDays,
+  readFileAsDataUrl, getAreaDestino, getRemitenteNombre
 } from './utils/expedienteHelpers'
 import { obtenerResponsablePorArea } from './utils/areasResponsables'
 
@@ -101,7 +101,7 @@ useEffect(() => {
       setLoadingDb(true)
       const { data, error } = await supabase
         .from('mesa_partes_2026')
-        .select(`id, nro_exp, fecha, fecha_ingreso, nombre_apellido, remitente, remitente_nombre, remitente_cargo, documento, tipo, asunto, contenido, area, area_destino, estado, plazo, prioridad, archivo, archivo_tipo, archivo_tamano, archivo_descripcion, documentos, modalidad_recepcion, entregado_a, documento_seguimiento, canal_recepcion, folios, anexos, direccion, correo, celular, representante, cargo_representante, usuario_registro, fecha_hora_recepcion, constancia_recepcion, historial, es_duplicado`)
+        .select(`id, nro_exp, fecha, fecha_ingreso, nombre_apellido, remitente, remitente_nombre, remitente_cargo, documento, tipo, asunto, contenido, area, area_destino, estado, plazo, prioridad, archivo, archivo_tipo, archivo_tamano, archivo_descripcion, documentos, modalidad_recepcion, entregado_a, documento_seguimiento, canal_recepcion, folios, anexos, direccion, correo, celular, representante, cargo_representante, usuario_registro, fecha_hora_recepcion, constancia_recepcion, historial, fecha_sin_respuesta, es_duplicado`)
         .order('nro_exp', { ascending: false })
 
       if (error) {
@@ -132,6 +132,7 @@ useEffect(() => {
             estado: item.estado || 'Pendiente',
             fecha: item.fecha || '',
             plazo: item.plazo || '',
+            fechaSinRespuesta: item.fecha_sin_respuesta || '',
             prioridad: item.prioridad || 'Normal',
             archivo: item.archivo || 'Sin adjunto',
             archivoData: '',
@@ -247,8 +248,8 @@ if (oficiosError) {
 
   const userPermissions = currentUser ? ROLE_PERMISSIONS[currentUser.rol] : null
 
-  const areaOptions = useMemo(() => 
-    Array.from(new Set([...areas, ...expedientes.map(getAreaDestino).filter(Boolean)])).sort(), 
+  const areaOptions = useMemo(() =>
+    Array.from(new Set([...areas, ...expedientes.map(getAreaDestino).filter(Boolean)])).sort(),
   [expedientes])
 
   const currentDate = useMemo(() => {
@@ -373,7 +374,7 @@ if (oficiosError) {
     if (!targetArea) { notify('Seleccione el área de destino antes de derivar'); return }
     const expediente = expedientes.find(e => e.id === id)
     if (!expediente) { notify('Expediente no encontrado'); return }
-    
+
     setMemoNro(''); setMemoFecha(todayInputValue()); setMemoDestinatario(''); setMemoSecretaria(''); setMemoAsunto(expediente.asunto || '')
     setPendingAction({ type: 'derive', id, area: targetArea })
   }
@@ -381,7 +382,6 @@ if (oficiosError) {
   const confirmDerive = async () => {
     if (!pendingAction || pendingAction.type !== 'derive' || !pendingAction.area || !currentUser) return
     const { id, area: targetArea } = pendingAction
-    const responsable = AREA_RESPONSABLES[targetArea] || targetArea
     const expediente = expedientes.find(e => e.id === id)
     if (!expediente) { notify('Expediente no encontrado'); return }
 
@@ -398,9 +398,8 @@ if (oficiosError) {
         fechaHora: timestamp, fechaSalida: timestamp, fechaIngreso: timestamp,
         areaOrigen: 'Mesa de Partes', areaDestino: targetArea,
         accion: `Memo ${memoNro.trim()} generado`,
-        observacion: `Se generó el Memo ${memoNro.trim()} para derivar el expediente a ${targetArea}. Responsable: ${responsable}.`,
-        responsable: `${currentUser.nombre} - ${currentUser.area || ''}`,
-        responsableDestino: responsable
+        observacion: `Se generó el Memo ${memoNro.trim()} para derivar el expediente a ${targetArea}.`,
+        responsable: `${currentUser.nombre} - ${currentUser.area || ''}`
       }
     ]
 
@@ -409,7 +408,7 @@ if (oficiosError) {
       fecha: memoFecha, destinatario: memoDestinatario.trim(), asunto: memoAsunto.trim(),
       secretaria: memoSecretaria.trim(),
       area_destino: targetArea,
-      responsable: responsable,
+      responsable: '',
       cargo: '',
       recepcionado_por: '',
       fecha_recepcion: null,
@@ -423,8 +422,8 @@ if (oficiosError) {
     }
 
     const { error: expedienteError } = await supabase.from('mesa_partes_2026').update({
-      estado: 'En atención', area: targetArea, area_destino: targetArea,
-      entregado_a: responsable, documento_seguimiento: memoNro.trim(), historial
+      estado: 'Pendiente',area: targetArea, area_destino: targetArea,
+      entregado_a: '', documento_seguimiento: memoNro.trim(), historial
     }).eq('id', id)
 
     if (expedienteError) {
@@ -468,11 +467,16 @@ if (oficiosError) {
     }
 
     setExpedientes(prev => prev.map(item => item.id === id ? {
-      ...item, estado: 'En atención', area: targetArea, areaDestino: targetArea,
-      entregadoA: responsable, documentoSeguimiento: memoNro.trim(), historial
+      ...item,
+      estado: 'Pendiente',
+      area: targetArea,
+      areaDestino: targetArea,
+      entregadoA: '',
+      documentoSeguimiento: memoNro.trim(),
+      historial
     } : item))
 
-    notify(`Memo ${memoNro.trim()} creado y expediente enviado a En atención`)
+    notify(`Memo ${memoNro.trim()} creado y expediente derivado al área ${targetArea}`)
     setMemoNro(''); setMemoFecha(todayInputValue()); setMemoDestinatario(''); setMemoAsunto(''); setMemoSecretaria('')
     setPendingAction(null)
   }
@@ -617,27 +621,31 @@ const openNewMemo = () => {
           fechaIngreso: memoFecha,
           areaOrigen: 'Mesa de Partes',
           areaDestino: memoAreaDestino.trim(),
-          accion: 'Derivado para atención',
+          accion: 'Derivado',
           observacion: `Expediente derivado mediante Memo ${memoNuevo.nroMemo}.`,
-          responsable: memoResponsable.trim()
+          responsable: currentUser?.nombre || ''
         }
       ]
 
       const { error: expedienteError } = await supabase
         .from('mesa_partes_2026')
         .update({
-          estado: 'En atención',
           area: memoAreaDestino.trim(),
           area_destino: memoAreaDestino.trim(),
-          entregado_a: memoResponsable.trim(),
+          entregado_a: '',
           documento_seguimiento: memoNuevo.nroMemo,
           historial: nuevoHistorial
         })
         .eq('id', expedienteId)
 
       if (expedienteError) {
-        console.error('Error actualizando expediente después del Memo:', expedienteError)
-        notify(`Memo registrado, pero no se pudo actualizar el expediente: ${expedienteError.message}`)
+        console.error(
+          'Error actualizando expediente después del Memo:',
+          expedienteError
+        )
+        notify(
+          `Memo registrado, pero no se pudo actualizar el expediente: ${expedienteError.message}`
+        )
         return
       }
 
@@ -646,16 +654,16 @@ const openNewMemo = () => {
           item.id === memoExpediente.id
             ? {
                 ...item,
-                estado: 'En atención',
                 area: memoAreaDestino.trim(),
                 areaDestino: memoAreaDestino.trim(),
-                entregadoA: memoResponsable.trim(),
+                entregadoA: '',
                 documentoSeguimiento: memoNuevo.nroMemo,
                 historial: nuevoHistorial
               }
             : item
         )
       )
+
 
       setMemoNro('')
       setMemoFecha(todayInputValue())
@@ -685,82 +693,128 @@ const updateMemoEstado = async (
   nuevoEstado: Memo['estado']
 ) => {
   console.log('UPDATE MEMO LLAMADO:', {
-  memoId,
-  nuevoEstado
-})
-  try {
-    const { data, error } = await supabase
-  .from('memos')
-  .update({
-    estado: nuevoEstado
+    memoId,
+    nuevoEstado
   })
-  .eq('id', Number(memoId))
-  .select('id, nro_memo, estado')
 
-console.log('RESULTADO REAL DEL UPDATE:', {
-  data,
-  error
-})
+  try {
+    // 1. Buscar el Memo
+    const memo = memos.find(
+      item => item.id === memoId
+    )
 
-    if (error) {
-      console.error('Error actualizando estado del Memo:', error)
-      notify(`No se pudo actualizar el estado: ${error.message}`)
+    if (!memo) {
+      notify('Memo no encontrado')
       return
     }
 
+    // 2. Actualizar el estado del Memo en Supabase
+    const { error } = await supabase
+      .from('memos')
+      .update({
+        estado: nuevoEstado
+      })
+      .eq('id', Number(memoId))
+
+    if (error) {
+      console.error(
+        'Error actualizando estado del Memo:',
+        error
+      )
+
+      notify(
+        `No se pudo actualizar el estado: ${error.message}`
+      )
+
+      return
+    }
+
+    // 3. Actualizar el Memo en memoria
     setMemos(prev =>
-      prev.map(memo =>
-        memo.id === memoId
+      prev.map(item =>
+        item.id === memoId
           ? {
-              ...memo,
+              ...item,
               estado: nuevoEstado
             }
-          : memo
+          : item
       )
     )
 
-    notify(`Memo actualizado a "${nuevoEstado}"`)
-  } catch (error) {
-    console.error('Error inesperado actualizando Memo:', error)
-    notify('Ocurrió un error al actualizar el estado del Memo')
-  }
-}
-  const completeExpediente = (id: string) => {
-    if (!userPermissions?.puedeAtender) { notify('No tiene permisos para atender expedientes'); return }
-    const expediente = expedientes.find(e => e.id === id)
-    if (!expediente) { notify('Expediente no encontrado'); return }
-    setPendingAction({ type: 'complete', id })
-  }
+    // 4. Obtener el expediente relacionado
+    const expedienteId = memo.expedienteId
 
-  const confirmComplete = async () => {
-    if (!pendingAction || pendingAction.type !== 'complete' || !currentUser) return
-    const { id } = pendingAction
-    const expediente = expedientes.find(e => e.id === id)
-    if (!expediente) { notify('Expediente no encontrado'); return }
+    const expediente = expedientes.find(
+      item => item.id === expedienteId
+    )
 
-    const timestamp = new Date().toLocaleString('es-PE')
-    const historial = [
-      ...(expediente.historial || []),
-      {
-        fechaHora: timestamp, fechaSalida: timestamp, fechaIngreso: timestamp,
-        areaOrigen: getAreaDestino(expediente), areaDestino: 'Mesa de Partes',
-        accion: 'Atendido', observacion: 'La oficina responsable registró la atención del expediente.',
-        responsable: `${currentUser.nombre} - ${currentUser.area || getAreaDestino(expediente)}`
-      }
-    ]
-
-    const { error } = await supabase.from('mesa_partes_2026').update({ estado: 'Atendido', historial }).eq('id', id)
-    if (error) {
-      console.error('Error atendiendo expediente:', error)
-      notify(`No se pudo marcar como atendido: ${error.message}`)
+    if (!expediente) {
+      notify(
+        'Memo actualizado, pero no se encontró su expediente relacionado'
+      )
       return
     }
 
-    setExpedientes(prev => prev.map(item => item.id === id ? { ...item, estado: 'Atendido', historial } : item))
-    notify('Expediente marcado como Atendido')
-    setPendingAction(null)
-  }
+    // 5. Determinar la fecha de Sin respuesta
+    const fechaSinRespuesta =
+      nuevoEstado === 'Sin respuesta'
+        ? expediente.fechaSinRespuesta ||
+          new Date().toISOString().split('T')[0]
+        : nuevoEstado === 'Atendido'
+          ? null
+          : expediente.fechaSinRespuesta || null
 
+    // 6. Actualizar el expediente relacionado
+    const { error: expedienteError } = await supabase
+      .from('mesa_partes_2026')
+      .update({
+        estado: nuevoEstado,
+        fecha_sin_respuesta: fechaSinRespuesta
+      })
+      .eq('id', Number(expedienteId))
+
+    if (expedienteError) {
+      console.error(
+        'Error actualizando estado del expediente:',
+        expedienteError
+      )
+
+      notify(
+        `Memo actualizado, pero no se pudo actualizar el expediente: ${expedienteError.message}`
+      )
+
+      return
+    }
+
+    // 7. Actualizar el expediente en memoria
+    setExpedientes(prev =>
+      prev.map(item =>
+        item.id === expedienteId
+          ? {
+              ...item,
+              estado: nuevoEstado,
+              fechaSinRespuesta:
+                fechaSinRespuesta || ''
+            }
+          : item
+      )
+    )
+
+    notify(
+      `Memo y expediente actualizados a "${nuevoEstado}"`
+    )
+
+  } catch (error) {
+    console.error(
+      'Error inesperado actualizando estado del Memo:',
+      error
+    )
+
+    notify(
+      'Ocurrió un error al actualizar el estado del Memo'
+    )
+  }
+}
   const cancelPendingAction = () => setPendingAction(null)
 
   if (!currentUser) return <UserSelectModal onSelectUser={setCurrentUser} />
@@ -909,11 +963,15 @@ console.log('RESULTADO REAL DEL UPDATE:', {
             <>
               {view === 'inicio' && <DashboardView expedientes={expedientes} onNew={() => setView('nuevo')} onViewAll={() => setView('expedientes')} currentDate={currentDate} />}
               {view === 'expedientes' && (
-                <ExpedientesView 
-                  items={filteredExpedientes} query={query} setQuery={setQuery} areaFilter={areaFilter} 
-                  areaOptions={areaOptions} setAreaFilter={setAreaFilter} remitenteFilter={remitenteFilter} 
-                  setRemitenteFilter={setRemitenteFilter} statusFilter={statusFilter} setStatusFilter={setStatusFilter} 
-                  onNew={() => setView('nuevo')} onOpenDocumentType={openDocumentType} onComplete={completeExpediente} expedienteDocumentos={expedienteDocumentos} onTracking={setTrackingId} 
+                <ExpedientesView
+                  items={filteredExpedientes} query={query} setQuery={setQuery} areaFilter={areaFilter}
+                  areaOptions={areaOptions} setAreaFilter={setAreaFilter} remitenteFilter={remitenteFilter}
+                  setRemitenteFilter={setRemitenteFilter} statusFilter={statusFilter} setStatusFilter={setStatusFilter}
+                  onNew={() => setView('nuevo')}
+                  onOpenDocumentType={openDocumentType}
+                  expedienteDocumentos={expedienteDocumentos}
+                  onTracking={setTrackingId}
+
                 />
               )}
          {view === 'memos' && (
@@ -1072,7 +1130,7 @@ console.log('RESULTADO REAL DEL UPDATE:', {
 
       {toast && <div className="toast"><span>✓</span>{toast}</div>}
       {trackingId && <TrackingModal item={expedientes.find(item => item.id === trackingId)} onClose={() => setTrackingId(null)} />}
-      
+
       {pendingAction && (
         <div className="modal-backdrop" role="presentation" onClick={cancelPendingAction}>
           <section className="confirmation-modal" role="dialog" aria-modal="true" onClick={event => event.stopPropagation()}>
@@ -1117,7 +1175,14 @@ console.log('RESULTADO REAL DEL UPDATE:', {
             </div>
             <div className="confirmation-actions">
               <button className="outline-button" onClick={cancelPendingAction}>Cancelar</button>
-              <button className="primary-button" onClick={() => { if (pendingAction.type === 'derive') confirmDerive(); else if (pendingAction.type === 'complete') confirmComplete(); }}>
+              <button
+                className="primary-button"
+                onClick={() => {
+                  if (pendingAction.type === 'derive') {
+                    confirmDerive()
+                  }
+                }}
+>
                 {pendingAction.type === 'derive' ? '✓ Crear Memo y derivar' : '✓ Atender'}
               </button>
             </div>

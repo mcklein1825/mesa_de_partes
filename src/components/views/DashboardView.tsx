@@ -15,11 +15,11 @@ export default function DashboardView({
   currentDate: string
 }) {
   const pending = expedientes.filter(item => item.estado === 'Pendiente').length
-  const attention = expedientes.filter(item => item.estado === 'En atención').length
+  const attention = expedientes.filter(item => item.estado === 'Pendiente').length
   const attended = expedientes.filter(item => item.estado === 'Atendido').length
 
   const upcomingDeadlines = expedientes
-    .filter(item => (item.estado === 'Pendiente' || item.estado === 'En atención') && item.plazo)
+    .filter(item => item.estado === 'Pendiente' && item.plazo)
     .map(item => ({ ...item, daysLeft: daysUntilDeadline(item.plazo) }))
     .filter(item => item.daysLeft >= 0 && item.daysLeft <= 15)
     .sort((a, b) => a.daysLeft - b.daysLeft)

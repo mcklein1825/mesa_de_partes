@@ -813,26 +813,46 @@ export default function MemosView({
                   </td>
 
                   <td className="memo-estado-columna">
-                   <select
-                      className="status-badge"
-                      value={memo.estado}
-                      onChange={e => {
-                        const nuevoEstado = e.target.value as Memo['estado']
+                  <select
+                    className="status-badge"
+                    value={memo.estado}
+                    onChange={e => {
+                      const nuevoEstado = e.target.value as Memo['estado']
 
-                        console.log('CAMBIANDO MEMO:', {
-                          id: memo.id,
-                          nroMemo: memo.nroMemo,
-                          estadoAnterior: memo.estado,
-                          nuevoEstado
-                        })
+                      console.log('CAMBIANDO MEMO:', {
+                        id: memo.id,
+                        nroMemo: memo.nroMemo,
+                        estadoAnterior: memo.estado,
+                        nuevoEstado
+                      })
 
-                        onUpdateMemoEstado(memo.id, nuevoEstado)
-                      }}
-                    >
-                      <option value="Pendiente">Pendiente</option>
-                      <option value="Sin respuesta">Sin respuesta</option>
+                      onUpdateMemoEstado(memo.id, nuevoEstado)
+                    }}
+                  >
+                    {memo.estado === 'Pendiente' && (
+                      <>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Sin respuesta">Sin respuesta</option>
+                        <option value="Atendido">Atendido</option>
+                      </>
+                    )}
+
+                    {memo.estado === 'Sin respuesta' && (
+                      <>
+                        <option value="Sin respuesta">Sin respuesta</option>
+                        <option value="Atendido">Atendido</option>
+                        <option value="Archivado">Archivado</option>
+                      </>
+                    )}
+
+                    {memo.estado === 'Atendido' && (
+                      <option value="Atendido">Atendido</option>
+                    )}
+
+                    {memo.estado === 'Archivado' && (
                       <option value="Archivado">Archivado</option>
-                    </select>
+                    )}
+                  </select>
                   </td>
 
                 </tr>

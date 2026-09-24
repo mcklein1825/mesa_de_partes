@@ -5,9 +5,19 @@ import DocumentLink from '../common/DocumentLink'
 import StatusBadge from '../common/StatusBadge'
 
 export default function ExpedientesView({
-  items, query, setQuery, areaFilter, areaOptions, setAreaFilter,
-  remitenteFilter, setRemitenteFilter, statusFilter, setStatusFilter,
-  onNew, onOpenDocumentType, onComplete, onTracking,
+  items,
+  query,
+  setQuery,
+  areaFilter,
+  areaOptions,
+  setAreaFilter,
+  remitenteFilter,
+  setRemitenteFilter,
+  statusFilter,
+  setStatusFilter,
+  onNew,
+  onOpenDocumentType,
+  onTracking,
   expedienteDocumentos
 }: {
   items: Expediente[]
@@ -26,7 +36,6 @@ export default function ExpedientesView({
   setStatusFilter: (v: string) => void
   onNew: () => void
   onOpenDocumentType: (id: string, tipo: string) => void
-  onComplete: (id: string) => void
   onTracking: (id: string) => void
 }) {
   const pageSize = 20
@@ -75,7 +84,7 @@ export default function ExpedientesView({
           <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1) }}>
             <option>Todos</option>
             <option>Pendiente</option>
-            <option>En atención</option>
+            <option>Sin respuesta</option>
             <option>Atendido</option>
             <option>Archivado</option>
           </select>
@@ -132,19 +141,23 @@ export default function ExpedientesView({
                     </td>
                     <td>{cell(item.documentoSeguimiento || 'Pendiente')}</td>
                     <td><StatusBadge status={item.estado} /></td>
-                    <td className="actions-cell">
-                      <button className="tracking-button" onClick={() => onTracking(item.id)}>◉ Ver seguimiento</button>
-                      {item.estado === 'Pendiente' ? (
-                        <button
-                          className="action-link"
-                          onClick={() => onOpenDocumentType(item.id, 'Memo')}
-                        >
-                          Crear Memo
-                        </button>
-                      ) : item.estado === 'En atención' ? (
-                        <button className="action-link" onClick={() => onComplete(item.id)}>Atender</button>
-                      ) : null}
-                    </td>
+                   <td className="actions-cell">
+                    <button
+                      className="tracking-button"
+                      onClick={() => onTracking(item.id)}
+                    >
+                      ◉ Ver seguimiento
+                    </button>
+
+                   {item.estado === 'Pendiente' ? (
+                    <button
+                      className="action-link"
+                      onClick={() => onOpenDocumentType(item.id, 'Memo')}
+                    >
+                      Crear Memo
+                    </button>
+                  ) : null}
+                  </td>
                   </tr>
                 )
               })}

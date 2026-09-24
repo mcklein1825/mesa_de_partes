@@ -16,9 +16,9 @@ export const ROLE_PERMISSIONS: Record<Role, {
 }
 
 export const VALID_TRANSITIONS: Record<Status, Status[]> = {
-  'Pendiente': ['En atención'],
-  'En atención': ['Atendido', 'Archivado'],
-  'Atendido': ['Archivado'],
+  'Pendiente': ['Sin respuesta', 'Atendido'],
+  'Sin respuesta': ['Atendido', 'Archivado'],
+  'Atendido': [],
   'Archivado': []
 }
 

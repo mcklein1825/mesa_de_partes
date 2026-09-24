@@ -1,4 +1,4 @@
-export type Status = 'Pendiente' | 'En atención' | 'Atendido' | 'Archivado'
+export type Status = 'Pendiente' | 'Sin respuesta' | 'Atendido' | 'Archivado'
 export type View = 'inicio' | 'expedientes' | 'nuevo' | 'reportes' | 'memos' | 'oficios'
 export type Role = 'MesaPartes' | 'AreaOperativa' | 'Administrador' | 'Auditor'
 
@@ -39,7 +39,7 @@ export type Memo = {
   plazo: string
   recepcionadoPor: string
   fechaRecepcion: string
-  estado: 'Pendiente' | 'Sin respuesta' | 'Archivado'
+  estado: 'Pendiente' | 'Sin respuesta' | 'Atendido' | 'Archivado'
   createdAt?: string
 
 }
@@ -75,6 +75,7 @@ export type Expediente = {
   estado: Status
   fecha: string
   plazo: string
+  fechaSinRespuesta?: string
   prioridad: 'Normal' | 'Alta'
   archivo: string
   archivoData?: string
