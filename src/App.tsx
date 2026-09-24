@@ -866,7 +866,7 @@ const simularArchivadoMemo = async (memoId: string) => {
       return
     }
 
-    setExpedientes(prev =>
+        setExpedientes(prev =>
       prev.map(item =>
         item.id === memo.expedienteId
           ? {
@@ -877,8 +877,51 @@ const simularArchivadoMemo = async (memoId: string) => {
       )
     )
 
+    // Ejecutar la función REAL de archivado automático
+    const { error: archiveError } =
+      await supabase.rpc(
+        'archivar_expedientes_sin_respuesta'
+      )
+
+    if (archiveError) {
+      console.error(
+        'Error ejecutando archivado automático:',
+        archiveError
+      )
+
+      notify(
+        `La fecha fue preparada, pero no se pudo ejecutar el archivado: ${archiveError.message}`
+      )
+
+      return
+    }
+
+    // Actualizar el Memo en memoria
+    setMemos(prev =>
+      prev.map(item =>
+        item.id === memoId
+          ? {
+              ...item,
+              estado: 'Archivado'
+            }
+          : item
+      )
+    )
+
+    // Actualizar el expediente en memoria
+    setExpedientes(prev =>
+      prev.map(item =>
+        item.id === memo.expedienteId
+          ? {
+              ...item,
+              estado: 'Archivado'
+            }
+          : item
+      )
+    )
+
     notify(
-      `Prueba preparada: fecha de Sin respuesta establecida en ${fechaSinRespuesta}`
+      'Prueba exitosa: el Memo y su expediente fueron archivados automáticamente'
     )
 
   } catch (error) {
