@@ -815,6 +815,83 @@ const updateMemoEstado = async (
     )
   }
 }
+// =========================================================
+// PRUEBA TEMPORAL DE ARCHIVADO AUTOMÁTICO
+// =========================================================
+
+const simularArchivadoMemo = async (memoId: string) => {
+  try {
+    const memo = memos.find(
+      item => item.id === memoId
+    )
+
+    if (!memo) {
+      notify('Memo no encontrado')
+      return
+    }
+
+    if (memo.estado !== 'Sin respuesta') {
+      notify(
+        'El Memo debe estar en "Sin respuesta" para realizar la prueba'
+      )
+      return
+    }
+
+    const fechaPrueba = new Date()
+
+    fechaPrueba.setDate(
+      fechaPrueba.getDate() - 30
+    )
+
+    const fechaSinRespuesta =
+      fechaPrueba.toISOString().split('T')[0]
+
+    const { error } = await supabase
+      .from('mesa_partes_2026')
+      .update({
+        fecha_sin_respuesta: fechaSinRespuesta
+      })
+      .eq('id', Number(memo.expedienteId))
+
+    if (error) {
+      console.error(
+        'Error preparando prueba de archivado:',
+        error
+      )
+
+      notify(
+        `No se pudo preparar la prueba: ${error.message}`
+      )
+
+      return
+    }
+
+    setExpedientes(prev =>
+      prev.map(item =>
+        item.id === memo.expedienteId
+          ? {
+              ...item,
+              fechaSinRespuesta
+            }
+          : item
+      )
+    )
+
+    notify(
+      `Prueba preparada: fecha de Sin respuesta establecida en ${fechaSinRespuesta}`
+    )
+
+  } catch (error) {
+    console.error(
+      'Error inesperado preparando la prueba:',
+      error
+    )
+
+    notify(
+      'Ocurrió un error preparando la prueba'
+    )
+  }
+}
   const cancelPendingAction = () => setPendingAction(null)
 
   if (!currentUser) return <UserSelectModal onSelectUser={setCurrentUser} />
@@ -975,14 +1052,15 @@ const updateMemoEstado = async (
                 />
               )}
          {view === 'memos' && (
-  <MemosView
-    expediente={memoExpediente}
-    expedientes={expedientes}
-    areaOptions={areaOptions}
-    memos={memos}
-    showMemoSelector={showMemoSelector}
-    onUpdateMemoEstado={updateMemoEstado}
-    onBack={() => {
+            <MemosView
+              expediente={memoExpediente}
+              expedientes={expedientes}
+              areaOptions={areaOptions}
+              memos={memos}
+              showMemoSelector={showMemoSelector}
+              onUpdateMemoEstado={updateMemoEstado}
+              onSimularArchivadoMemo={simularArchivadoMemo}
+              onBack={() => {
       setMemoExpediente(null)
       setShowMemoForm(false)
       setShowMemoSelector(false)

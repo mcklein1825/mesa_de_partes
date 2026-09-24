@@ -31,7 +31,8 @@ export default function MemosView({
   onCancelMemo,
   onSelectExpediente,
   onCloseMemoSelector,
-  onUpdateMemoEstado
+  onUpdateMemoEstado,
+  onSimularArchivadoMemo
 }: {
   expediente: Expediente | null
   expedientes: Expediente[]
@@ -64,6 +65,9 @@ export default function MemosView({
   onUpdateMemoEstado: (
   memoId: string,
   nuevoEstado: Memo['estado']
+) => void
+  onSimularArchivadoMemo: (
+  memoId: string
 ) => void
 }) {
   const [query, setQuery] = useState('')
@@ -852,7 +856,22 @@ export default function MemosView({
                     {memo.estado === 'Archivado' && (
                       <option value="Archivado">Archivado</option>
                     )}
-                  </select>
+                                    </select>
+
+                  {memo.estado === 'Sin respuesta' && (
+                    <button
+                      type="button"
+                      onClick={() => onSimularArchivadoMemo(memo.id)}
+                      style={{
+                        marginLeft: '8px',
+                        padding: '4px 8px',
+                        fontSize: '11px'
+                      }}
+                    >
+                       Probar 30 días
+                    </button>
+                  )}
+
                   </td>
 
                 </tr>
