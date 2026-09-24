@@ -1584,6 +1584,9 @@ tbody tr:last-child td {
 .list-panel th:nth-child(8) { width: 220px; }
 .list-panel th:nth-child(9) { width: 125px; }
 .list-panel th:nth-child(10) { width: 220px; }
+.list-panel th:nth-child(11) { width: 200px; }
+.list-panel th:nth-child(12) { width: 180px; }
+.list-panel th:nth-child(13) { width: 170px; }
 
 .table-cell-text {
   display: block;
@@ -2154,4 +2157,15 @@ tbody tr:last-child td {
     flex-direction: column;
     gap: 4px;
   }
+}
+.memo-estado-columna {
+  min-width: 150px;
+  width: 150px;
+  white-space: nowrap;
+}
+
+.memo-estado-columna .status-badge {
+  width: 135px;
+  min-width: 135px;
+  box-sizing: border-box;
 }

@@ -60,6 +60,7 @@ export default function App() {
   const [memoCargo, setMemoCargo] = useState('')
   const [memoInstruccion, setMemoInstruccion] = useState('')
   const [memoPlazo, setMemoPlazo] = useState('')
+  const [showMemoResponsableWarning, setShowMemoResponsableWarning] = useState(false)
   const responsableMemo = useMemo(
   () => obtenerResponsablePorArea(memoAreaDestino),
   [memoAreaDestino]
@@ -540,11 +541,6 @@ const openNewMemo = () => {
 
   if (!memoAreaDestino.trim()) {
     notify('Seleccione el área destino')
-    return
-  }
-
-  if (!memoResponsable.trim()) {
-    notify('No se pudo determinar el responsable del área seleccionada')
     return
   }
 

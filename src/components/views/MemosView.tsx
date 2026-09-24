@@ -71,6 +71,7 @@ export default function MemosView({
   const [areaFilter, setAreaFilter] = useState('Todas')
   const [estadoFilter, setEstadoFilter] = useState('Todos')
   const [page, setPage] = useState(1)
+  const [showResponsableWarning, setShowResponsableWarning] = useState(false)
 
   const pageSize = 20
   const responsableMemo = obtenerResponsablePorArea(memoAreaDestino)
@@ -486,7 +487,14 @@ export default function MemosView({
             >
               <button
                 className="primary-button"
-                onClick={onSaveMemo}
+                onClick={() => {
+                  if (!responsableMemo?.responsable?.trim()) {
+                    setShowResponsableWarning(true)
+                    return
+                  }
+
+                  onSaveMemo()
+                }}
               >
                 Guardar Memo
               </button>
@@ -499,9 +507,68 @@ export default function MemosView({
               </button>
             </div>
           
-          </div>
+                 </div>
 
         </div>
+
+        {showResponsableWarning && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.45)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 9999
+            }}
+          >
+            <div
+              style={{
+                background: '#fff',
+                borderRadius: '12px',
+                padding: '28px',
+                width: 'min(420px, 90%)',
+                boxShadow: '0 20px 50px rgba(0, 0, 0, 0.25)',
+                textAlign: 'center'
+              }}
+            >
+              <h2 style={{ marginTop: 0 }}>
+                Advertencia
+              </h2>
+
+              <p style={{ marginBottom: '24px' }}>
+                El área seleccionada no tiene un responsable configurado.
+                ¿Desea continuar y registrar el Memo de todas formas?
+              </p>
+
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  gap: '10px'
+                }}
+              >
+                <button
+                  className="action-link"
+                  onClick={() => setShowResponsableWarning(false)}
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  className="primary-button"
+                  onClick={() => {
+                    setShowResponsableWarning(false)
+                    onSaveMemo()
+                  }}
+                >
+                  Continuar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     )
@@ -654,7 +721,7 @@ export default function MemosView({
                 <th>PLAZO</th>
                 <th>RECEPCIONADO POR</th>
                 <th>FECHA RECEPCIÓN</th>
-                <th>ESTADO</th>
+                <th className="memo-estado-columna">ESTADO</th>
               </tr>
             </thead>
 
@@ -745,8 +812,8 @@ export default function MemosView({
                     {memo.fechaRecepcion || '—'}
                   </td>
 
-                  <td>
-                    <select
+                  <td className="memo-estado-columna">
+                   <select
                       className="status-badge"
                       value={memo.estado}
                       onChange={e => {
