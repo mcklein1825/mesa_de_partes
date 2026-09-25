@@ -28,16 +28,17 @@ export default function UserSelectModal({
 
       const usuarios = await usuariosService.getAll();
 
-      setUsers(
-        usuarios.map((usuario) => ({
-          id: usuario.id,
-          nombre: usuario.nombre,
-          email: '',
-          rol: usuario.rol as Role,
-          area: usuario.area,
-          activo: usuario.activo
-        }))
-      );
+    setUsers(
+      usuarios.map((usuario) => ({
+        id: usuario.id,
+        nombre: usuario.nombre,
+        email: '',
+        rol: usuario.rol as Role,
+        area: usuario.area,
+        secretaria: usuario.secretaria,
+        activo: usuario.activo
+      }))
+    );
     } catch (error) {
       console.error('No se pudieron cargar los usuarios:', error);
     } finally {
@@ -81,6 +82,7 @@ export default function UserSelectModal({
       nombre,
       rol: nuevoRol,
       area: nuevaArea,
+      secretaria: 'Dirección General',
       activo: true
     };
 
@@ -97,6 +99,7 @@ export default function UserSelectModal({
       email: '',
       rol: usuarioCreado.rol as Role,
       area: usuarioCreado.area,
+      secretaria: usuarioCreado.secretaria,
       activo: usuarioCreado.activo
     };
 

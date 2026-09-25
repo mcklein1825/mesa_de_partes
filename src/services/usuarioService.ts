@@ -5,6 +5,7 @@ export interface Usuario {
   nombre: string;
   rol: string;
   area: string;
+  secretaria: string;
   activo: boolean;
   created_at?: string;
 }

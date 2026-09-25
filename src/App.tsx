@@ -12,7 +12,6 @@ import {
   normalizeExpediente, formatDate, todayInputValue, addDays,
   readFileAsDataUrl, getAreaDestino, getRemitenteNombre
 } from './utils/expedienteHelpers'
-import { obtenerResponsablePorArea } from './utils/areasResponsables'
 
 import DashboardView from './components/views/DashboardView'
 import ExpedientesView from './components/views/ExpedientesView'
@@ -56,19 +55,9 @@ export default function App() {
   const [showMemoForm, setShowMemoForm] = useState(false)
   const [showMemoSelector, setShowMemoSelector] = useState(false)
   const [memoAreaDestino, setMemoAreaDestino] = useState('')
-  const [memoResponsable, setMemoResponsable] = useState('')
-  const [memoCargo, setMemoCargo] = useState('')
   const [memoInstruccion, setMemoInstruccion] = useState('')
   const [memoPlazo, setMemoPlazo] = useState('')
-  const [showMemoResponsableWarning, setShowMemoResponsableWarning] = useState(false)
-  const responsableMemo = useMemo(
-  () => obtenerResponsablePorArea(memoAreaDestino),
-  [memoAreaDestino]
-)
-useEffect(() => {
-  setMemoResponsable(responsableMemo?.responsable || '')
-  setMemoCargo(responsableMemo?.cargo || '')
-}, [responsableMemo])
+ 
   const [memoFormData, setMemoFormData] = useState<{ nroMemo: string; fecha: string; destinatario: string; asunto: string; secretaria: string; areaDestino: string } | null>(null)
 
   const notify = useCallback((message: string) => {
@@ -375,7 +364,7 @@ if (oficiosError) {
     const expediente = expedientes.find(e => e.id === id)
     if (!expediente) { notify('Expediente no encontrado'); return }
 
-    setMemoNro(''); setMemoFecha(todayInputValue()); setMemoDestinatario(''); setMemoSecretaria(''); setMemoAsunto(expediente.asunto || '')
+    setMemoNro(''); setMemoFecha(todayInputValue()); setMemoDestinatario(''); setMemoSecretaria(currentUser?.secretaria || ''); setMemoAsunto(expediente.asunto || '')
     setPendingAction({ type: 'derive', id, area: targetArea })
   }
 
@@ -385,7 +374,7 @@ if (oficiosError) {
     const expediente = expedientes.find(e => e.id === id)
     if (!expediente) { notify('Expediente no encontrado'); return }
 
-    if (!memoNro.trim() || !memoFecha || !memoDestinatario.trim() || !memoAsunto.trim() || !memoSecretaria.trim()) {
+    if (!memoNro.trim() || !memoFecha || !memoDestinatario.trim() || !memoAsunto.trim()) {
       notify('Complete todos los campos obligatorios del Memo'); return
     }
     const expedienteId = Number(expediente.id)
@@ -406,7 +395,7 @@ if (oficiosError) {
     const { data: memoCreado, error: memoError } = await supabase.from('memos').insert({
       nro_memo: memoNro.trim(), expediente_id: expedienteId, nro_expediente: expediente.nroExp,
       fecha: memoFecha, destinatario: memoDestinatario.trim(), asunto: memoAsunto.trim(),
-      secretaria: memoSecretaria.trim(),
+      secretaria: currentUser?.secretaria || '',
       area_destino: targetArea,
       responsable: '',
       cargo: '',
@@ -446,7 +435,7 @@ if (oficiosError) {
         destinatario: memoCreado.destinatario || memoDestinatario.trim(),
 
         asunto: memoCreado.asunto || memoAsunto.trim(),
-        secretaria: memoCreado.secretaria || memoSecretaria.trim(),
+        secretaria: memoCreado.secretaria || currentUser?.secretaria || '',
 
         areaDestino: memoCreado.area_destino || targetArea,
 
@@ -477,7 +466,7 @@ if (oficiosError) {
     } : item))
 
     notify(`Memo ${memoNro.trim()} creado y expediente derivado al área ${targetArea}`)
-    setMemoNro(''); setMemoFecha(todayInputValue()); setMemoDestinatario(''); setMemoAsunto(''); setMemoSecretaria('')
+    setMemoNro(''); setMemoFecha(todayInputValue()); setMemoDestinatario(''); setMemoAsunto(''); setMemoSecretaria(currentUser?.secretaria || '')
     setPendingAction(null)
   }
 
@@ -496,10 +485,8 @@ if (oficiosError) {
     setMemoFecha(todayInputValue())
     setMemoDestinatario('')
     setMemoAsunto(expediente.asunto || '')
-    setMemoSecretaria('')
+    setMemoSecretaria(currentUser?.secretaria || '')
     setMemoAreaDestino('')
-    setMemoResponsable('')
-    setMemoCargo('')
     setMemoInstruccion('')
     setMemoPlazo('')
 
@@ -518,10 +505,8 @@ const openNewMemo = () => {
   setMemoFecha(todayInputValue())
   setMemoDestinatario('')
   setMemoAsunto(memoExpediente?.asunto || '')
-  setMemoSecretaria('')
+  setMemoSecretaria(currentUser?.secretaria || '')
   setMemoAreaDestino('')
-  setMemoResponsable('')
-  setMemoCargo('')
   setMemoInstruccion('')
   setMemoPlazo('')
 
@@ -573,10 +558,8 @@ const openNewMemo = () => {
       p_fecha: memoFecha,
       p_destinatario: memoDestinatario.trim(),
       p_asunto: memoAsunto.trim(),
-      p_secretaria: memoSecretaria.trim(),
+      p_secretaria: currentUser?.secretaria || '',
       p_area_destino: memoAreaDestino.trim(),
-      p_responsable: memoResponsable.trim(),
-      p_cargo: memoCargo.trim(),
       p_instruccion: memoInstruccion.trim(),
       p_plazo: memoPlazo.trim()
     })
@@ -669,10 +652,8 @@ const openNewMemo = () => {
       setMemoFecha(todayInputValue())
       setMemoDestinatario('')
       setMemoAsunto('')
-      setMemoSecretaria('')
+      setMemoSecretaria(currentUser?.secretaria || '')
       setMemoAreaDestino('')
-      setMemoResponsable('')
-      setMemoCargo('')
       setMemoInstruccion('')
       setMemoPlazo('')
 
@@ -815,126 +796,7 @@ const updateMemoEstado = async (
     )
   }
 }
-// =========================================================
-// PRUEBA TEMPORAL DE ARCHIVADO AUTOMÁTICO
-// =========================================================
 
-const simularArchivadoMemo = async (memoId: string) => {
-  try {
-    const memo = memos.find(
-      item => item.id === memoId
-    )
-
-    if (!memo) {
-      notify('Memo no encontrado')
-      return
-    }
-
-    if (memo.estado !== 'Sin respuesta') {
-      notify(
-        'El Memo debe estar en "Sin respuesta" para realizar la prueba'
-      )
-      return
-    }
-
-    const fechaPrueba = new Date()
-
-    fechaPrueba.setDate(
-      fechaPrueba.getDate() - 30
-    )
-
-    const fechaSinRespuesta =
-      fechaPrueba.toISOString().split('T')[0]
-
-    const { error } = await supabase
-      .from('mesa_partes_2026')
-      .update({
-        fecha_sin_respuesta: fechaSinRespuesta
-      })
-      .eq('id', Number(memo.expedienteId))
-
-    if (error) {
-      console.error(
-        'Error preparando prueba de archivado:',
-        error
-      )
-
-      notify(
-        `No se pudo preparar la prueba: ${error.message}`
-      )
-
-      return
-    }
-
-        setExpedientes(prev =>
-      prev.map(item =>
-        item.id === memo.expedienteId
-          ? {
-              ...item,
-              fechaSinRespuesta
-            }
-          : item
-      )
-    )
-
-    // Ejecutar la función REAL de archivado automático
-    const { error: archiveError } =
-      await supabase.rpc(
-        'archivar_expedientes_sin_respuesta'
-      )
-
-    if (archiveError) {
-      console.error(
-        'Error ejecutando archivado automático:',
-        archiveError
-      )
-
-      notify(
-        `La fecha fue preparada, pero no se pudo ejecutar el archivado: ${archiveError.message}`
-      )
-
-      return
-    }
-
-    // Actualizar el Memo en memoria
-    setMemos(prev =>
-      prev.map(item =>
-        item.id === memoId
-          ? {
-              ...item,
-              estado: 'Archivado'
-            }
-          : item
-      )
-    )
-
-    // Actualizar el expediente en memoria
-    setExpedientes(prev =>
-      prev.map(item =>
-        item.id === memo.expedienteId
-          ? {
-              ...item,
-              estado: 'Archivado'
-            }
-          : item
-      )
-    )
-
-    notify(
-      'Prueba exitosa: el Memo y su expediente fueron archivados automáticamente'
-    )
-
-  } catch (error) {
-    console.error(
-      'Error inesperado preparando la prueba:',
-      error
-    )
-
-    notify(
-      'Ocurrió un error preparando la prueba'
-    )
-  }
-}
   const cancelPendingAction = () => setPendingAction(null)
 
   if (!currentUser) return <UserSelectModal onSelectUser={setCurrentUser} />
@@ -1102,7 +964,6 @@ const simularArchivadoMemo = async (memoId: string) => {
               memos={memos}
               showMemoSelector={showMemoSelector}
               onUpdateMemoEstado={updateMemoEstado}
-              onSimularArchivadoMemo={simularArchivadoMemo}
               onBack={() => {
       setMemoExpediente(null)
       setShowMemoForm(false)
@@ -1124,6 +985,7 @@ const simularArchivadoMemo = async (memoId: string) => {
     setMemoAsunto={setMemoAsunto}
     memoSecretaria={memoSecretaria}
     setMemoSecretaria={setMemoSecretaria}
+    secretariaActual={currentUser?.secretaria || ''}
     memoAreaDestino={memoAreaDestino}
     setMemoAreaDestino={setMemoAreaDestino}
     memoInstruccion={memoInstruccion}
@@ -1140,10 +1002,8 @@ const simularArchivadoMemo = async (memoId: string) => {
         setMemoFecha(todayInputValue())
         setMemoDestinatario('')
         setMemoAsunto(expediente.asunto || '')
-        setMemoSecretaria('')
+        setMemoSecretaria(currentUser?.secretaria || '')
         setMemoAreaDestino('')
-        setMemoResponsable('')
-        setMemoCargo('')
         setMemoInstruccion('')
         setMemoPlazo('')
         setShowMemoSelector(false)
@@ -1278,8 +1138,13 @@ const simularArchivadoMemo = async (memoId: string) => {
                     <input type="text" value={memoDestinatario} onChange={event => setMemoDestinatario(event.target.value)} placeholder="Nombre del destinatario" />
                   </div>
                   <div className="form-group" style={{ marginTop: '12px' }}>
-                    <label>Secretaría *</label>
-                    <input type="text" value={memoSecretaria} onChange={event => setMemoSecretaria(event.target.value)} placeholder="Secretaría responsable" />
+                    <label>Secretaría</label>
+                      <input
+                        type="text"
+                        value={currentUser?.secretaria || ''}
+                        readOnly
+                        placeholder="Secretaría"
+                      />
                   </div>
                   <div className="form-group" style={{ marginTop: '12px' }}>
                     <label>Asunto del Memo *</label>

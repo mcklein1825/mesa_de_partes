@@ -8,6 +8,7 @@ export type User = {
   email: string
   rol: Role
   area?: string
+  secretaria?: string
   activo: boolean
 }
 
