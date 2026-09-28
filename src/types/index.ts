@@ -23,26 +23,19 @@ export type HistoryEntry = {
   responsable: string
   responsableDestino?: string
 }
-export type Memo = {
 
+export type Memo = {
   id: string
   nroMemo: string
   expedienteId: string
   nroExpediente: string
   fecha: string
-  destinatario: string
   asunto: string
-  secretaria: string
+  registradoPor: string
   areaDestino: string
   responsable: string
-  cargo: string
-  instruccion: string
-  plazo: string
-  recepcionadoPor: string
-  fechaRecepcion: string
   estado: 'Pendiente' | 'Sin respuesta' | 'Atendido' | 'Archivado'
   createdAt?: string
-
 }
 export type Oficio = {
   id: string
@@ -69,12 +62,9 @@ export type Expediente = {
   esDuplicado?: boolean
   fechaIngreso?: string
   remitente: string
-  documento: string
-  tipo: string
   asunto: string
   area: string
   estado: Status
-  fecha: string
   plazo: string
   fechaSinRespuesta?: string
   prioridad: 'Normal' | 'Alta'
@@ -82,7 +72,6 @@ export type Expediente = {
   archivoData?: string
   archivoTipo?: string
   archivoTamano?: number
-  archivoDescripcion?: string
   documentos?: string
   modalidadRecepcion?: string
   entregadoA?: string
@@ -100,7 +89,6 @@ export type Expediente = {
   fechaHoraRecepcion?: string
   constanciaRecepcion?: string
   remitenteNombre?: string
-  remitenteCargo?: string
   areaDestino?: string
   historial?: HistoryEntry[]
 }

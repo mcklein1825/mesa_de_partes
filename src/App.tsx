@@ -39,8 +39,7 @@ export default function App() {
   const [showProfile, setShowProfile] = useState(false)
   const [toast, setToast] = useState('')
   const [isSaving, setIsSaving] = useState(false)
-  const [pendingAction, setPendingAction] = useState<{ type: 'derive' | 'complete' | 'archive'; id: string; area?: string } | null>(null)
-
+  
   const [memos, setMemos] = useState<Memo[]>([])
   const [oficios, setOficios] = useState<Oficio[]>([])
   const [showOficioForm, setShowOficioForm] = useState(false)
@@ -48,18 +47,23 @@ export default function App() {
   { expedienteId: string; tipoDocumento: 'Memo' | 'Oficio' }[]
 >([])
   const [memoNro, setMemoNro] = useState('')
-  const [memoDestinatario, setMemoDestinatario] = useState('')
   const [memoAsunto, setMemoAsunto] = useState('')
-  const [memoSecretaria, setMemoSecretaria] = useState('')
   const [memoFecha, setMemoFecha] = useState(todayInputValue())
   const [showMemoForm, setShowMemoForm] = useState(false)
   const [showMemoSelector, setShowMemoSelector] = useState(false)
   const [memoAreaDestino, setMemoAreaDestino] = useState('')
-  const [memoInstruccion, setMemoInstruccion] = useState('')
-  const [memoPlazo, setMemoPlazo] = useState('')
- 
-  const [memoFormData, setMemoFormData] = useState<{ nroMemo: string; fecha: string; destinatario: string; asunto: string; secretaria: string; areaDestino: string } | null>(null)
+  const [memoResponsable, setMemoResponsable] = useState('')
+  useEffect(() => {
+  if (!memoAreaDestino) {
+    setMemoResponsable('')
+    return
+  }
 
+  setMemoResponsable(
+    AREA_RESPONSABLES[memoAreaDestino] || ''
+  )
+}, [memoAreaDestino]) 
+  
   const notify = useCallback((message: string) => {
     setToast(message)
     window.setTimeout(() => setToast(''), 3000)
@@ -89,20 +93,54 @@ export default function App() {
     const cargarDeSupabase = async () => {
       setLoadingDb(true)
       const { data, error } = await supabase
-        .from('mesa_partes_2026')
-        .select(`id, nro_exp, fecha, fecha_ingreso, nombre_apellido, remitente, remitente_nombre, remitente_cargo, documento, tipo, asunto, contenido, area, area_destino, estado, plazo, prioridad, archivo, archivo_tipo, archivo_tamano, archivo_descripcion, documentos, modalidad_recepcion, entregado_a, documento_seguimiento, canal_recepcion, folios, anexos, direccion, correo, celular, representante, cargo_representante, usuario_registro, fecha_hora_recepcion, constancia_recepcion, historial, fecha_sin_respuesta, es_duplicado`)
-        .order('nro_exp', { ascending: false })
+  .from('mesa_partes_2026')
+  .select(`
+    id,
+    nro_exp,
+    fecha,
+    fecha_ingreso,
+    remitente_nombre,
+    asunto,
+    contenido,
+    area,
+    area_destino,
+    estado,
+    plazo,
+    prioridad,
+    archivo,
+    archivo_tipo,
+    archivo_tamano,
+    documentos,
+    modalidad_recepcion,
+    entregado_a,
+    documento_seguimiento,
+    canal_recepcion,
+    folios,
+    anexos,
+    direccion,
+    correo,
+    celular,
+    representante,
+    cargo_representante,
+    usuario_registro,
+    fecha_hora_recepcion,
+    constancia_recepcion,
+    historial,
+    fecha_sin_respuesta,
+    es_duplicado
+  `)
+  .order('nro_exp', { ascending: false })
 
-      if (error) {
-        console.error('Supabase Error:', error)
-        notify('Error al cargar expedientes desde Supabase')
-        setLoadingDb(false)
-        return
-      }
+if (error) {
+  console.error('Supabase Error:', error)
+  notify('Error al cargar expedientes desde Supabase')
+  setLoadingDb(false)
+  return
+}
 
       if (data) {
         const normalizados: Expediente[] = data.map((item: any) => {
-          const nombreCompleto = item.nombre_apellido || item.remitente || 'Sin nombre'
+          const nombreCompleto = item.remitente_nombre || 'Sin nombre'
           const parts = nombreCompleto.split(/\s*-\s*/, 2)
           return normalizeExpediente({
             id: String(item.id || ''),
@@ -111,15 +149,11 @@ export default function App() {
             fechaIngreso: item.fecha_ingreso || '',
             remitente: nombreCompleto,
             remitenteNombre: item.remitente_nombre || parts[0]?.trim() || nombreCompleto,
-            remitenteCargo: item.remitente_cargo || parts[1]?.trim() || '',
-            documento: item.documento || '',
-            tipo: item.tipo || '',
             asunto: item.asunto || '',
             contenido: item.contenido || '',
             area: item.area || '',
             areaDestino: item.area_destino || '',
             estado: item.estado || 'Pendiente',
-            fecha: item.fecha || '',
             plazo: item.plazo || '',
             fechaSinRespuesta: item.fecha_sin_respuesta || '',
             prioridad: item.prioridad || 'Normal',
@@ -127,8 +161,6 @@ export default function App() {
             archivoData: '',
             archivoTipo: item.archivo_tipo || '',
             archivoTamano: item.archivo_tamano || 0,
-            archivoDescripcion: item.archivo_descripcion || '',
-            documentos: item.documentos || '',
             modalidadRecepcion: item.modalidad_recepcion || undefined,
             entregadoA: item.entregado_a || '',
             documentoSeguimiento: item.documento_seguimiento || '',
@@ -167,16 +199,10 @@ export default function App() {
           expedienteId: String(m.expediente_id),
           nroExpediente: m.nro_expediente || '',
           fecha: m.fecha || '',
-          destinatario: m.destinatario || '',
           asunto: m.asunto || '',
-          secretaria: m.secretaria || '',
+          registradoPor: m.registrado_por || '',
           areaDestino: m.area_destino || '',
           responsable: m.responsable || '',
-          cargo: m.cargo || '',
-          instruccion: m.instruccion || '',
-          plazo: m.plazo || '',
-          recepcionadoPor: m.recepcionado_por || '',
-          fechaRecepcion: m.fecha_recepcion || '',
           estado: m.estado || 'Pendiente',
           createdAt: m.created_at
         }))
@@ -296,25 +322,20 @@ if (oficiosError) {
     const fechaIngreso = String(data.get('fechaIngreso') || '')
     const fechaFormateada = formatDate(fechaIngreso)
     const remitente = String(data.get('remitente') || '').trim()
-    const tipoDocumento = String(data.get('tipoDocumento') || '')
-    const numeroDocumento = String(data.get('numeroDocumento') || '')
 
     const newExpediente: Expediente = {
       id: '', nroExp: String(nextNumber), fechaIngreso: fechaFormateada, remitente,
-      remitenteNombre: remitente, remitenteCargo: String(data.get('cargoRemitente') || '').trim(),
-      documento: `${tipoDocumento} ${numeroDocumento}`.trim(),
+      remitenteNombre: remitente,
       representante: String(data.get('representante') || ''),
       cargoRepresentante: String(data.get('cargoRepresentante') || ''),
-      tipo: String(data.get('tipo') || ''), asunto: String(data.get('asunto') || ''),
+      asunto: String(data.get('asunto') || ''),
       contenido: String(data.get('contenido') || ''), area: '', areaDestino: '', estado: 'Pendiente',
-      fecha: fechaFormateada, plazo: addDays(fechaIngreso, 7),
+      plazo: addDays(fechaIngreso, 7),
       prioridad: String(data.get('prioridad') || 'Normal') as 'Normal' | 'Alta',
       archivo: selectedFile.name || 'Sin adjunto', archivoData: fileData,
       archivoTipo: selectedFile.type || 'application/octet-stream', archivoTamano: selectedFile.size,
-      archivoDescripcion: String(data.get('archivoDescripcion') || '').trim(),
       documentos: String(data.get('documentos') || ''),
       modalidadRecepcion: String(data.get('canalRecepcion') || ''), entregadoA: '',
-      documentoSeguimiento: String(data.get('documentoSeguimiento') || 'Pendiente'),
       canalRecepcion: String(data.get('canalRecepcion') || ''),
       folios: Number(data.get('folios') || 1), anexos: Number(data.get('anexos') || 0),
       direccion: String(data.get('direccion') || ''), correo: String(data.get('correo') || ''),
@@ -325,17 +346,14 @@ if (oficiosError) {
     }
 
     const { data: insertedData, error } = await supabase.from('mesa_partes_2026').insert({
-      nro_exp: newExpediente.nroExp, fecha_ingreso: fechaIngreso, nombre_apellido: newExpediente.remitente,
+      nro_exp: newExpediente.nroExp, fecha_ingreso: fechaIngreso, 
       remitente: newExpediente.remitente, remitente_nombre: newExpediente.remitenteNombre,
-      remitente_cargo: newExpediente.remitenteCargo, documento: newExpediente.documento,
-      tipo: newExpediente.tipo, asunto: newExpediente.asunto, contenido: newExpediente.contenido,
-      area: newExpediente.area, area_destino: newExpediente.areaDestino, estado: newExpediente.estado,
-      fecha: fechaIngreso, plazo: newExpediente.plazo, prioridad: newExpediente.prioridad,
+      asunto: newExpediente.asunto, contenido: newExpediente.contenido, plazo: newExpediente.plazo, prioridad: newExpediente.prioridad,
       archivo: newExpediente.archivo, archivo_data: newExpediente.archivoData,
       archivo_tipo: newExpediente.archivoTipo, archivo_tamano: newExpediente.archivoTamano,
-      archivo_descripcion: newExpediente.archivoDescripcion, documentos: newExpediente.documentos,
+      documentos: newExpediente.documentos,
       modalidad_recepcion: newExpediente.modalidadRecepcion, entregado_a: newExpediente.entregadoA,
-      documento_seguimiento: newExpediente.documentoSeguimiento, canal_recepcion: newExpediente.canalRecepcion,
+      canal_recepcion: newExpediente.canalRecepcion,
       folios: newExpediente.folios, anexos: newExpediente.anexos, direccion: newExpediente.direccion,
       correo: newExpediente.correo, celular: newExpediente.celular, representante: newExpediente.representante,
       cargo_representante: newExpediente.cargoRepresentante, usuario_registro: newExpediente.usuarioRegistro,
@@ -358,118 +376,6 @@ if (oficiosError) {
     notify(`Expediente ${nextId} registrado correctamente`)
   }
 
-  const deriveExpediente = (id: string, targetArea: string) => {
-    if (!userPermissions?.puedeDerivar) { notify('No tiene permisos para derivar expedientes'); return }
-    if (!targetArea) { notify('Seleccione el área de destino antes de derivar'); return }
-    const expediente = expedientes.find(e => e.id === id)
-    if (!expediente) { notify('Expediente no encontrado'); return }
-
-    setMemoNro(''); setMemoFecha(todayInputValue()); setMemoDestinatario(''); setMemoSecretaria(currentUser?.secretaria || ''); setMemoAsunto(expediente.asunto || '')
-    setPendingAction({ type: 'derive', id, area: targetArea })
-  }
-
-  const confirmDerive = async () => {
-    if (!pendingAction || pendingAction.type !== 'derive' || !pendingAction.area || !currentUser) return
-    const { id, area: targetArea } = pendingAction
-    const expediente = expedientes.find(e => e.id === id)
-    if (!expediente) { notify('Expediente no encontrado'); return }
-
-    if (!memoNro.trim() || !memoFecha || !memoDestinatario.trim() || !memoAsunto.trim()) {
-      notify('Complete todos los campos obligatorios del Memo'); return
-    }
-    const expedienteId = Number(expediente.id)
-    if (!Number.isInteger(expedienteId)) { notify('ID de expediente inválido'); return }
-
-    const timestamp = new Date().toLocaleString('es-PE')
-    const historial = [
-      ...(expediente.historial || []),
-      {
-        fechaHora: timestamp, fechaSalida: timestamp, fechaIngreso: timestamp,
-        areaOrigen: 'Mesa de Partes', areaDestino: targetArea,
-        accion: `Memo ${memoNro.trim()} generado`,
-        observacion: `Se generó el Memo ${memoNro.trim()} para derivar el expediente a ${targetArea}.`,
-        responsable: `${currentUser.nombre} - ${currentUser.area || ''}`
-      }
-    ]
-
-    const { data: memoCreado, error: memoError } = await supabase.from('memos').insert({
-      nro_memo: memoNro.trim(), expediente_id: expedienteId, nro_expediente: expediente.nroExp,
-      fecha: memoFecha, destinatario: memoDestinatario.trim(), asunto: memoAsunto.trim(),
-      secretaria: currentUser?.secretaria || '',
-      area_destino: targetArea,
-      responsable: '',
-      cargo: '',
-      recepcionado_por: '',
-      fecha_recepcion: null,
-      estado: 'Pendiente'
-    }).select().single()
-
-    if (memoError) {
-      console.error('Error creando Memo:', memoError)
-      notify(`No se pudo crear el Memo: ${memoError.message}`)
-      return
-    }
-
-    const { error: expedienteError } = await supabase.from('mesa_partes_2026').update({
-      estado: 'Pendiente',area: targetArea, area_destino: targetArea,
-      entregado_a: '', documento_seguimiento: memoNro.trim(), historial
-    }).eq('id', id)
-
-    if (expedienteError) {
-      console.error('Error actualizando expediente:', expedienteError)
-      if (memoCreado?.id) await supabase.from('memos').delete().eq('id', memoCreado.id)
-      notify(`No se pudo derivar el expediente: ${expedienteError.message}`)
-      return
-    }
-
-    if (memoCreado) {
-      const nuevoMemo: Memo = {
-
-        id: String(memoCreado.id),
-        nroMemo: memoCreado.nro_memo || memoNro.trim(),
-
-        expedienteId: String(memoCreado.expediente_id),
-        nroExpediente: memoCreado.nro_expediente || expediente.nroExp,
-
-        fecha: memoCreado.fecha || memoFecha,
-        destinatario: memoCreado.destinatario || memoDestinatario.trim(),
-
-        asunto: memoCreado.asunto || memoAsunto.trim(),
-        secretaria: memoCreado.secretaria || currentUser?.secretaria || '',
-
-        areaDestino: memoCreado.area_destino || targetArea,
-
-        responsable: memoCreado.responsable || '',
-        cargo: memoCreado.cargo || '',
-
-        instruccion: memoCreado.instruccion || '',
-        plazo: memoCreado.plazo || '',
-
-        recepcionadoPor: memoCreado.recepcionado_por || '',
-        fechaRecepcion: memoCreado.fecha_recepcion || '',
-
-        estado: memoCreado.estado || 'Pendiente',
-
-        createdAt: memoCreado.created_at
-      }
-      setMemos(prev => [nuevoMemo, ...prev])
-    }
-
-    setExpedientes(prev => prev.map(item => item.id === id ? {
-      ...item,
-      estado: 'Pendiente',
-      area: targetArea,
-      areaDestino: targetArea,
-      entregadoA: '',
-      documentoSeguimiento: memoNro.trim(),
-      historial
-    } : item))
-
-    notify(`Memo ${memoNro.trim()} creado y expediente derivado al área ${targetArea}`)
-    setMemoNro(''); setMemoFecha(todayInputValue()); setMemoDestinatario(''); setMemoAsunto(''); setMemoSecretaria(currentUser?.secretaria || '')
-    setPendingAction(null)
-  }
-
   const openDocumentType = (id: string, tipo: string) => {
   const expediente = expedientes.find(item => item.id === id)
 
@@ -483,13 +389,8 @@ if (oficiosError) {
 
     setMemoNro('')
     setMemoFecha(todayInputValue())
-    setMemoDestinatario('')
     setMemoAsunto(expediente.asunto || '')
-    setMemoSecretaria(currentUser?.secretaria || '')
     setMemoAreaDestino('')
-    setMemoInstruccion('')
-    setMemoPlazo('')
-
     setShowMemoSelector(false)
     setShowMemoForm(true)
     setView('memos')
@@ -503,12 +404,8 @@ if (oficiosError) {
 const openNewMemo = () => {
   setMemoNro('')
   setMemoFecha(todayInputValue())
-  setMemoDestinatario('')
   setMemoAsunto(memoExpediente?.asunto || '')
-  setMemoSecretaria(currentUser?.secretaria || '')
   setMemoAreaDestino('')
-  setMemoInstruccion('')
-  setMemoPlazo('')
 
   setMemoExpediente(null)
   setShowMemoSelector(true)
@@ -532,12 +429,6 @@ const openNewMemo = () => {
     notify('Seleccione el área destino')
     return
   }
-
-  if (!memoPlazo.trim()) {
-    notify('Ingrese el plazo del Memo')
-    return
-  }
-
   const expedienteId = Number(memoExpediente.id)
 
   if (Number.isNaN(expedienteId)) {
@@ -556,12 +447,10 @@ const openNewMemo = () => {
       p_expediente_id: expedienteId,
       p_nro_expediente: nroExpediente,
       p_fecha: memoFecha,
-      p_destinatario: memoDestinatario.trim(),
       p_asunto: memoAsunto.trim(),
-      p_secretaria: currentUser?.secretaria || '',
+      p_registrado_por: currentUser?.nombre || '',
       p_area_destino: memoAreaDestino.trim(),
-      p_instruccion: memoInstruccion.trim(),
-      p_plazo: memoPlazo.trim()
+      p_responsable: memoResponsable.trim()
     })
 
     if (error) {
@@ -577,16 +466,9 @@ const openNewMemo = () => {
         expedienteId: String(data.expediente_id),
         nroExpediente: data.nro_expediente || '',
         fecha: data.fecha || '',
-        destinatario: data.destinatario || '',
         asunto: data.asunto || '',
-        secretaria: data.secretaria || '',
-        areaDestino: data.area_destino || '',
+registradoPor: data.registrado_por || '',        areaDestino: data.area_destino || '',
         responsable: data.responsable || '',
-        cargo: data.cargo || '',
-        instruccion: data.instruccion || '',
-        plazo: data.plazo || '',
-        recepcionadoPor: data.recepcionado_por || '',
-        fechaRecepcion: data.fecha_recepcion || '',
         estado: data.estado || 'Pendiente',
         createdAt: data.created_at
       }
@@ -650,12 +532,10 @@ const openNewMemo = () => {
 
       setMemoNro('')
       setMemoFecha(todayInputValue())
-      setMemoDestinatario('')
+    
       setMemoAsunto('')
-      setMemoSecretaria(currentUser?.secretaria || '')
       setMemoAreaDestino('')
-      setMemoInstruccion('')
-      setMemoPlazo('')
+
 
       setShowMemoForm(false)
 
@@ -797,7 +677,6 @@ const updateMemoEstado = async (
   }
 }
 
-  const cancelPendingAction = () => setPendingAction(null)
 
   if (!currentUser) return <UserSelectModal onSelectUser={setCurrentUser} />
 
@@ -979,19 +858,12 @@ const updateMemoEstado = async (
     setMemoNro={setMemoNro}
     memoFecha={memoFecha}
     setMemoFecha={setMemoFecha}
-    memoDestinatario={memoDestinatario}
-    setMemoDestinatario={setMemoDestinatario}
     memoAsunto={memoAsunto}
     setMemoAsunto={setMemoAsunto}
-    memoSecretaria={memoSecretaria}
-    setMemoSecretaria={setMemoSecretaria}
-    secretariaActual={currentUser?.secretaria || ''}
+    secretariaActual={currentUser?.nombre || ''}
     memoAreaDestino={memoAreaDestino}
     setMemoAreaDestino={setMemoAreaDestino}
-    memoInstruccion={memoInstruccion}
-    setMemoInstruccion={setMemoInstruccion}
-    memoPlazo={memoPlazo}
-    setMemoPlazo={setMemoPlazo}
+    memoResponsable={memoResponsable}
     onSaveMemo={saveNewMemo}
     onCancelMemo={cancelNewMemo}
     onSelectExpediente={(expediente) => {
@@ -1000,12 +872,10 @@ const updateMemoEstado = async (
       if (expediente) {
         setMemoNro('')
         setMemoFecha(todayInputValue())
-        setMemoDestinatario('')
+        
         setMemoAsunto(expediente.asunto || '')
-        setMemoSecretaria(currentUser?.secretaria || '')
         setMemoAreaDestino('')
-        setMemoInstruccion('')
-        setMemoPlazo('')
+  
         setShowMemoSelector(false)
         setShowMemoForm(true)
       } else {
@@ -1110,71 +980,12 @@ const updateMemoEstado = async (
       </main>
 
       {toast && <div className="toast"><span>✓</span>{toast}</div>}
-      {trackingId && <TrackingModal item={expedientes.find(item => item.id === trackingId)} onClose={() => setTrackingId(null)} />}
-
-      {pendingAction && (
-        <div className="modal-backdrop" role="presentation" onClick={cancelPendingAction}>
-          <section className="confirmation-modal" role="dialog" aria-modal="true" onClick={event => event.stopPropagation()}>
-            <div className="confirmation-header">
-              <h2>{pendingAction.type === 'derive' ? 'Crear Memo y derivar expediente' : 'Confirmar acción'}</h2>
-              <button className="modal-close" onClick={cancelPendingAction} aria-label="Cerrar">×</button>
-            </div>
-            <div className="confirmation-body">
-              {pendingAction.type === 'derive' ? (
-                <>
-                  <p>Complete los datos del Memo para derivar este expediente.</p>
-                  <p className="confirmation-detail"><strong>Área destino:</strong> {pendingAction.area}</p>
-                  <p className="confirmation-detail"><strong>Responsable:</strong> {pendingAction.area ? AREA_RESPONSABLES[pendingAction.area] || pendingAction.area : 'No asignado'}</p>
-                  <div className="form-group" style={{ marginTop: '16px' }}>
-                    <label>Número de Memo *</label>
-                    <input type="text" value={memoNro} onChange={event => setMemoNro(event.target.value)} placeholder="Ej. MEMO-001-2026" />
-                  </div>
-                  <div className="form-group" style={{ marginTop: '12px' }}>
-                    <label>Fecha del Memo *</label>
-                    <input type="date" value={memoFecha} onChange={event => setMemoFecha(event.target.value)} />
-                  </div>
-                  <div className="form-group" style={{ marginTop: '12px' }}>
-                    <label>Destinatario *</label>
-                    <input type="text" value={memoDestinatario} onChange={event => setMemoDestinatario(event.target.value)} placeholder="Nombre del destinatario" />
-                  </div>
-                  <div className="form-group" style={{ marginTop: '12px' }}>
-                    <label>Secretaría</label>
-                      <input
-                        type="text"
-                        value={currentUser?.secretaria || ''}
-                        readOnly
-                        placeholder="Secretaría"
-                      />
-                  </div>
-                  <div className="form-group" style={{ marginTop: '12px' }}>
-                    <label>Asunto del Memo *</label>
-                    <textarea value={memoAsunto} onChange={event => setMemoAsunto(event.target.value)} placeholder="Ingrese el asunto del Memo" rows={3} />
-                  </div>
-                  <p className="confirmation-detail" style={{ marginTop: '16px' }}>El Memo se guardará vinculado a este expediente y quedará registrado en su seguimiento.</p>
-                </>
-              ) : (
-                <>
-                  <p>¿Está seguro que desea marcar este expediente como atendido?</p>
-                  <p className="confirmation-detail">Esta acción cambiará el estado del expediente.</p>
-                </>
-              )}
-            </div>
-            <div className="confirmation-actions">
-              <button className="outline-button" onClick={cancelPendingAction}>Cancelar</button>
-              <button
-                className="primary-button"
-                onClick={() => {
-                  if (pendingAction.type === 'derive') {
-                    confirmDerive()
-                  }
-                }}
->
-                {pendingAction.type === 'derive' ? '✓ Crear Memo y derivar' : '✓ Atender'}
-              </button>
-            </div>
-          </section>
-        </div>
-      )}
-    </div>
+      {trackingId && (
+        <TrackingModal
+          item={expedientes.find(item => item.id === trackingId)}
+          onClose={() => setTrackingId(null)}
+        />
+      )}    
+      </div>
   )
 }

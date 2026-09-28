@@ -78,7 +78,7 @@ export default function DashboardView({
                   <tr key={item.id}>
                     <td>
                       <b className="exp-id">{formatNroExp(item.nroExp)}</b>
-                      <small>{item.fecha}</small>
+                      <small>{item.fechaIngreso || 'Sin fecha'}</small>
                     </td>
                     <td>
                       <span className="person-cell">

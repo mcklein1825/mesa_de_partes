@@ -25,13 +25,11 @@ export default function NewExpedienteView({
     setBuscandoDuplicado(true)
     try {
       const esNumero = /^\d+$/.test(termino)
-      let query = supabase.from('mesa_partes_2026').select('id, nro_exp, fecha, nombre_apellido, asunto').limit(10)
-
+        let query = supabase.from('mesa_partes_2026').select('id, nro_exp, fecha, remitente_nombre, asunto').limit(10)
       if (esNumero) {
         query = query.eq('nro_exp', Number(termino))
       } else {
-        query = query.or(`nombre_apellido.ilike.%${termino}%,asunto.ilike.%${termino}%`)
-      }
+        query = query.or(`remitente_nombre.ilike.%${termino}%,asunto.ilike.%${termino}%`)      }
 
       const { data, error } = await query
       if (error) { console.error('Error buscando expediente para duplicar:', error); setDuplicadoResultados([]); return }
@@ -68,9 +66,9 @@ export default function NewExpedienteView({
                 {duplicadoResultados.map((item) => (
                   <div key={item.id} style={{ padding: '12px', border: '1px solid #ddd', borderRadius: '8px' }}>
                     <strong>{formatNroExp(String(item.nro_exp))}</strong>
-                    <div>{item.nombre_apellido || 'Sin nombre'}</div>
+                    <div>{item.remitente_nombre || 'Sin nombre'}</div>
                     <div>{item.asunto || 'Sin asunto'}</div>
-                    <div>{item.fecha || 'Sin fecha'}</div>
+                    <div>{item.fechaIngreso || 'Sin fecha'}</div>
                     <button type="button" onClick={() => {
                       setDuplicadoSeleccionado(item)
                       const numero = formatNroExp(String(item.nro_exp))
@@ -85,8 +83,8 @@ export default function NewExpedienteView({
               <div style={{ marginTop: '15px', padding: '12px', borderRadius: '8px', border: '1px solid #ccc' }}>
                 <strong>Expediente seleccionado:</strong>
                 <div>{formatNroExp(String(duplicadoSeleccionado.nro_exp))}</div>
-                <div>{duplicadoSeleccionado.nombre_apellido}</div>
-                <div style={{ marginTop: '10px', padding: '10px', borderRadius: '6px', background: '#f5f5f5' }}>
+                <div>{duplicadoSeleccionado.remitente_nombre}</div>   
+             <div style={{ marginTop: '10px', padding: '10px', borderRadius: '6px', background: '#f5f5f5' }}>
                   <strong>Nuevo expediente:</strong>
                   <div>{numeroExpedienteClonado}</div>
                 </div>
@@ -99,23 +97,15 @@ export default function NewExpedienteView({
 
         {isSaving && <div className="saving-notice">Guardando archivo y expediente en Supabase...</div>}
 
-        <div className="legacy-title">▣ Registro de Expediente MPV</div>
+        <div className="legacy-title">Registro de Expediente</div>
 
         <section className="panel form-panel">
           <div className="panel-header">
-            <div><h2>Datos del trámite</h2><p>Complete los datos solicitados para registrar el expediente.</p></div>
+            <div><h2>Datos del expediente</h2><p>Complete los datos solicitados para registrar el expediente.</p></div>
           </div>
           <div className="form-grid">
             <label>Fecha de ingreso<input name="fechaIngreso" type="date" required defaultValue={todayInputValue()} /></label>
-            <label>Trámite
-              <select name="tipo" required>
-                <option value="">Seleccione el tipo</option>
-                <option>Solicitud</option><option>Oficio</option><option>Memorando</option>
-                <option>Informe</option><option>Carta</option><option>Resolución</option>
-              </select>
-            </label>
             <label className="wide">Nombre / apellido o razón social<input name="remitente" required placeholder="Ingrese el nombre completo o razón social." /></label>
-            <label>Cargo del remitente<input name="cargoRemitente" placeholder="Cargo o función del remitente" /></label>
             <label className="wide">Asunto de la solicitud<input name="asunto" required placeholder="Registre en forma clara el asunto por el cual ingresa el documento." /></label>
             <label className="wide">Documentos<input name="documentos" required placeholder="Ej. Oficio Múltiple N.° 00129-2025-MINEDU/..." /></label>
           </div>
@@ -164,7 +154,6 @@ export default function NewExpedienteView({
                 <option>Físico</option><option>Plataforma SINAD</option><option>Virtual</option><option>Presencial</option>
               </select>
             </label>
-            <label className="wide">Documento seguimiento<input name="documentoSeguimiento" placeholder="Ej. Informe técnico o memorando" /></label>
           </div>
         </section>
 
@@ -179,7 +168,6 @@ export default function NewExpedienteView({
               </label>
               <small>{selectedFileName ? `Seleccionado: ${selectedFileName}` : 'Máximo 5 MB.'}</small>
             </div>
-            <label>Descripción del archivo<input name="archivoDescripcion" placeholder="Descripción del archivo" /></label>
           </div>
         </section>
 

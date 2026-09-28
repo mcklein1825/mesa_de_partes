@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Expediente } from '../../types'
-import { formatNroExp, displayDate, getRemitenteNombre, getRemitenteCargo, getAreaDestino } from '../../utils/expedienteHelpers'
+import { formatNroExp, displayDate, getRemitenteNombre, getAreaDestino } from '../../utils/expedienteHelpers'
 import DocumentLink from '../common/DocumentLink'
 import StatusBadge from '../common/StatusBadge'
 
@@ -109,11 +109,10 @@ export default function ExpedientesView({
             </thead>
             <tbody>
               {pageItems.map(item => {
-                const cargo = getRemitenteCargo(item)
                 return (
                   <tr key={item.id}>
                     <td><b className="exp-id">{formatNroExp(item.nroExp)}</b></td>
-                    <td>{displayDate(item.fechaIngreso || item.fecha)}</td>
+                    <td>{displayDate(item.fechaIngreso || '')}</td>
                     <td>
                       <span className="person-cell">
                         <span className="small-avatar">
@@ -121,14 +120,12 @@ export default function ExpedientesView({
                         </span>
                         <span className="table-cell-group">
                           {cell(getRemitenteNombre(item))}
-                          {cargo ? <small>{cargo}</small> : null}
                         </span>
                       </span>
                     </td>
                     <td>
                       <span className="table-cell-group">
                         {cell(item.asunto)}
-                        <small>{item.tipo}</small>
                       </span>
                     </td>
                     <td><DocumentLink item={item} /></td>

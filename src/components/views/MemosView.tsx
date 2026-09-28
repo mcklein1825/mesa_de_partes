@@ -14,19 +14,12 @@
     setMemoNro,
     memoFecha,
     setMemoFecha,
-    memoDestinatario,
-    setMemoDestinatario,
     memoAsunto,
     setMemoAsunto,
-    memoSecretaria,
-    setMemoSecretaria,
     secretariaActual,
     memoAreaDestino,
     setMemoAreaDestino,
-    memoInstruccion,
-    setMemoInstruccion,
-    memoPlazo,
-    setMemoPlazo,
+    memoResponsable,
     onSaveMemo,
     onCancelMemo,
     onSelectExpediente,
@@ -45,19 +38,12 @@
     setMemoNro: (value: string) => void
     memoFecha: string
     setMemoFecha: (value: string) => void
-    memoDestinatario: string
-    setMemoDestinatario: (value: string) => void
     memoAsunto: string
     setMemoAsunto: (value: string) => void
-    memoSecretaria: string
-    setMemoSecretaria: (value: string) => void
     secretariaActual: string
     memoAreaDestino: string
     setMemoAreaDestino: (value: string) => void
-    memoInstruccion: string
-    setMemoInstruccion: (value: string) => void
-    memoPlazo: string
-    setMemoPlazo: (value: string) => void
+    memoResponsable: string
     onSaveMemo: () => void
     onCancelMemo: () => void
     onSelectExpediente: (expediente: Expediente | null) => void
@@ -113,10 +99,8 @@
 
       return memos.filter(memo => {
         const coincideBusqueda =
-          !texto ||
           memo.nroMemo.toLowerCase().includes(texto) ||
           memo.nroExpediente.toLowerCase().includes(texto) ||
-          memo.destinatario.toLowerCase().includes(texto) ||
           memo.asunto.toLowerCase().includes(texto)
 
         const coincideArea =
@@ -360,27 +344,13 @@
                   }
                 />
               </div>
-
               <div>
-                <label>Destinatario</label>
-
-                <input
-                  type="text"
-                  value={memoDestinatario}
-                  onChange={e =>
-                    setMemoDestinatario(e.target.value)
-                  }
-                  placeholder="Nombre del destinatario"
-                />
-              </div>
-
-              <div>
-                <label>Secretaría</label>
+                <label>Registrado por</label>
                   <input
                     type="text"
                     value={secretariaActual}
                     readOnly
-                    placeholder="Secretaría"
+                    placeholder="Usuario"
                   />
               </div>
 
@@ -406,6 +376,16 @@
                     </option>
                   ))}
                 </select>
+              </div>
+              <div>
+                <label>Responsable</label>
+
+                <input
+                  type="text"
+                  value={memoResponsable}
+                  readOnly
+                  placeholder="Se completará automáticamente"
+                />
               </div>
 
               <div>
@@ -500,7 +480,7 @@
                   setQuery(e.target.value)
                   setPage(1)
                 }}
-                placeholder="Buscar por N.º Memo, expediente, destinatario o asunto..."
+                placeholder="Buscar por N.º Memo, expediente o asunto..."
               />
 
             </div>
@@ -565,15 +545,10 @@
                   <th>N.º MEMO</th>
                   <th>N.º EXPEDIENTE</th>
                   <th>FECHA</th>
-                  <th>DESTINATARIO</th>
                   <th>ASUNTO</th>
-                  <th>SECRETARÍA</th>
+                  <th>REGISTRADO POR</th>
                   <th>ÁREA DESTINO</th>
                   <th>RESPONSABLE</th>
-                  <th>CARGO</th>
-                  <th>PLAZO</th>
-                  <th>RECEPCIONADO POR</th>
-                  <th>FECHA RECEPCIÓN</th>
                   <th className="memo-estado-columna">ESTADO</th>
                 </tr>
               </thead>
@@ -602,15 +577,6 @@
                     <td>
                       <span
                         className="table-cell-text"
-                        title={memo.destinatario}
-                      >
-                        {memo.destinatario || '—'}
-                      </span>
-                    </td>
-
-                    <td>
-                      <span
-                        className="table-cell-text"
                         title={memo.asunto}
                       >
                         {memo.asunto || '—'}
@@ -620,9 +586,9 @@
                     <td>
                       <span
                         className="table-cell-text"
-                        title={memo.secretaria}
+                        title={memo.registradoPor}
                       >
-                        {memo.secretaria || '—'}
+                        {memo.registradoPor || '—'}
                       </span>
                     </td>
 
@@ -634,7 +600,6 @@
                       {memo.areaDestino || '—'}
                     </span>
                   </td>
-
                   <td>
                     <span
                       className="table-cell-text"
@@ -643,28 +608,6 @@
                       {memo.responsable || '—'}
                     </span>
                   </td>
-
-                  <td>
-                    <span
-                      className="table-cell-text"
-                      title={memo.cargo || ''}
-                    >
-                      {memo.cargo || '—'}
-                    </span>
-                  </td>
-
-                  <td>
-                    {memo.plazo || '—'}
-                  </td>
-
-                  <td>
-                    {memo.recepcionadoPor || '—'}
-                  </td>
-
-                    <td>
-                      {memo.fechaRecepcion || '—'}
-                    </td>
-
                     <td className="memo-estado-columna">
                     <select
                       className="status-badge"

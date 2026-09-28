@@ -1,16 +1,8 @@
 import { Expediente, HistoryEntry } from '../types'
 import { AREA_RESPONSABLES } from '../constants'
 
-export const splitRemitente = (value: string) => {
-  const [name, ...cargo] = value.split(/\s*-\s*/, 2)
-  return { nombre: name.trim(), cargo: cargo.join(' - ').trim() }
-}
-
 export const getRemitenteNombre = (item: Expediente) =>
-  item.remitenteNombre || splitRemitente(item.remitente).nombre
-
-export const getRemitenteCargo = (item: Expediente) =>
-  item.remitenteCargo || splitRemitente(item.remitente).cargo
+  item.remitenteNombre || ''
 
 export const getAreaDestino = (item: Expediente) =>
   item.areaDestino || item.entregadoA || item.area || 'Pendiente de asignación'
@@ -26,8 +18,8 @@ export const getRecordedResponsible = (item: Expediente) => {
 
 export const createInitialHistory = (item: Expediente): HistoryEntry[] => [
   {
-    fechaHora: item.fechaIngreso || item.fecha || 'Fecha pendiente',
-    fechaIngreso: item.fechaIngreso || item.fecha || 'Fecha pendiente',
+    fechaHora: item.fechaIngreso || 'Fecha pendiente',
+    fechaIngreso: item.fechaIngreso || 'Fecha pendiente',
     areaOrigen: 'Mesa de Partes',
     areaDestino: getAreaDestino(item),
     accion: 'Pendiente',
@@ -35,9 +27,9 @@ export const createInitialHistory = (item: Expediente): HistoryEntry[] => [
     responsable: item.usuarioRegistro || 'Responsable no registrado'
   },
   ...(item.estado !== 'Pendiente' ? [{
-    fechaHora: item.fechaHoraRecepcion || item.fechaIngreso || item.fecha || 'Fecha pendiente',
-    fechaSalida: item.fechaHoraRecepcion || item.fechaIngreso || item.fecha || 'Fecha pendiente',
-    fechaIngreso: item.fechaHoraRecepcion || item.fechaIngreso || item.fecha || 'Fecha pendiente',
+    fechaHora: item.fechaHoraRecepcion || item.fechaIngreso || 'Fecha pendiente',
+    fechaSalida: item.fechaHoraRecepcion || item.fechaIngreso || 'Fecha pendiente',
+    fechaIngreso: item.fechaHoraRecepcion || item.fechaIngreso || 'Fecha pendiente',
     areaOrigen: 'Mesa de Partes',
     areaDestino: getAreaDestino(item),
     accion: 'Derivado para atención',
@@ -45,8 +37,8 @@ export const createInitialHistory = (item: Expediente): HistoryEntry[] => [
     responsable: item.usuarioRegistro || 'Responsable no registrado'
   }] : []),
   ...(['Atendido', 'Archivado'].includes(item.estado) ? [{
-    fechaHora: item.fechaHoraRecepcion || item.fechaIngreso || item.fecha || 'Fecha pendiente',
-    fechaSalida: item.fechaHoraRecepcion || item.fechaIngreso || item.fecha || 'Fecha pendiente',
+    fechaHora: item.fechaHoraRecepcion || item.fechaIngreso || 'Fecha pendiente',
+    fechaSalida: item.fechaHoraRecepcion || item.fechaIngreso || 'Fecha pendiente',
     areaOrigen: getAreaDestino(item),
     areaDestino: 'Mesa de Partes',
     accion: item.estado === 'Archivado' ? 'Archivado' : 'Atendido',
@@ -56,11 +48,9 @@ export const createInitialHistory = (item: Expediente): HistoryEntry[] => [
 ]
 
 export const normalizeExpediente = (item: Expediente): Expediente => {
-  const parts = splitRemitente(item.remitente)
   return {
     ...item,
-    remitenteNombre: item.remitenteNombre || parts.nombre,
-    remitenteCargo: item.remitenteCargo || parts.cargo,
+    remitenteNombre: item.remitenteNombre || '',
     areaDestino: item.areaDestino || item.entregadoA || item.area || '',
     historial: item.historial?.length ? item.historial : createInitialHistory(item)
   }
@@ -97,7 +87,7 @@ export const calculateAverageResolutionTime = (expedientes: Expediente[]): numbe
   if (attended.length === 0) return 0
   let totalDays = 0, count = 0
   attended.forEach(exp => {
-    const startDate = exp.fechaIngreso || exp.fecha
+    const startDate = exp.fechaIngreso
     if (!startDate) return
     const attendedEntry = exp.historial?.find(h => h.accion === 'Atendido' || h.accion === 'Archivado')
     if (!attendedEntry?.fechaHora) return
@@ -114,7 +104,7 @@ export const calculateAverageResolutionTime = (expedientes: Expediente[]): numbe
 export const exportReportToCSV = (expedientes: Expediente[]) => {
   const headers = ['Nro. Expediente', 'Fecha', 'Remitente', 'Asunto', 'Área', 'Estado', 'Prioridad', 'Plazo']
   const rows = expedientes.map(e => [
-    formatNroExp(e.nroExp), e.fechaIngreso || e.fecha, getRemitenteNombre(e),
+    formatNroExp(e.nroExp), e.fechaIngreso || '', getRemitenteNombre(e),
     `"${e.asunto.replace(/"/g, '""')}"`, getAreaDestino(e), e.estado, e.prioridad, e.plazo
   ])
   const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n')

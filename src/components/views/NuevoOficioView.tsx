@@ -1,9 +1,6 @@
 import { FormEvent, useState } from 'react'
 import { Expediente } from '../../types'
-import {
-  AREAS_RESPONSABLES,
-  obtenerResponsablePorArea
-} from '../../utils/areasResponsables'
+import { AREA_RESPONSABLES } from '../../constants'
 
 type Props = {
   expediente: Expediente | null
@@ -52,9 +49,7 @@ export default function NuevoOficioView({
   const [guardando, setGuardando] = useState(false)
 
   // El responsable se obtiene automáticamente según el área seleccionada.
-  const responsableInfo = obtenerResponsablePorArea(areaDestino)
-
-  const responsable = responsableInfo?.responsable || ''
+ const responsable = AREA_RESPONSABLES[areaDestino] || ''
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -161,12 +156,12 @@ export default function NuevoOficioView({
                     Seleccione un área
                   </option>
 
-                  {AREAS_RESPONSABLES.map(item => (
+                  {Object.keys(AREA_RESPONSABLES).map(area => (
                     <option
-                      key={item.area}
-                      value={item.area}
+                      key={area}
+                      value={area}
                     >
-                      {item.area}
+                      {area}
                     </option>
                   ))}
                 </select>
@@ -181,12 +176,6 @@ export default function NuevoOficioView({
                   readOnly
                   placeholder="Se completará automáticamente"
                 />
-
-                {responsableInfo?.cargo && (
-                  <small>
-                    {responsableInfo.cargo}
-                  </small>
-                )}
               </div>
             </div>
           </div>

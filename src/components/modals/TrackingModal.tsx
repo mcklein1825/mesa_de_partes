@@ -26,11 +26,10 @@ export default function TrackingModal({ item, onClose }: { item?: Expediente; on
           <span><b>Ubicación actual</b>{getAreaDestino(item)}</span>
         </div>
 
-        {item.archivoData && (
+        {item.archivo && item.archivo !== 'Sin adjunto' && (
           <div className="tracking-attachment">
             <b>Documento adjunto</b>
             <DocumentLink item={item} />
-            {item.archivoDescripcion && <small>{item.archivoDescripcion}</small>}
           </div>
         )}
 

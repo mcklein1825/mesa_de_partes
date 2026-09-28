@@ -3,7 +3,6 @@ import { Expediente } from '../../types'
 import {
   formatNroExp,
   getRemitenteNombre,
-  getRemitenteCargo,
   getAreaDestino
 } from '../../utils/expedienteHelpers'
 
@@ -72,8 +71,7 @@ export default function ExpedienteSelector({
   ])
 
   if (value) {
-    const cargo = getRemitenteCargo(value)
-    const area = getAreaDestino(value)
+  const area = getAreaDestino(value)
 
     return (
       <div className="form-group">
@@ -85,7 +83,6 @@ export default function ExpedienteSelector({
 
             <small>
               {getRemitenteNombre(value)}
-              {cargo ? ` · ${cargo}` : ''}
             </small>
 
             <small>
@@ -147,7 +144,6 @@ export default function ExpedienteSelector({
         {resultados.length > 0 && (
           <div className="expediente-selector-results">
             {resultados.map(item => {
-              const cargo = getRemitenteCargo(item)
               const area = getAreaDestino(item)
 
               return (
@@ -167,7 +163,6 @@ export default function ExpedienteSelector({
 
                     <span>
                       {getRemitenteNombre(item)}
-                      {cargo ? ` · ${cargo}` : ''}
                     </span>
                   </div>
 
