@@ -47,7 +47,7 @@ export default function App() {
   { expedienteId: string; tipoDocumento: 'Memo' | 'Oficio' }[]
 >([])
   const [memoNro, setMemoNro] = useState('')
-  const [memoDocumento, setMemoDocumento] = useState('')
+  const [memoAsunto, setMemoAsunto] = useState('')
   const [memoFecha, setMemoFecha] = useState(todayInputValue())
   const [showMemoForm, setShowMemoForm] = useState(false)
   const [showMemoSelector, setShowMemoSelector] = useState(false)
@@ -198,7 +198,7 @@ if (error) {
           expedienteId: String(m.expediente_id),
           nroExpediente: m.nro_expediente || '',
           fecha: m.fecha || '',
-          documento: m.documento || '',
+          asunto: m.asunto || '',
           registradoPor: m.registrado_por || '',
           areaDestino: m.area_destino || '',
           responsable: m.responsable || '',
@@ -388,7 +388,7 @@ if (oficiosError) {
 
     setMemoNro('')
     setMemoFecha(todayInputValue())
-    setMemoDocumento(expediente.asunto || '')
+    setMemoAsunto(expediente.asunto || '')
     setMemoAreaDestino('')
     setShowMemoSelector(false)
     setShowMemoForm(true)
@@ -403,7 +403,7 @@ if (oficiosError) {
 const openNewMemo = () => {
   setMemoNro('')
   setMemoFecha(todayInputValue())
-  setMemoDocumento(memoExpediente?.asunto || '')
+  setMemoAsunto(memoExpediente?.asunto || '')
   setMemoAreaDestino('')
 
   setMemoExpediente(null)
@@ -446,7 +446,7 @@ const openNewMemo = () => {
       p_expediente_id: expedienteId,
       p_nro_expediente: nroExpediente,
       p_fecha: memoFecha,
-      p_documento: memoDocumento.trim(),
+      p_asunto: memoAsunto.trim(),
       p_registrado_por: currentUser?.nombre || '',
       p_area_destino: memoAreaDestino.trim(),
       p_responsable: memoResponsable.trim()
@@ -465,7 +465,7 @@ const openNewMemo = () => {
         expedienteId: String(data.expediente_id),
         nroExpediente: data.nro_expediente || '',
         fecha: data.fecha || '',
-        documento: data.documento || '',
+        asunto: data.asunto || '',
         registradoPor: data.registrado_por || '',
         areaDestino: data.area_destino || '',
         responsable: data.responsable || '',
@@ -533,7 +533,7 @@ const openNewMemo = () => {
       setMemoNro('')
       setMemoFecha(todayInputValue())
     
-      setMemoDocumento('')
+      setMemoAsunto('')
       setMemoAreaDestino('')
 
 
@@ -858,8 +858,8 @@ const updateMemoEstado = async (
     setMemoNro={setMemoNro}
     memoFecha={memoFecha}
     setMemoFecha={setMemoFecha}
-    memoDocumento={memoDocumento}
-    setMemoDocumento={setMemoDocumento}
+    memoAsunto={memoAsunto}
+    setMemoAsunto={setMemoAsunto}
     secretariaActual={currentUser?.nombre || ''}
     memoAreaDestino={memoAreaDestino}
     setMemoAreaDestino={setMemoAreaDestino}
@@ -873,7 +873,7 @@ const updateMemoEstado = async (
         setMemoNro('')
         setMemoFecha(todayInputValue())
         
-        setMemoDocumento(expediente.asunto || '')
+        setMemoAsunto(expediente.asunto || '')
         setMemoAreaDestino('')
   
         setShowMemoSelector(false)

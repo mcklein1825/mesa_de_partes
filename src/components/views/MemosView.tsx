@@ -14,8 +14,8 @@
     setMemoNro,
     memoFecha,
     setMemoFecha,
-    memoDocumento,
-    setMemoDocumento,
+    memoAsunto,
+    setMemoAsunto,
     secretariaActual,
     memoAreaDestino,
     setMemoAreaDestino,
@@ -38,8 +38,8 @@
     setMemoNro: (value: string) => void
     memoFecha: string
     setMemoFecha: (value: string) => void
-    memoDocumento: string
-    setMemoDocumento: (value: string) => void
+    memoAsunto: string
+    setMemoAsunto: (value: string) => void
     secretariaActual: string
     memoAreaDestino: string
     setMemoAreaDestino: (value: string) => void
@@ -101,7 +101,7 @@
         const coincideBusqueda =
           memo.nroMemo.toLowerCase().includes(texto) ||
           memo.nroExpediente.toLowerCase().includes(texto) ||
-          memo.documento.toLowerCase().includes(texto)
+          memo.asunto.toLowerCase().includes(texto)
 
         const coincideArea =
           areaFilter === 'Todas' ||
@@ -390,15 +390,15 @@
 
               <div>
 
-              <label>Documento</label>
+              <label>Asunto</label>
 
               <input
                 type="text"
-                value={memoDocumento}
+                value={memoAsunto}
                 onChange={e =>
-                  setMemoDocumento(e.target.value)
+                  setMemoAsunto(e.target.value)
                 }
-                placeholder="Documento del Memo"
+                placeholder="Asunto del Memo"
               />
               </div>
               <div
@@ -545,7 +545,7 @@
                   <th>N.º MEMO</th>
                   <th>N.º EXPEDIENTE</th>
                   <th>FECHA</th>
-                  <th>DOCUMENTO</th>
+                  <th>ASUNTO</th>
                   <th>REGISTRADO POR</th>
                   <th>ÁREA DESTINO</th>
                   <th>RESPONSABLE</th>
@@ -577,9 +577,9 @@
                     <td>
                       <span
                         className="table-cell-text"
-                        title={memo.documento}
+                        title={memo.asunto}
                       >
-                        {memo.documento || '—'}
+                        {memo.asunto || '—'}
                       </span>
                     </td>
 

@@ -30,7 +30,7 @@ export type Memo = {
   expedienteId: string
   nroExpediente: string
   fecha: string
-  documento: string
+  asunto: string
   registradoPor: string
   areaDestino: string
   responsable: string
