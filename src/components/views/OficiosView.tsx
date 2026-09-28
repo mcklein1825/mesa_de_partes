@@ -86,7 +86,7 @@ export default function OficiosView({
               <th>Fecha</th>
               <th>Destinatario</th>
               <th>Área destino</th>
-              <th>Asunto</th>
+              <th>Documento</th>
               <th>Responsable</th>
               <th>Estado</th>
             </tr>

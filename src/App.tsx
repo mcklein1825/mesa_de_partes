@@ -47,7 +47,7 @@ export default function App() {
   { expedienteId: string; tipoDocumento: 'Memo' | 'Oficio' }[]
 >([])
   const [memoNro, setMemoNro] = useState('')
-  const [memoAsunto, setMemoAsunto] = useState('')
+  const [memoDocumento, setMemoDocumento] = useState('')
   const [memoFecha, setMemoFecha] = useState(todayInputValue())
   const [showMemoForm, setShowMemoForm] = useState(false)
   const [showMemoSelector, setShowMemoSelector] = useState(false)
@@ -97,7 +97,6 @@ export default function App() {
   .select(`
     id,
     nro_exp,
-    fecha,
     fecha_ingreso,
     remitente_nombre,
     asunto,
@@ -199,7 +198,7 @@ if (error) {
           expedienteId: String(m.expediente_id),
           nroExpediente: m.nro_expediente || '',
           fecha: m.fecha || '',
-          asunto: m.asunto || '',
+          documento: m.documento || '',
           registradoPor: m.registrado_por || '',
           areaDestino: m.area_destino || '',
           responsable: m.responsable || '',
@@ -347,7 +346,7 @@ if (oficiosError) {
 
     const { data: insertedData, error } = await supabase.from('mesa_partes_2026').insert({
       nro_exp: newExpediente.nroExp, fecha_ingreso: fechaIngreso, 
-      remitente: newExpediente.remitente, remitente_nombre: newExpediente.remitenteNombre,
+      remitente_nombre: newExpediente.remitenteNombre,
       asunto: newExpediente.asunto, contenido: newExpediente.contenido, plazo: newExpediente.plazo, prioridad: newExpediente.prioridad,
       archivo: newExpediente.archivo, archivo_data: newExpediente.archivoData,
       archivo_tipo: newExpediente.archivoTipo, archivo_tamano: newExpediente.archivoTamano,
@@ -389,7 +388,7 @@ if (oficiosError) {
 
     setMemoNro('')
     setMemoFecha(todayInputValue())
-    setMemoAsunto(expediente.asunto || '')
+    setMemoDocumento(expediente.asunto || '')
     setMemoAreaDestino('')
     setShowMemoSelector(false)
     setShowMemoForm(true)
@@ -404,7 +403,7 @@ if (oficiosError) {
 const openNewMemo = () => {
   setMemoNro('')
   setMemoFecha(todayInputValue())
-  setMemoAsunto(memoExpediente?.asunto || '')
+  setMemoDocumento(memoExpediente?.asunto || '')
   setMemoAreaDestino('')
 
   setMemoExpediente(null)
@@ -447,7 +446,7 @@ const openNewMemo = () => {
       p_expediente_id: expedienteId,
       p_nro_expediente: nroExpediente,
       p_fecha: memoFecha,
-      p_asunto: memoAsunto.trim(),
+      p_documento: memoDocumento.trim(),
       p_registrado_por: currentUser?.nombre || '',
       p_area_destino: memoAreaDestino.trim(),
       p_responsable: memoResponsable.trim()
@@ -466,8 +465,9 @@ const openNewMemo = () => {
         expedienteId: String(data.expediente_id),
         nroExpediente: data.nro_expediente || '',
         fecha: data.fecha || '',
-        asunto: data.asunto || '',
-registradoPor: data.registrado_por || '',        areaDestino: data.area_destino || '',
+        documento: data.documento || '',
+        registradoPor: data.registrado_por || '',
+        areaDestino: data.area_destino || '',
         responsable: data.responsable || '',
         estado: data.estado || 'Pendiente',
         createdAt: data.created_at
@@ -533,7 +533,7 @@ registradoPor: data.registrado_por || '',        areaDestino: data.area_destino 
       setMemoNro('')
       setMemoFecha(todayInputValue())
     
-      setMemoAsunto('')
+      setMemoDocumento('')
       setMemoAreaDestino('')
 
 
@@ -858,8 +858,8 @@ const updateMemoEstado = async (
     setMemoNro={setMemoNro}
     memoFecha={memoFecha}
     setMemoFecha={setMemoFecha}
-    memoAsunto={memoAsunto}
-    setMemoAsunto={setMemoAsunto}
+    memoDocumento={memoDocumento}
+    setMemoDocumento={setMemoDocumento}
     secretariaActual={currentUser?.nombre || ''}
     memoAreaDestino={memoAreaDestino}
     setMemoAreaDestino={setMemoAreaDestino}
@@ -873,7 +873,7 @@ const updateMemoEstado = async (
         setMemoNro('')
         setMemoFecha(todayInputValue())
         
-        setMemoAsunto(expediente.asunto || '')
+        setMemoDocumento(expediente.asunto || '')
         setMemoAreaDestino('')
   
         setShowMemoSelector(false)

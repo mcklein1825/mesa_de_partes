@@ -14,8 +14,8 @@
     setMemoNro,
     memoFecha,
     setMemoFecha,
-    memoAsunto,
-    setMemoAsunto,
+    memoDocumento,
+    setMemoDocumento,
     secretariaActual,
     memoAreaDestino,
     setMemoAreaDestino,
@@ -38,8 +38,8 @@
     setMemoNro: (value: string) => void
     memoFecha: string
     setMemoFecha: (value: string) => void
-    memoAsunto: string
-    setMemoAsunto: (value: string) => void
+    memoDocumento: string
+    setMemoDocumento: (value: string) => void
     secretariaActual: string
     memoAreaDestino: string
     setMemoAreaDestino: (value: string) => void
@@ -101,7 +101,7 @@
         const coincideBusqueda =
           memo.nroMemo.toLowerCase().includes(texto) ||
           memo.nroExpediente.toLowerCase().includes(texto) ||
-          memo.asunto.toLowerCase().includes(texto)
+          memo.documento.toLowerCase().includes(texto)
 
         const coincideArea =
           areaFilter === 'Todas' ||
@@ -390,15 +390,15 @@
 
               <div>
 
-              <label>Asunto</label>
+              <label>Documento</label>
 
               <input
                 type="text"
-                value={memoAsunto}
+                value={memoDocumento}
                 onChange={e =>
-                  setMemoAsunto(e.target.value)
+                  setMemoDocumento(e.target.value)
                 }
-                placeholder="Asunto del Memo"
+                placeholder="Documento del Memo"
               />
               </div>
               <div
@@ -480,7 +480,7 @@
                   setQuery(e.target.value)
                   setPage(1)
                 }}
-                placeholder="Buscar por N.º Memo, expediente o asunto..."
+                placeholder="Buscar por N.º Memo, expediente o documento..."
               />
 
             </div>
@@ -545,7 +545,7 @@
                   <th>N.º MEMO</th>
                   <th>N.º EXPEDIENTE</th>
                   <th>FECHA</th>
-                  <th>ASUNTO</th>
+                  <th>DOCUMENTO</th>
                   <th>REGISTRADO POR</th>
                   <th>ÁREA DESTINO</th>
                   <th>RESPONSABLE</th>
@@ -577,9 +577,9 @@
                     <td>
                       <span
                         className="table-cell-text"
-                        title={memo.asunto}
+                        title={memo.documento}
                       >
-                        {memo.asunto || '—'}
+                        {memo.documento || '—'}
                       </span>
                     </td>
 

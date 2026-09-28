@@ -25,8 +25,8 @@ export default function NewExpedienteView({
     setBuscandoDuplicado(true)
     try {
       const esNumero = /^\d+$/.test(termino)
-        let query = supabase.from('mesa_partes_2026').select('id, nro_exp, fecha, remitente_nombre, asunto').limit(10)
-      if (esNumero) {
+        let query = supabase.from('mesa_partes_2026').select('id, nro_exp, fecha_ingreso, remitente_nombre, asunto').limit(10)
+         if (esNumero) {
         query = query.eq('nro_exp', Number(termino))
       } else {
         query = query.or(`remitente_nombre.ilike.%${termino}%,asunto.ilike.%${termino}%`)      }
@@ -68,7 +68,7 @@ export default function NewExpedienteView({
                     <strong>{formatNroExp(String(item.nro_exp))}</strong>
                     <div>{item.remitente_nombre || 'Sin nombre'}</div>
                     <div>{item.asunto || 'Sin asunto'}</div>
-                    <div>{item.fechaIngreso || 'Sin fecha'}</div>
+                    <div>{item.fecha_ingreso || 'Sin fecha'}</div>
                     <button type="button" onClick={() => {
                       setDuplicadoSeleccionado(item)
                       const numero = formatNroExp(String(item.nro_exp))

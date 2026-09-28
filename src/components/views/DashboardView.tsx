@@ -67,7 +67,7 @@ export default function DashboardView({
                 <tr>
                   <th>N° DE EXPEDIENTE</th>
                   <th>REMITENTE</th>
-                  <th>ASUNTO</th>
+                  <th>DOCUMENTO</th>
                   <th>ÁREA DESTINO</th>
                   <th>ESTADO</th>
                   <th />

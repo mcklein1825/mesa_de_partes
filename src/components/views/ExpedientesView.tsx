@@ -98,7 +98,7 @@ export default function ExpedientesView({
                 <th>N.° EXP</th>
                 <th>FECHA</th>
                 <th>NOMBRE / APELLIDO</th>
-                <th>ASUNTO</th>
+                <th>DOCUMENTO</th>
                 <th>DOCUMENTOS</th>
                 <th>RECIBIDO</th>
                 <th>UBICACIÓN ACTUAL</th>
