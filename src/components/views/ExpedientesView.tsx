@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Expediente } from '../../types'
+import { Expediente, Status } from '../../types'
 import { formatNroExp, displayDate, getRemitenteNombre, getAreaDestino } from '../../utils/expedienteHelpers'
 import DocumentLink from '../common/DocumentLink'
 import StatusBadge from '../common/StatusBadge'
+import DuplicateExpedienteModal from '../modals/DuplicateExpedienteModal'
 
 export default function ExpedientesView({
   items,
@@ -18,6 +19,7 @@ export default function ExpedientesView({
   onNew,
   onOpenDocumentType,
   onTracking,
+  onDuplicate,
   expedienteDocumentos
 }: {
   items: Expediente[]
@@ -37,10 +39,12 @@ export default function ExpedientesView({
   onNew: () => void
   onOpenDocumentType: (id: string, tipo: string) => void
   onTracking: (id: string) => void
+  onDuplicate: (expediente: Expediente) => void
 }) {
   const pageSize = 20
   const [page, setPage] = useState(1)
   const [selectedDocumentTypeById, setSelectedDocumentTypeById] = useState<Record<string, string>>({})
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false)
 
   const pageCount = Math.max(1, Math.ceil(items.length / pageSize))
   const currentPage = Math.min(page, pageCount)
@@ -56,9 +60,26 @@ export default function ExpedientesView({
         <div>
           <p className="eyebrow">GESTIÓN DOCUMENTAL</p>
           <h1>Expedientes</h1>
-          <p className="muted">Consulta, filtra y gestiona los documentos registrados.</p>
+          <p className="muted">
+            Consulta, filtra y gestiona los documentos registrados.
+          </p>
         </div>
-        <button className="primary-button" onClick={onNew}>＋ Nuevo expediente</button>
+
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            className="primary-button"
+            onClick={onNew}
+          >
+            ＋ Nuevo expediente
+          </button>
+
+          <button
+            className="primary-button"
+            onClick={() => setShowDuplicateModal(true)}
+          >
+            ⧉ Duplicar expediente
+          </button>
+        </div>
       </div>
 
       <section className="panel list-panel">
@@ -102,7 +123,6 @@ export default function ExpedientesView({
                 <th>DOCUMENTOS</th>
                 <th>RECIBIDO</th>
                 <th>UBICACIÓN ACTUAL</th>
-                <th>SEGUIMIENTO</th>
                 <th>ESTADO</th>
                 <th>ACCIONES</th>
               </tr>
@@ -111,7 +131,12 @@ export default function ExpedientesView({
               {pageItems.map(item => {
                 return (
                   <tr key={item.id}>
-                    <td><b className="exp-id">{formatNroExp(item.nroExp)}</b></td>
+                    <td>
+                      <b className="exp-id">
+                        {formatNroExp(item.nroExp)}
+                        {item.esDuplicado ? ' *' : ''}
+                      </b>
+                    </td>
                     <td>{displayDate(item.fechaIngreso || '')}</td>
                     <td>
                       <span className="person-cell">
@@ -123,9 +148,11 @@ export default function ExpedientesView({
                         </span>
                       </span>
                     </td>
-                    <td>
+                   <td>
                       <span className="table-cell-group">
-                        {cell(item.asunto)}
+                        <DocumentLink item={item}>
+                          {item.asunto}
+                        </DocumentLink>
                       </span>
                     </td>
                     <td><DocumentLink item={item} /></td>
@@ -136,7 +163,6 @@ export default function ExpedientesView({
                         <small>Ubicación del trámite</small>
                       </span>
                     </td>
-                    <td>{cell(item.documentoSeguimiento || 'Pendiente')}</td>
                     <td><StatusBadge status={item.estado} /></td>
                    <td className="actions-cell">
                     <button
@@ -172,6 +198,48 @@ export default function ExpedientesView({
           <button disabled={currentPage === pageCount} onClick={() => setPage(currentPage + 1)}>›</button>
         </div>
       </section>
+      <DuplicateExpedienteModal
+        isOpen={showDuplicateModal}
+        onClose={() => setShowDuplicateModal(false)}
+        onSelect={expediente => {
+          onDuplicate({
+            id: String(expediente.id),
+            nroExp: String(expediente.nro_exp),
+            fechaIngreso: expediente.fecha_ingreso || '',
+            remitente: expediente.remitente_nombre || '',
+            remitenteNombre: expediente.remitente_nombre || '',
+            asunto: expediente.asunto || '',
+            contenido: '',
+            area: expediente.area || '',
+            areaDestino: expediente.area_destino || '',
+            estado: (expediente.estado || 'Pendiente') as Status,
+            plazo: '',
+            prioridad: 'Normal',
+            archivo: '',
+            archivoData: '',
+            archivoTipo: '',
+            archivoTamano: 0,
+            documentos: '',
+            modalidadRecepcion: '',
+            entregadoA: '',
+            canalRecepcion: '',
+            folios: 1,
+            anexos: 0,
+            direccion: '',
+            correo: '',
+            celular: '',
+            representante: '',
+            cargoRepresentante: '',
+            usuarioRegistro: '',
+            fechaHoraRecepcion: '',
+            constanciaRecepcion: '',
+            historial: [],
+            esDuplicado: false
+          })
+
+        setShowDuplicateModal(false)
+      }}
+      />
     </>
   )
 }

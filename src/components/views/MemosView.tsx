@@ -1,6 +1,7 @@
   import { useMemo, useState } from 'react'
   import { Expediente, Memo } from '../../types'
   import ExpedienteSelector from '../common/ExpedienteSelector'
+  import MemoDocumentLink from '../common/MemoDocumentLink'
 
   export default function MemosView({
     expediente,
@@ -44,7 +45,7 @@
     memoAreaDestino: string
     setMemoAreaDestino: (value: string) => void
     memoResponsable: string
-    onSaveMemo: () => void
+    onSaveMemo: (archivo: File | null) => void
     onCancelMemo: () => void
     onSelectExpediente: (expediente: Expediente | null) => void
     onCloseMemoSelector: () => void
@@ -54,10 +55,13 @@
   ) => void
   }) {
     const [query, setQuery] = useState('')
+    const [memoArchivo, setMemoArchivo] = useState<File | null>(null)
+    const [memoArchivoNombre, setMemoArchivoNombre] = useState('')
     const [areaFilter, setAreaFilter] = useState('Todas')
     const [estadoFilter, setEstadoFilter] = useState('Todos')
-    const [page, setPage] = useState(1)
-    const pageSize = 20
+   const [page, setPage] = useState(1)
+   const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null)
+   const pageSize = 20
     /*
     * =========================================================
     * OPCIONES DE FILTROS
@@ -95,34 +99,83 @@
     */
 
     const memosFiltrados = useMemo(() => {
-      const texto = query.trim().toLowerCase()
+  const termino = query.trim().toLowerCase()
 
-      return memos.filter(memo => {
-        const coincideBusqueda =
-          memo.nroMemo.toLowerCase().includes(texto) ||
-          memo.nroExpediente.toLowerCase().includes(texto) ||
-          memo.asunto.toLowerCase().includes(texto)
+  return memos.filter(memo => {
+    let coincideBusqueda = true
 
-        const coincideArea =
-          areaFilter === 'Todas' ||
-          memo.areaDestino === areaFilter
+    if (termino) {
+      const nroMemo = String(memo.nroMemo || '')
+        .trim()
+        .toLowerCase()
 
-        const coincideEstado =
-          estadoFilter === 'Todos' ||
-          memo.estado === estadoFilter
+      const nroExpediente = String(memo.nroExpediente || '')
+        .trim()
+        .toLowerCase()
 
-        return (
-          coincideBusqueda &&
-          coincideArea &&
-          coincideEstado
-        )
-      })
-    }, [
-      memos,
-      query,
-      areaFilter,
-      estadoFilter
-    ])
+      const nroExpedienteFormateado =
+        nroExpediente.startsWith('exp-')
+          ? nroExpediente
+          : `exp-2026-${nroExpediente.padStart(5, '0')}`
+
+      const registradoPor = String(memo.registradoPor || '')
+        .trim()
+        .toLowerCase()
+
+      const asunto = String(memo.asunto || '')
+        .trim()
+        .toLowerCase()
+
+      const areaDestino = String(memo.areaDestino || '')
+        .trim()
+        .toLowerCase()
+
+      const responsable = String(memo.responsable || '')
+        .trim()
+        .toLowerCase()
+
+      const terminoEsNumero = /^\d+$/.test(termino)
+
+      if (terminoEsNumero) {
+        coincideBusqueda =
+          nroMemo === termino ||
+          nroExpediente === termino ||
+          nroExpedienteFormateado ===
+            `exp-2026-${termino.padStart(5, '0')}` ||
+          nroExpedienteFormateado.endsWith(
+            `-${termino.padStart(5, '0')}`
+          )
+      } else {
+        coincideBusqueda =
+          nroMemo.includes(termino) ||
+          nroExpedienteFormateado.includes(termino) ||
+          asunto.includes(termino) ||
+          registradoPor.includes(termino) ||
+          areaDestino.includes(termino) ||
+          responsable.includes(termino)
+      }
+    }
+
+    const coincideArea =
+      areaFilter === 'Todas' ||
+      memo.areaDestino === areaFilter
+
+    const coincideEstado =
+      estadoFilter === 'Todos' ||
+      memo.estado === estadoFilter
+
+    return (
+      coincideBusqueda &&
+      coincideArea &&
+      coincideEstado
+    )
+  })
+}, [
+  memos,
+  query,
+  areaFilter,
+  estadoFilter
+])
 
     /*
     * =========================================================
@@ -166,267 +219,247 @@
     * No se muestra al entrar normalmente a Memos.
     * =========================================================
     */
-
-    if (showMemoSelector && !expediente) {
-      return (
-        <div className="page">
-
-          <div className="page-header">
-
-            <div>
-              <p className="eyebrow">
-                GESTIÓN DOCUMENTAL
-              </p>
-
-              <h1>Nuevo Memo</h1>
-
-              <p className="muted">
-                Seleccione el expediente al que desea asociar el Memo.
-              </p>
-            </div>
-
-            <button
-              className="action-link"
-              onClick={onCloseMemoSelector}
-            >
-              ← Volver
-            </button>
-
-          </div>
-
-          <div className="detail-card">
-
-            <div className="section-header">
-
-              <div>
-                <h2>Seleccionar expediente</h2>
-
-                <p>
-                  Busque el expediente por número, asunto,
-                  remitente o área.
-                </p>
-              </div>
-
-            </div>
-
-            <ExpedienteSelector
-              expedientes={expedientes}
-              value={null}
-              onChange={selectedExpediente => {
-                if (!selectedExpediente) {
-                  return
-                }
-
-                onSelectExpediente(selectedExpediente)
-              }}
-              areaOptions={areaOptions}
-              expedientesExcluidos={expedientesConMemo}
-            />
-
-          </div>
-
-        </div>
-      )
-    }
-
+    
     /*
     * =========================================================
     * FORMULARIO DE NUEVO MEMO
     * =========================================================
     */
 
-    if (showMemoForm && expediente) {
-      return (
-        <div className="page">
+if (showMemoForm && expediente) {
+  return (
+    <div className="memo-form-page">
 
-          <div className="page-header">
+      <div className="memo-form-header">
 
-            <div>
-              <p className="eyebrow">
-                GESTIÓN DOCUMENTAL
-              </p>
+        <div>
+          <p className="eyebrow">
+            GESTIÓN DOCUMENTAL
+          </p>
 
-              <h1>Nuevo Memo</h1>
+          <h1>Nuevo Memo</h1>
 
-              <p className="muted">
-                Registrar un nuevo Memo relacionado con un expediente.
-              </p>
-            </div>
+          <p className="muted">
+            Registrar un nuevo Memo relacionado con un expediente.
+          </p>
+        </div>
+
+        <button
+          className="action-link"
+          onClick={onCancelMemo}
+        >
+          ← Cancelar
+        </button>
+
+      </div>
+
+      <div className="memo-form-card">
+
+        <div className="memo-form-section-header">
+
+          <div>
+            <h2>Expediente relacionado</h2>
+
+            <p>
+              El Memo quedará vinculado a este expediente.
+            </p>
+          </div>
+
+        </div>
+
+        <div className="memo-expediente-info">
+
+          <div>
+            <strong>Expediente</strong>
+
+            <p>
+              {formatExpediente(expediente.nroExp)}
+            </p>
+          </div>
+
+          <div>
+            <strong>Remitente</strong>
+
+            <p>
+              {expediente.remitente || 'Sin especificar'}
+            </p>
+          </div>
+
+          <div>
+            <strong>Asunto del expediente</strong>
+
+            <p>
+              {expediente.asunto || 'Sin asunto'}
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div className="memo-form-card">
+
+        <div className="memo-form-section-header">
+
+          <div>
+            <h2>Datos del Memo</h2>
+
+            <p>
+              Complete la información necesaria para registrar el Memo.
+            </p>
+          </div>
+
+        </div>
+
+        <div className="memo-form-grid">
+
+          <div className="memo-form-field">
+            <label>N.º Memo</label>
+
+            <input
+              type="text"
+              value={memoNro}
+              readOnly
+              placeholder="Se asignará automáticamente"
+            />
+          </div>
+
+          <div className="memo-form-field">
+            <label>Fecha</label>
+
+            <input
+              type="date"
+              value={memoFecha}
+              onChange={e =>
+                setMemoFecha(e.target.value)
+              }
+            />
+          </div>
+
+          <div className="memo-form-field">
+            <label>Registrado por</label>
+
+            <input
+              type="text"
+              value={secretariaActual}
+              readOnly
+              placeholder="Usuario"
+            />
+          </div>
+
+          <div className="memo-form-field">
+            <label>Área destino</label>
+
+            <select
+              value={memoAreaDestino}
+              onChange={e =>
+                setMemoAreaDestino(e.target.value)
+              }
+            >
+              <option value="">
+                Seleccione un área
+              </option>
+
+              {areaOptions.map(area => (
+                <option
+                  key={area}
+                  value={area}
+                >
+                  {area}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="memo-form-field">
+            <label>Responsable</label>
+
+            <input
+              type="text"
+              value={memoResponsable}
+              readOnly
+              placeholder="Se completará automáticamente"
+            />
+          </div>
+
+          <div className="memo-form-field">
+            <label>Asunto</label>
+
+            <input
+              type="text"
+              value={memoAsunto}
+              onChange={e =>
+                setMemoAsunto(e.target.value)
+              }
+              placeholder="Asunto del Memo"
+            />
+          </div>
+
+          <div className="memo-form-field memo-file-field">
+            <label>Archivo del Memo</label>
+
+            <label className="memo-file-button">
+              ▣ Seleccionar archivo
+
+              <input
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                onChange={event => {
+                  const file = event.target.files?.[0] || null
+
+                  if (!file) {
+                    setMemoArchivo(null)
+                    setMemoArchivoNombre('')
+                    return
+                  }
+
+                  if (file.size > 5 * 1024 * 1024) {
+                    alert('El archivo no puede superar los 5 MB.')
+                    event.target.value = ''
+                    setMemoArchivo(null)
+                    setMemoArchivoNombre('')
+                    return
+                  }
+
+                  setMemoArchivo(file)
+                  setMemoArchivoNombre(file.name)
+                }}
+              />
+            </label>
+
+            <small>
+              {memoArchivoNombre
+                ? `Seleccionado: ${memoArchivoNombre}`
+                : 'Máximo 5 MB.'}
+            </small>
+          </div>
+
+          <div className="memo-form-actions">
+
+            <button
+              className="primary-button"
+              onClick={() => onSaveMemo(memoArchivo)}
+            >
+              Guardar Memo
+            </button>
 
             <button
               className="action-link"
               onClick={onCancelMemo}
             >
-              ← Cancelar
+              Cancelar
             </button>
 
           </div>
 
-          <div className="detail-card">
-
-            <div className="section-header">
-
-              <div>
-                <h2>Expediente relacionado</h2>
-
-                <p>
-                  El Memo quedará vinculado a este expediente.
-                </p>
-              </div>
-
-            </div>
-
-            <div className="detail-grid">
-
-              <div>
-                <strong>Expediente</strong>
-
-                <p>
-                  {formatExpediente(expediente.nroExp)}
-                </p>
-              </div>
-
-              <div>
-                <strong>Remitente</strong>
-
-                <p>
-                  {expediente.remitente || 'Sin especificar'}
-                </p>
-              </div>
-
-              <div>
-                <strong>Asunto del expediente</strong>
-
-                <p>
-                  {expediente.asunto || 'Sin asunto'}
-                </p>
-              </div>
-
-            </div>
-
-          </div>
-
-          <div className="detail-card">
-
-            <div className="section-header">
-
-              <div>
-                <h2>Datos del Memo</h2>
-
-                <p>
-                  Complete la información necesaria para registrar el Memo.
-                </p>
-              </div>
-
-            </div>
-
-            <div className="detail-grid">
-
-              <div>
-                <label>N.º Memo</label>
-
-                <input
-                  type="text"
-                  value={memoNro}
-                  readOnly
-                  placeholder="Se asignará automáticamente"
-                />
-              </div>
-
-              <div>
-                <label>Fecha</label>
-
-                <input
-                  type="date"
-                  value={memoFecha}
-                  onChange={e =>
-                    setMemoFecha(e.target.value)
-                  }
-                />
-              </div>
-              <div>
-                <label>Registrado por</label>
-                  <input
-                    type="text"
-                    value={secretariaActual}
-                    readOnly
-                    placeholder="Usuario"
-                  />
-              </div>
-
-              <div>
-                <label>Área destino</label>
-
-                <select
-                  value={memoAreaDestino}
-                  onChange={e =>
-                    setMemoAreaDestino(e.target.value)
-                  }
-                >
-                  <option value="">
-                    Seleccione un área
-                  </option>
-
-                  {areaOptions.map(area => (
-                    <option
-                      key={area}
-                      value={area}
-                    >
-                      {area}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label>Responsable</label>
-
-                <input
-                  type="text"
-                  value={memoResponsable}
-                  readOnly
-                  placeholder="Se completará automáticamente"
-                />
-              </div>
-
-              <div>
-
-              <label>Asunto</label>
-
-              <input
-                type="text"
-                value={memoAsunto}
-                onChange={e =>
-                  setMemoAsunto(e.target.value)
-                }
-                placeholder="Asunto del Memo"
-              />
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  gap: '10px',
-                  marginTop: '20px'
-                }}
-              >
-                <button
-                  className="primary-button"
-                  onClick={onSaveMemo}
-                >
-                  Guardar Memo
-                </button>
-
-                <button
-                  className="action-link"
-                  onClick={onCancelMemo}
-                >
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
-      )
-    }
+
+      </div>
+
+    </div>
+  )
+}
+
 
     /*
     * =========================================================
@@ -441,9 +474,105 @@
     */
 
     return (
-      <div className="page">
+  <div className="page">
 
-        <div className="page-heading compact">
+    {showMemoSelector && !expediente && (
+      <div
+        className="memo-modal-overlay"
+        onMouseDown={event => {
+          if (event.target === event.currentTarget) {
+            onCloseMemoSelector()
+          }
+        }}
+      >
+
+        <div
+          className="memo-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="nuevo-memo-title"
+        >
+
+          <div className="memo-modal-header">
+
+            <div>
+              <p className="eyebrow">
+                GESTIÓN DOCUMENTAL
+              </p>
+
+              <h2 id="nuevo-memo-title">
+                Nuevo Memo
+              </h2>
+
+              <p>
+                Seleccione el expediente al que desea asociar el Memo.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              className="memo-modal-close"
+              onClick={onCloseMemoSelector}
+              aria-label="Cerrar"
+            >
+              ×
+            </button>
+
+          </div>
+
+          <div className="memo-modal-body">
+
+            <div className="section-header">
+
+              <div>
+                <h3>
+                  Seleccionar expediente
+                </h3>
+
+                <p>
+                  Busque el expediente por número, asunto,
+                  remitente o área.
+                </p>
+              </div>
+
+            </div>
+
+            <ExpedienteSelector
+              expedientes={expedientes}
+              value={null}
+              onChange={selectedExpediente => {
+
+                if (!selectedExpediente) {
+                  return
+                }
+
+                onSelectExpediente(selectedExpediente)
+
+              }}
+              areaOptions={areaOptions}
+              expedientesExcluidos={expedientesConMemo}
+            />
+
+          </div>
+
+          <div className="memo-modal-footer">
+
+            <button
+              type="button"
+              className="legacy-light-button"
+              onClick={onCloseMemoSelector}
+            >
+              Cancelar
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+    )}
+
+    <div className="page-heading compact">
 
           <div>
             <p className="eyebrow">
@@ -538,124 +667,134 @@
 
           <div className="table-wrap">
 
-            <table>
+            <table className="memos-table">
 
-              <thead>
-                <tr>
-                  <th>N.º MEMO</th>
-                  <th>N.º EXPEDIENTE</th>
-                  <th>FECHA</th>
-                  <th>ASUNTO</th>
-                  <th>REGISTRADO POR</th>
-                  <th>ÁREA DESTINO</th>
-                  <th>RESPONSABLE</th>
-                  <th className="memo-estado-columna">ESTADO</th>
-                </tr>
-              </thead>
+             <thead>
+              <tr>
+                <th>N.º MEMO</th>
+                <th>N.º EXPEDIENTE</th>
+                <th>FECHA</th>
+                <th>ASUNTO</th>
+                <th className="memo-estado-columna">ESTADO</th>
+                <th>MÁS DATOS</th>
+              </tr>
+            </thead>
 
               <tbody>
 
-                {pageItems.map(memo => (
-                  <tr key={memo.id}>
+  {pageItems.map(memo => (
+    <tr key={memo.id}>
 
-                    <td>
-                      <b className="exp-id">
-                        {memo.nroMemo}
-                      </b>
-                    </td>
+      <td>
+        <b className="exp-id">
+          {memo.nroMemo}
+        </b>
+      </td>
 
-                    <td>
-                      <b>
-                        {memo.nroExpediente}
-                      </b>
-                    </td>
+      <td>
+        <b>
+          {memo.nroExpediente}
+        </b>
+      </td>
 
-                    <td>
-                      {memo.fecha || '—'}
-                    </td>
+      <td>
+        {memo.fecha || '—'}
+      </td>
 
-                    <td>
-                      <span
-                        className="table-cell-text"
-                        title={memo.asunto}
-                      >
-                        {memo.asunto || '—'}
-                      </span>
-                    </td>
+      <td>
+          <MemoDocumentLink
+            archivoData={memo.archivoData}
+            archivo={memo.archivo}
+          >
+            {memo.asunto || '—'}
+          </MemoDocumentLink>
+       </td>
 
-                    <td>
-                      <span
-                        className="table-cell-text"
-                        title={memo.registradoPor}
-                      >
-                        {memo.registradoPor || '—'}
-                      </span>
-                    </td>
+      {/* ESTADO */}
+      <td className="memo-estado-columna">
+        <select
+          className="status-badge"
+          value={memo.estado}
+          onChange={e => {
+            const nuevoEstado =
+              e.target.value as Memo['estado']
 
-                  <td>
-                    <span
-                      className="table-cell-text"
-                      title={memo.areaDestino}
-                    >
-                      {memo.areaDestino || '—'}
-                    </span>
-                  </td>
-                  <td>
-                    <span
-                      className="table-cell-text"
-                      title={memo.responsable || ''}
-                    >
-                      {memo.responsable || '—'}
-                    </span>
-                  </td>
-                    <td className="memo-estado-columna">
-                    <select
-                      className="status-badge"
-                      value={memo.estado}
-                      onChange={e => {
-                        const nuevoEstado = e.target.value as Memo['estado']
+            console.log('CAMBIANDO MEMO:', {
+              id: memo.id,
+              nroMemo: memo.nroMemo,
+              estadoAnterior: memo.estado,
+              nuevoEstado
+            })
 
-                        console.log('CAMBIANDO MEMO:', {
-                          id: memo.id,
-                          nroMemo: memo.nroMemo,
-                          estadoAnterior: memo.estado,
-                          nuevoEstado
-                        })
+            onUpdateMemoEstado(
+              memo.id,
+              nuevoEstado
+            )
+          }}
+        >
+          {memo.estado === 'Pendiente' && (
+            <>
+              <option value="Pendiente">
+                Pendiente
+              </option>
 
-                        onUpdateMemoEstado(memo.id, nuevoEstado)
-                      }}
-                    >
-                      {memo.estado === 'Pendiente' && (
-                        <>
-                          <option value="Pendiente">Pendiente</option>
-                          <option value="Sin respuesta">Sin respuesta</option>
-                          <option value="Atendido">Atendido</option>
-                        </>
-                      )}
+              <option value="Sin respuesta">
+                Sin respuesta
+              </option>
 
-                      {memo.estado === 'Sin respuesta' && (
-                        <>
-                          <option value="Sin respuesta">Sin respuesta</option>
-                          <option value="Atendido">Atendido</option>
-                          <option value="Archivado">Archivado</option>
-                        </>
-                      )}
+              <option value="Atendido">
+                Atendido
+              </option>
+            </>
+          )}
 
-                      {memo.estado === 'Atendido' && (
-                        <option value="Atendido">Atendido</option>
-                      )}
+          {memo.estado === 'Sin respuesta' && (
+            <>
+              <option value="Sin respuesta">
+                Sin respuesta
+              </option>
 
-                      {memo.estado === 'Archivado' && (
-                        <option value="Archivado">Archivado</option>
-                      )}
-                                      </select>
+              <option value="Atendido">
+                Atendido
+              </option>
 
-                    </td>
+              <option value="Archivado">
+                Archivado
+              </option>
+            </>
+          )}
 
-                  </tr>
-                ))}
+          {memo.estado === 'Atendido' && (
+            <option value="Atendido">
+              Atendido
+            </option>
+          )}
 
-              </tbody>
+          {memo.estado === 'Archivado' && (
+            <option value="Archivado">
+              Archivado
+            </option>
+          )}
+        </select>
+      </td>
+
+      {/* MÁS DATOS */}
+      <td className="actions-cell">
+        <button
+          className="tracking-button"
+          onClick={() => {
+            console.log('MEMO SELECCIONADO:', memo)
+            setSelectedMemo(memo)
+          }}
+        >
+          ◉ Ver más datos
+        </button>
+      </td>
+
+    </tr>
+  ))}
+
+</tbody>
 
             </table>
 
@@ -713,7 +852,137 @@
 
           </div>
 
-        </section>
+                </section>
+
+        {selectedMemo && (
+          <div className="modal-overlay">
+            <div className="modal-card">
+
+              <div className="section-header">
+
+                <div>
+                  <p className="eyebrow">
+                    GESTIÓN DOCUMENTAL
+                  </p>
+
+                  <h2>
+                    Datos del Memo {selectedMemo.nroMemo}
+                  </h2>
+                </div>
+
+                <button
+                  className="action-link"
+                  onClick={() => setSelectedMemo(null)}
+                >
+                  ✕
+                </button>
+
+              </div>
+
+              <div className="detail-grid">
+
+                <div>
+                  <strong>N.º Memo</strong>
+                  <p>
+                    {selectedMemo.nroMemo || '—'}
+                  </p>
+                </div>
+
+                <div>
+                  <strong>N.º Expediente</strong>
+                  <p>
+                    {selectedMemo.nroExpediente || '—'}
+                  </p>
+                </div>
+
+                <div>
+                  <strong>Fecha</strong>
+                  <p>
+                    {selectedMemo.fecha || '—'}
+                  </p>
+                </div>
+
+                <div>
+                  <strong>Registrado por</strong>
+                  <p>
+                    {selectedMemo.registradoPor || '—'}
+                  </p>
+                </div>
+
+                <div>
+                  <strong>Área destino</strong>
+                  <p>
+                    {selectedMemo.areaDestino || '—'}
+                  </p>
+                </div>
+
+                <div>
+                  <strong>Responsable</strong>
+                  <p>
+                    {selectedMemo.responsable || '—'}
+                  </p>
+                </div>
+
+                <div>
+                  <strong>Estado</strong>
+                  <p>
+                    {selectedMemo.estado || '—'}
+                  </p>
+                </div>
+
+                <div>
+                  <strong>Archivo</strong>
+
+                  <p>
+                    {selectedMemo.archivo || 'Sin archivo'}
+                  </p>
+
+                  {selectedMemo.archivoData && (
+                    <button
+                      className="tracking-button"
+                      onClick={() => {
+                        window.open(
+                          selectedMemo.archivoData,
+                          '_blank',
+                          'noopener,noreferrer'
+                        )
+                      }}
+                    >
+                      ◉ Abrir archivo
+                    </button>
+                  )}
+                </div>
+
+              </div>
+
+              <div style={{ marginTop: '20px' }}>
+
+                <strong>Asunto</strong>
+
+                <p>
+                  {selectedMemo.asunto || 'Sin asunto'}
+                </p>
+
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  marginTop: '24px'
+                }}
+              >
+                <button
+                  className="action-link"
+                  onClick={() => setSelectedMemo(null)}
+                >
+                  Cerrar
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
 
       </div>
     )

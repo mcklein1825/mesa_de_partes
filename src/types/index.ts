@@ -25,6 +25,7 @@ export type HistoryEntry = {
 }
 
 export type Memo = {
+
   id: string
   nroMemo: string
   expedienteId: string
@@ -35,6 +36,10 @@ export type Memo = {
   areaDestino: string
   responsable: string
   estado: 'Pendiente' | 'Sin respuesta' | 'Atendido' | 'Archivado'
+  archivo?: string
+  archivoData?: string
+  archivoTipo?: string
+  archivoTamano?: number
   createdAt?: string
 }
 export type Oficio = {
@@ -75,7 +80,6 @@ export type Expediente = {
   documentos?: string
   modalidadRecepcion?: string
   entregadoA?: string
-  documentoSeguimiento?: string
   canalRecepcion?: string
   contenido?: string
   folios?: number

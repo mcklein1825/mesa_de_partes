@@ -26,6 +26,8 @@ import TrackingModal from './components/modals/TrackingModal'
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [view, setView] = useState<View>('nuevo')
+  const [expedienteParaDuplicar, setExpedienteParaDuplicar] =
+  useState<Expediente | null>(null)
   const [expedientes, setExpedientes] = useState<Expediente[]>([])
   const [memoExpediente, setMemoExpediente] = useState<Expediente | null>(null)
   const [oficioExpediente, setOficioExpediente] = useState<Expediente | null>(null)
@@ -112,7 +114,6 @@ export default function App() {
     documentos,
     modalidad_recepcion,
     entregado_a,
-    documento_seguimiento,
     canal_recepcion,
     folios,
     anexos,
@@ -162,7 +163,6 @@ if (error) {
             archivoTamano: item.archivo_tamano || 0,
             modalidadRecepcion: item.modalidad_recepcion || undefined,
             entregadoA: item.entregado_a || '',
-            documentoSeguimiento: item.documento_seguimiento || '',
             canalRecepcion: item.canal_recepcion || '',
             folios: item.folios ?? 1,
             anexos: item.anexos ?? 0,
@@ -203,6 +203,12 @@ if (error) {
           areaDestino: m.area_destino || '',
           responsable: m.responsable || '',
           estado: m.estado || 'Pendiente',
+
+          archivo: m.archivo || '',
+          archivoData: m.archivo_data || '',
+          archivoTipo: m.archivo_tipo || '',
+          archivoTamano: m.archivo_tamano || 0,
+
           createdAt: m.created_at
         }))
 
@@ -271,13 +277,65 @@ if (oficiosError) {
     return now.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()
   }, [])
 
-  const filteredExpedientes = useMemo(() => expedientes.filter(item => {
-    const matchesQuery = `${item.nroExp} ${item.asunto}`.toLowerCase().includes(query.trim().toLowerCase())
-    const matchesArea = areaFilter === 'Todas' || getAreaDestino(item) === areaFilter
-    const matchesRemitente = getRemitenteNombre(item).toLowerCase().includes(remitenteFilter.trim().toLowerCase())
-    const matchesStatus = statusFilter === 'Todos' || item.estado === statusFilter
-    return matchesQuery && matchesArea && matchesRemitente && matchesStatus
-  }), [expedientes, query, areaFilter, remitenteFilter, statusFilter])
+  const filteredExpedientes = useMemo(() => {
+  const termino = query.trim().toLowerCase()
+
+  return expedientes.filter(item => {
+    let matchesQuery = true
+
+    if (termino) {
+      const nroExpediente = String(item.nroExp || '')
+        .trim()
+        .toLowerCase()
+
+      const nroExpedienteFormateado = nroExpediente.startsWith('exp-')
+        ? nroExpediente
+        : `exp-2026-${nroExpediente.padStart(5, '0')}`
+
+      const terminoEsNumero = /^\d+$/.test(termino)
+
+      if (terminoEsNumero) {
+        matchesQuery =
+          nroExpediente === termino ||
+          nroExpedienteFormateado ===
+            `exp-2026-${termino.padStart(5, '0')}` ||
+          nroExpedienteFormateado.endsWith(
+            `-${termino.padStart(5, '0')}`
+          )
+      } else {
+        matchesQuery =
+          nroExpedienteFormateado.includes(termino) ||
+          item.asunto.toLowerCase().includes(termino)
+      }
+    }
+
+    const matchesArea =
+      areaFilter === 'Todas' ||
+      getAreaDestino(item) === areaFilter
+
+    const matchesRemitente =
+      getRemitenteNombre(item)
+        .toLowerCase()
+        .includes(remitenteFilter.trim().toLowerCase())
+
+    const matchesStatus =
+      statusFilter === 'Todos' ||
+      item.estado === statusFilter
+
+    return (
+      matchesQuery &&
+      matchesArea &&
+      matchesRemitente &&
+      matchesStatus
+    )
+  })
+}, [
+  expedientes,
+  query,
+  areaFilter,
+  remitenteFilter,
+  statusFilter
+])
 
   const addExpediente = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -288,6 +346,13 @@ if (oficiosError) {
     const form = event.currentTarget
     const data = new FormData(form)
     const selectedFile = data.get('archivo')
+
+    const duplicadoDesdeId = String(
+      data.get('duplicadoDesdeId') || ''
+    ).trim()
+
+    const esDuplicado =
+      String(data.get('esDuplicado') || '').toLowerCase() === 'true'
 
     if (!(selectedFile instanceof File) || !selectedFile.size) {
       notify('Seleccione un archivo antes de registrar el expediente')
@@ -308,22 +373,91 @@ if (oficiosError) {
       return
     }
 
-    const { data: nextNumber, error: nextNumberError } = await supabase.rpc('obtener_siguiente_nro_exp')
-    if (nextNumberError || !Number.isInteger(nextNumber)) {
-      console.error('Error obteniendo número de expediente:', nextNumberError)
-      notify('No se pudo obtener el número de expediente. Intente nuevamente.')
-      setIsSaving(false)
-      return
-    }
+    const expedienteOriginal =
+  esDuplicado && duplicadoDesdeId
+    ? expedientes.find(
+        item => item.id === duplicadoDesdeId
+      )
+    : null
 
-    const currentYear = new Date().getFullYear()
-    const nextId = `EXP-${currentYear}-${String(nextNumber).padStart(5, '0')}`
-    const fechaIngreso = String(data.get('fechaIngreso') || '')
-    const fechaFormateada = formatDate(fechaIngreso)
-    const remitente = String(data.get('remitente') || '').trim()
+if (esDuplicado && !expedienteOriginal) {
+  notify('No se encontró el expediente original para duplicar')
+  setIsSaving(false)
+  return
+}
 
+let nextNumber: number
+
+if (esDuplicado && expedienteOriginal) {
+  nextNumber = Number(expedienteOriginal.nroExp)
+
+  if (!Number.isInteger(nextNumber)) {
+    notify('El número del expediente original no es válido')
+    setIsSaving(false)
+    return
+  }
+} else {
+  const { data: numeroSiguiente, error: nextNumberError } =
+    await supabase.rpc('obtener_siguiente_nro_exp')
+
+  if (
+    nextNumberError ||
+    !Number.isInteger(numeroSiguiente)
+  ) {
+    console.error(
+      'Error obteniendo número de expediente:',
+      nextNumberError
+    )
+
+    notify(
+      'No se pudo obtener el número de expediente. Intente nuevamente.'
+    )
+
+    setIsSaving(false)
+    return
+  }
+
+  nextNumber = numeroSiguiente
+}
+
+const currentYear = new Date().getFullYear()
+
+const nextId =
+  `EXP-${currentYear}-${String(nextNumber).padStart(5, '0')}`
+
+const fechaIngreso = String(
+  data.get('fechaIngreso') || ''
+)
+
+const fechaFormateada = formatDate(fechaIngreso)
+
+const remitente = String(
+  data.get('remitente') || ''
+).trim()
+
+  
+
+const historialInicial = esDuplicado && expedienteOriginal
+  ? [
+      {
+        fechaHora: new Date().toISOString(),
+        fechaIngreso,
+        areaOrigen: 'Mesa de Partes',
+        areaDestino: '',
+        accion: 'Duplicado',
+        observacion: `Expediente creado como duplicado de EXP-2026-${String(
+          expedienteOriginal.nroExp
+        ).padStart(5, '0')}.`,
+        responsable: currentUser.nombre
+      }
+    ]
+  : []
     const newExpediente: Expediente = {
-      id: '', nroExp: String(nextNumber), fechaIngreso: fechaFormateada, remitente,
+      id: '',
+      nroExp: String(nextNumber),
+      esDuplicado,
+      fechaIngreso: fechaFormateada,
+      remitente,
       remitenteNombre: remitente,
       representante: String(data.get('representante') || ''),
       cargoRepresentante: String(data.get('cargoRepresentante') || ''),
@@ -357,8 +491,12 @@ if (oficiosError) {
       correo: newExpediente.correo, celular: newExpediente.celular, representante: newExpediente.representante,
       cargo_representante: newExpediente.cargoRepresentante, usuario_registro: newExpediente.usuarioRegistro,
       fecha_hora_recepcion: newExpediente.fechaHoraRecepcion, constancia_recepcion: newExpediente.constanciaRecepcion,
-      historial: newExpediente.historial
-    }).select().single()
+      historial: newExpediente.historial,
+      es_duplicado: esDuplicado,
+      duplicado_de_id: esDuplicado
+        ? Number(duplicadoDesdeId)
+        : null
+          }).select().single()
 
     if (error) {
       console.error('Error insertando expediente:', error)
@@ -368,11 +506,32 @@ if (oficiosError) {
     }
 
     setIsSaving(false)
-    const expedienteInsertado = insertedData ? normalizeExpediente({ ...newExpediente, id: String(insertedData.id), nroExp: String(insertedData.nro_exp || newExpediente.nroExp) }) : newExpediente
-    setExpedientes(prev => [expedienteInsertado, ...prev])
-    form.reset()
-    setView('expedientes')
-    notify(`Expediente ${nextId} registrado correctamente`)
+
+const expedienteInsertado = insertedData
+  ? normalizeExpediente({
+      ...newExpediente,
+      id: String(insertedData.id),
+      nroExp: String(
+        insertedData.nro_exp || newExpediente.nroExp
+      )
+    })
+  : newExpediente
+
+setExpedientes(prev => [
+  expedienteInsertado,
+  ...prev
+])
+
+form.reset()
+
+// Limpiar el modo duplicado
+setExpedienteParaDuplicar(null)
+
+setView('expedientes')
+
+notify(
+  `Expediente ${nextId} registrado correctamente`
+)
   }
 
   const openDocumentType = (id: string, tipo: string) => {
@@ -413,7 +572,7 @@ const openNewMemo = () => {
 
   const cancelNewMemo = () => setShowMemoForm(false)
 
-  const saveNewMemo = async () => {
+  const saveNewMemo = async (archivo: File | null) => {
   if (!memoExpediente) {
     notify('No se seleccionó ningún expediente')
     return
@@ -428,7 +587,16 @@ const openNewMemo = () => {
     notify('Seleccione el área destino')
     return
   }
-  const expedienteId = Number(memoExpediente.id)
+  if (!archivo) {
+  notify('Seleccione el archivo del Memo')
+  return
+  }
+
+  if (archivo.size > 5 * 1024 * 1024) {
+    notify('El archivo no puede superar los 5 MB')
+    return
+  } 
+    const expedienteId = Number(memoExpediente.id)
 
   if (Number.isNaN(expedienteId)) {
     notify('El ID del expediente no es válido')
@@ -442,15 +610,21 @@ const openNewMemo = () => {
       ? memoExpediente.nroExp
       : `EXP-2026-${memoExpediente.nroExp.padStart(5, '0')}`
 
+    const archivoData = await readFileAsDataUrl(archivo)
+
     const { data, error } = await supabase.rpc('registrar_memo', {
-      p_expediente_id: expedienteId,
-      p_nro_expediente: nroExpediente,
-      p_fecha: memoFecha,
-      p_asunto: memoAsunto.trim(),
-      p_registrado_por: currentUser?.nombre || '',
-      p_area_destino: memoAreaDestino.trim(),
-      p_responsable: memoResponsable.trim()
-    })
+    p_expediente_id: expedienteId,
+    p_nro_expediente: nroExpediente,
+    p_fecha: memoFecha,
+    p_asunto: memoAsunto.trim(),
+    p_registrado_por: currentUser?.nombre || '',
+    p_area_destino: memoAreaDestino.trim(),
+    p_responsable: memoResponsable.trim(),
+    p_archivo: archivo.name,
+    p_archivo_data: archivoData,
+    p_archivo_tipo: archivo.type,
+    p_archivo_tamano: archivo.size
+  })
 
     if (error) {
       console.error('Error guardando Memo:', error)
@@ -470,6 +644,10 @@ const openNewMemo = () => {
         areaDestino: data.area_destino || '',
         responsable: data.responsable || '',
         estado: data.estado || 'Pendiente',
+        archivo: data.archivo || '',
+        archivoData: data.archivo_data || '',
+        archivoTipo: data.archivo_tipo || '',
+        archivoTamano: data.archivo_tamano || 0,
         createdAt: data.created_at
       }
 
@@ -498,7 +676,6 @@ const openNewMemo = () => {
           area: memoAreaDestino.trim(),
           area_destino: memoAreaDestino.trim(),
           entregado_a: '',
-          documento_seguimiento: memoNuevo.nroMemo,
           historial: nuevoHistorial
         })
         .eq('id', expedienteId)
@@ -517,14 +694,13 @@ const openNewMemo = () => {
       setExpedientes(prev =>
         prev.map(item =>
           item.id === memoExpediente.id
-            ? {
-                ...item,
-                area: memoAreaDestino.trim(),
-                areaDestino: memoAreaDestino.trim(),
-                entregadoA: '',
-                documentoSeguimiento: memoNuevo.nroMemo,
-                historial: nuevoHistorial
-              }
+            ?{
+              ...item,
+              area: memoAreaDestino.trim(),
+              areaDestino: memoAreaDestino.trim(),
+              entregadoA: '',
+              historial: nuevoHistorial
+            }
             : item
         )
       )
@@ -532,10 +708,8 @@ const openNewMemo = () => {
 
       setMemoNro('')
       setMemoFecha(todayInputValue())
-    
       setMemoAsunto('')
       setMemoAreaDestino('')
-
 
       setShowMemoForm(false)
 
@@ -832,7 +1006,10 @@ const updateMemoEstado = async (
                   onOpenDocumentType={openDocumentType}
                   expedienteDocumentos={expedienteDocumentos}
                   onTracking={setTrackingId}
-
+                  onDuplicate={expediente => {
+                    setExpedienteParaDuplicar(expediente)
+                    setView('nuevo')
+                  }}
                 />
               )}
          {view === 'memos' && (
@@ -972,7 +1149,17 @@ const updateMemoEstado = async (
     }}
   />
 )}
-              {view === 'nuevo' && <NewExpedienteView onSubmit={addExpediente} onCancel={() => setView('inicio')} isSaving={isSaving} />}
+              {view === 'nuevo' && (
+                <NewExpedienteView
+                  onSubmit={addExpediente}
+                   onCancel={() => {
+                    setExpedienteParaDuplicar(null)
+                    setView('inicio')
+                  }}
+                  isSaving={isSaving}
+                  expedienteParaDuplicar={expedienteParaDuplicar}
+                />
+              )}
               {view === 'reportes' && <ReportsView expedientes={expedientes} notify={notify} />}
             </>
           )}

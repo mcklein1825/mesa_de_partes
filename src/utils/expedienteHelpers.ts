@@ -10,12 +10,6 @@ export const getAreaDestino = (item: Expediente) =>
 export const formatNroExp = (nroExp: string, esDuplicado = false) =>
   `EXP-2026-${String(nroExp).padStart(5, '0')}${esDuplicado ? ' *' : ''}`
 
-export const getRecordedResponsible = (item: Expediente) => {
-  const followUp = item.documentoSeguimiento || ''
-  const match = followUp.match(/(?:a|por)\s+([A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑ]+(?:\s+[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑ]+){1,3})/)
-  return match?.[1]?.trim() || ''
-}
-
 export const createInitialHistory = (item: Expediente): HistoryEntry[] => [
   {
     fechaHora: item.fechaIngreso || 'Fecha pendiente',
@@ -43,7 +37,7 @@ export const createInitialHistory = (item: Expediente): HistoryEntry[] => [
     areaDestino: 'Mesa de Partes',
     accion: item.estado === 'Archivado' ? 'Archivado' : 'Atendido',
     observacion: item.estado === 'Archivado' ? 'Expediente archivado luego de su atención.' : 'La oficina responsable registró la atención del expediente.',
-    responsable: getRecordedResponsible(item) || 'Responsable no registrado'
+    responsable: item.usuarioRegistro || 'Responsable no registrado'
   }] : [])
 ]
 

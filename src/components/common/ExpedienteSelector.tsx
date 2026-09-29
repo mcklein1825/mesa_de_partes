@@ -42,11 +42,15 @@ export default function ExpedienteSelector({
         const remitente = getRemitenteNombre(item).toLowerCase()
         const area = getAreaDestino(item)
 
-        const coincideBusqueda =
-          !texto ||
-          nroExp.includes(texto) ||
-          nroOriginal.includes(texto) ||
-          asunto.includes(texto)
+        const esNumero = /^\d+$/.test(texto)
+
+        const coincideBusqueda = !texto
+          ? true
+          : esNumero
+            ? nroOriginal === texto ||
+              nroExp === `exp-2026-${texto.padStart(5, '0')}`
+            : nroExp.includes(texto) ||
+              asunto.includes(texto)
 
         const coincideRemitente =
           !remitenteTexto ||
@@ -79,7 +83,10 @@ export default function ExpedienteSelector({
 
         <div className="selected-expediente">
           <div>
-            <strong>{formatNroExp(value.nroExp)}</strong>
+            <strong>
+              {formatNroExp(value.nroExp)}
+              {value.esDuplicado ? ' *' : ''}
+            </strong>
 
             <small>
               {getRemitenteNombre(value)}
@@ -159,7 +166,10 @@ export default function ExpedienteSelector({
                     }}
                 >
                   <div className="selector-main">
-                    <strong>{formatNroExp(item.nroExp)}</strong>
+                    <strong>
+                      {formatNroExp(item.nroExp)}
+                      {item.esDuplicado ? ' *' : ''}
+                    </strong>
 
                     <span>
                       {getRemitenteNombre(item)}
