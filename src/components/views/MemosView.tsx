@@ -62,6 +62,8 @@
 
     const [destinoBusqueda, setDestinoBusqueda] = useState('')
     const [destinoAbierto, setDestinoAbierto] = useState(false)
+    const [memoSubareaDestino, setMemoSubareaDestino] = useState('')
+    const [memoAreaPrincipalDestino, setMemoAreaPrincipalDestino] = useState('')
     const [estadoFilter, setEstadoFilter] = useState('Todos')
     const [page, setPage] = useState(1)
     const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null)
@@ -83,35 +85,14 @@
       ).sort()
     }, [areaOptions, memos])
     const destinoOptions = useMemo(() => {
-  const opciones: {
-    value: string
-    label: string
-    searchText: string
-    esSubarea: boolean
-  }[] = []
-
-  AREAS_UNICAS.forEach(area => {
-    opciones.push({
-      value: area,
-      label: area,
-      searchText: area,
-      esSubarea: false
-    })
-
-    getSubareas(area).forEach(subarea => {
-      opciones.push({
-        value: `${area} / ${subarea}`,
-        label: `${area} → ${subarea}`,
-        searchText: `${area} ${subarea}`,
-        esSubarea: true
-      })
-    })
-  })
-
-  return opciones
-}, [])
+      return AREAS_UNICAS.map(area => ({
+        value: area,
+        label: area,
+        searchText: area
+      }))
+    }, [])
     const destinosFiltrados = useMemo(() => {
-  const termino = destinoBusqueda.trim().toLowerCase()
+    const termino = destinoBusqueda.trim().toLowerCase()
 
   if (!termino) {
     return destinoOptions
@@ -422,25 +403,18 @@ if (showMemoForm && expediente) {
             <button
               key={opcion.value}
               type="button"
-              className={
-                opcion.esSubarea
-                  ? 'memo-destino-option memo-destino-subarea'
-                  : 'memo-destino-option'
-              }
+              className="memo-destino-option"
               onMouseDown={event => {
                 event.preventDefault()
 
-                setMemoAreaDestino(
-                  opcion.value
-                )
+                setMemoAreaPrincipalDestino(opcion.value)
+                setMemoAreaDestino(opcion.value)
+                setMemoSubareaDestino('')
 
-                setDestinoBusqueda(
-                  opcion.label
-                )
-
+                setDestinoBusqueda(opcion.label)
                 setDestinoAbierto(false)
               }}
-            >
+                          >
               {opcion.label}
             </button>
           ))
@@ -454,12 +428,61 @@ if (showMemoForm && expediente) {
     )}
 
   </div>
-
-  {memoAreaDestino && (
+{memoAreaDestino && (
+  <>
     <small>
-      Destino seleccionado: {memoAreaDestino}
+      Área seleccionada: {memoAreaPrincipalDestino}
     </small>
-  )}
+
+    {getSubareas(memoAreaPrincipalDestino).length > 0 && (
+      <div className="memo-form-field memo-subarea-field">
+        <label>Subárea</label>
+
+        <select
+          value={memoSubareaDestino}
+          onChange={e => {
+            const subarea = e.target.value
+
+            setMemoSubareaDestino(subarea)
+
+            if (subarea) {
+              setMemoAreaDestino(
+                `${memoAreaPrincipalDestino} / ${subarea}`
+              )
+            } else {
+              setMemoAreaDestino(
+                memoAreaPrincipalDestino
+              )
+            }
+          }}
+        >
+          <option value="">
+            Seleccione una subárea
+          </option>
+
+          {getSubareas(
+            memoAreaPrincipalDestino
+          ).map(subarea => (
+            <option
+              key={subarea}
+              value={subarea}
+            >
+              {subarea}
+            </option>
+          ))}
+        </select>
+
+        {memoSubareaDestino && (
+          <small>
+            Destino seleccionado:{' '}
+            {memoAreaPrincipalDestino} /{' '}
+            {memoSubareaDestino}
+          </small>
+        )}
+      </div>
+    )}
+  </>
+)}
 </div>
 
           <div className="memo-form-field">
@@ -1001,11 +1024,22 @@ if (showMemoForm && expediente) {
                 </div>
 
                 <div>
-                  <strong>Área destino</strong>
-                  <p>
-                    {selectedMemo.areaDestino || '—'}
-                  </p>
-                </div>
+                    <strong>Área destino</strong>
+                    <p>
+                      {selectedMemo.areaDestino
+                        ? selectedMemo.areaDestino.split(' / ')[0]
+                        : '—'}
+                    </p>
+                  </div>
+
+                  {selectedMemo.areaDestino?.includes(' / ') && (
+                    <div>
+                      <strong>Subárea</strong>
+                      <p>
+                        {selectedMemo.areaDestino.split(' / ')[1]}
+                      </p>
+                    </div>
+                  )}
 
                 <div>
                   <strong>Responsable</strong>
