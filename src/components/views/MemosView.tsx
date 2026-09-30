@@ -1,5 +1,6 @@
   import { useMemo, useState } from 'react'
   import { Expediente, Memo } from '../../types'
+  import { AREAS_UNICAS, getSubareas } from '../../constants'
   import ExpedienteSelector from '../common/ExpedienteSelector'
   import MemoDocumentLink from '../common/MemoDocumentLink'
 
@@ -58,11 +59,14 @@
     const [memoArchivo, setMemoArchivo] = useState<File | null>(null)
     const [memoArchivoNombre, setMemoArchivoNombre] = useState('')
     const [areaFilter, setAreaFilter] = useState('Todas')
+
+    const [destinoBusqueda, setDestinoBusqueda] = useState('')
+    const [destinoAbierto, setDestinoAbierto] = useState(false)
     const [estadoFilter, setEstadoFilter] = useState('Todos')
-   const [page, setPage] = useState(1)
-   const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null)
-   const pageSize = 20
-    /*
+    const [page, setPage] = useState(1)
+    const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null)
+    const pageSize = 20
+      /*
     * =========================================================
     * OPCIONES DE FILTROS
     * =========================================================
@@ -78,7 +82,47 @@
         ])
       ).sort()
     }, [areaOptions, memos])
+    const destinoOptions = useMemo(() => {
+  const opciones: {
+    value: string
+    label: string
+    searchText: string
+    esSubarea: boolean
+  }[] = []
 
+  AREAS_UNICAS.forEach(area => {
+    opciones.push({
+      value: area,
+      label: area,
+      searchText: area,
+      esSubarea: false
+    })
+
+    getSubareas(area).forEach(subarea => {
+      opciones.push({
+        value: `${area} / ${subarea}`,
+        label: `${area} → ${subarea}`,
+        searchText: `${area} ${subarea}`,
+        esSubarea: true
+      })
+    })
+  })
+
+  return opciones
+}, [])
+    const destinosFiltrados = useMemo(() => {
+  const termino = destinoBusqueda.trim().toLowerCase()
+
+  if (!termino) {
+    return destinoOptions
+  }
+
+  return destinoOptions.filter(opcion =>
+    opcion.searchText
+      .toLowerCase()
+      .includes(termino)
+  )
+}, [destinoBusqueda, destinoOptions])
     const estadoOptions = useMemo(() => {
       return Array.from(
         new Set(
@@ -347,29 +391,76 @@ if (showMemoForm && expediente) {
             />
           </div>
 
-          <div className="memo-form-field">
-            <label>Área destino</label>
+         <div className="memo-form-field memo-destino-field">
+  <label>Destino</label>
 
-            <select
-              value={memoAreaDestino}
-              onChange={e =>
-                setMemoAreaDestino(e.target.value)
+  <div className="memo-destino-combobox">
+
+    <input
+      type="text"
+      value={destinoBusqueda}
+      onChange={e => {
+        setDestinoBusqueda(e.target.value)
+        setDestinoAbierto(true)
+
+        if (memoAreaDestino) {
+          setMemoAreaDestino('')
+        }
+      }}
+      onFocus={() => {
+        setDestinoAbierto(true)
+      }}
+      placeholder="Escribe área o subárea..."
+      autoComplete="off"
+    />
+
+    {destinoAbierto && (
+      <div className="memo-destino-options">
+
+        {destinosFiltrados.length > 0 ? (
+          destinosFiltrados.map(opcion => (
+            <button
+              key={opcion.value}
+              type="button"
+              className={
+                opcion.esSubarea
+                  ? 'memo-destino-option memo-destino-subarea'
+                  : 'memo-destino-option'
               }
-            >
-              <option value="">
-                Seleccione un área
-              </option>
+              onMouseDown={event => {
+                event.preventDefault()
 
-              {areaOptions.map(area => (
-                <option
-                  key={area}
-                  value={area}
-                >
-                  {area}
-                </option>
-              ))}
-            </select>
+                setMemoAreaDestino(
+                  opcion.value
+                )
+
+                setDestinoBusqueda(
+                  opcion.label
+                )
+
+                setDestinoAbierto(false)
+              }}
+            >
+              {opcion.label}
+            </button>
+          ))
+        ) : (
+          <div className="memo-destino-empty">
+            No se encontraron áreas o subáreas.
           </div>
+        )}
+
+      </div>
+    )}
+
+  </div>
+
+  {memoAreaDestino && (
+    <small>
+      Destino seleccionado: {memoAreaDestino}
+    </small>
+  )}
+</div>
 
           <div className="memo-form-field">
             <label>Responsable</label>

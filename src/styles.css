@@ -2000,6 +2000,12 @@ tbody tr:last-child td {
   text-decoration: underline;
   color: #135b68;
 }
+.document-text-without-file {
+  color: #111827;
+  cursor: default;
+  text-decoration: none;
+  font-weight: 500;
+}
 
 .tracking-attachment {
   display: flex;
@@ -3097,4 +3103,214 @@ tbody tr:last-child td {
     justify-content: stretch;
     flex-direction: column;
   }
+}
+/* =========================================================
+   SEGUIMIENTO DEL EXPEDIENTE
+   ========================================================= */
+
+.timeline-card {
+  padding: 16px 18px;
+}
+
+.timeline-date {
+  display: block;
+  margin-bottom: 6px;
+  color: #6b7280;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.timeline-action {
+  margin-bottom: 14px;
+  color: #111827;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.timeline-route {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+  color: #374151;
+  font-size: 0.94rem;
+}
+
+.timeline-route b {
+  font-weight: 600;
+}
+
+.timeline-responsible,
+.timeline-performed-by {
+  margin-top: 8px;
+  color: #4b5563;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.timeline-responsible span,
+.timeline-performed-by span {
+  display: block;
+  margin-bottom: 2px;
+  color: #9ca3af;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.timeline-responsible b,
+.timeline-performed-by b {
+  color: #111827;
+  font-weight: 600;
+}
+
+.timeline-observation {
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+  color: #6b7280;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+/* =========================================================
+   DOCUMENTO PENDIENTE / ADJUNTAR POSTERIORMENTE
+   ========================================================= */
+
+.document-pending {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.document-pending-text {
+  color: #8a5a00;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.document-attach-button {
+  border: 1px solid #8ebdce;
+  border-radius: 6px;
+  padding: 5px 9px;
+  background: #f3f8fa;
+  color: #247f8b;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.document-attach-button:hover {
+  background: #e8f3f6;
+  border-color: #5d9eab;
+}
+
+.document-attach-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.document-pending {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.document-link-without-file {
+  color: #111827;
+  cursor: default !important;
+}
+
+.document-missing {
+  color: #b45309;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.document-attach-button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: #2563eb;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.document-attach-button:hover {
+  text-decoration: underline;
+}
+
+.document-attach-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+.expediente-remitente {
+  display: block;
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.expedientes-asunto {
+  display: block;
+  max-width: 420px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.memo-destino-field {
+  position: relative;
+}
+
+.memo-destino-combobox {
+  position: relative;
+}
+
+.memo-destino-combobox input {
+  width: 100%;
+}
+
+.memo-destino-options {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 50;
+  max-height: 260px;
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+}
+
+.memo-destino-option {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  color: #111827;
+  text-align: left;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.memo-destino-option:hover {
+  background: #f3f4f6;
+}
+
+.memo-destino-subarea {
+  padding-left: 24px;
+  color: #4b5563;
+}
+
+.memo-destino-empty {
+  padding: 12px;
+  color: #6b7280;
+  font-size: 0.85rem;
 }

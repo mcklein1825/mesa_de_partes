@@ -20,11 +20,12 @@ export default function ExpedientesView({
   onOpenDocumentType,
   onTracking,
   onDuplicate,
-  expedienteDocumentos
+  expedienteDocumentos,
+  onAttachDocument
 }: {
   items: Expediente[]
   query: string
-    expedienteDocumentos: {
+  expedienteDocumentos: {
     expedienteId: string
     tipoDocumento: 'Memo' | 'Oficio'
   }[]
@@ -40,6 +41,10 @@ export default function ExpedientesView({
   onOpenDocumentType: (id: string, tipo: string) => void
   onTracking: (id: string) => void
   onDuplicate: (expediente: Expediente) => void
+  onAttachDocument: (
+    id: string,
+    file: File
+  ) => Promise<void>
 }) {
   const pageSize = 20
   const [page, setPage] = useState(1)
@@ -51,9 +56,13 @@ export default function ExpedientesView({
   const pageItems = items.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   const cell = (value: string, className = '') => (
-    <span className={`table-cell-text ${className}`} title={value}>{value}</span>
-  )
-
+  <span
+    className={`table-cell-text ${className}`}
+    title={value}
+  >
+    {value}
+  </span>
+)
   return (
     <>
       <div className="page-heading compact">
@@ -120,8 +129,6 @@ export default function ExpedientesView({
                 <th>FECHA</th>
                 <th>NOMBRE / APELLIDO</th>
                 <th>ASUNTO</th>
-                <th>DOCUMENTOS</th>
-                <th>RECIBIDO</th>
                 <th>UBICACIÓN ACTUAL</th>
                 <th>ESTADO</th>
                 <th>ACCIONES</th>
@@ -144,19 +151,25 @@ export default function ExpedientesView({
                           {getRemitenteNombre(item).split(' ').map(x => x[0]).slice(0, 2).join('')}
                         </span>
                         <span className="table-cell-group">
-                          {cell(getRemitenteNombre(item))}
+                          {cell(
+                            getRemitenteNombre(item),
+                            'expediente-remitente'
+                          )}
                         </span>
                       </span>
                     </td>
                    <td>
-                      <span className="table-cell-group">
-                        <DocumentLink item={item}>
+                      <span className="table-cell-group expediente-asunto">
+                        <DocumentLink
+                          item={item}
+                          onAttach={file =>
+                            onAttachDocument(item.id, file)
+                          }
+                        >
                           {item.asunto}
                         </DocumentLink>
                       </span>
                     </td>
-                    <td><DocumentLink item={item} /></td>
-                    <td>{cell(item.canalRecepcion || item.modalidadRecepcion || 'No especificado')}</td>
                     <td>
                       <span className="table-cell-group">
                         {cell(getAreaDestino(item))}

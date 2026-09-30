@@ -23,13 +23,42 @@ export const VALID_TRANSITIONS: Record<Status, Status[]> = {
 }
 
 export const areas = [
-  'Unidad Académica', 'Administración', 'Secretaría Académica',
-  'Unidad de Bienestar del Estudiante', 'Unidad de Investigación',
-  'Unidad de Formación Continua', 'Área de Calidad', 'Electrónica Industrial',
-  'Gestión Administrativa', 'Contabilidad', 'Desarrollo de Sistemas de Información',
-  'Electricidad', 'Construcción Civil', 'Mecatrónica Automotriz', 'Mecánica de Producción'
+  'Unidad Académica',
+  'Administración',
+  'Secretaría Académica',
+  'Unidad de Bienestar del Estudiante',
+  'Unidad de Investigación',
+  'Unidad de Formación Continua',
+  'Área de Calidad',
+  'Electrónica Industrial',
+  'Gestión Administrativa',
+  'Contabilidad',
+  'Desarrollo de Sistemas de Información',
+  'Electricidad',
+  'Construcción Civil',
+  'Mecatrónica Automotriz',
+  'Mecánica de Producción'
 ]
 
+export const AREAS_UNICAS = Array.from(
+  new Set(
+    areas
+      .map(area => area.trim())
+      .filter(Boolean)
+  )
+)
+export const SUBAREAS_POR_AREA: Record<string, string[]> = {
+  'Administración': [
+    'Tesorería',
+    'Área de Personal',
+    'Patrimonio',
+    'Logística'
+  ]
+}
+
+export const getSubareas = (area: string): string[] => {
+  return SUBAREAS_POR_AREA[area] || []
+}
 export const AREA_RESPONSABLES: Record<string, string> = {
   'Unidad Académica': 'Ing. NÓSSER JURADO GUILLÉN',
   'Administración': 'CPC MARICELA OLIVARES MANDUJANO',

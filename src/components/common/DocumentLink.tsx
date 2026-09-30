@@ -1,18 +1,36 @@
-import { useState } from 'react'
+import {
+  ChangeEvent,
+  ReactNode,
+  useRef,
+  useState
+} from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import { Expediente } from '../../types'
 
 export default function DocumentLink({
   item,
-  children
+  children,
+  onAttach
 }: {
   item: Expediente
-  children?: React.ReactNode
+  children?: ReactNode
+  onAttach?: (file: File) => Promise<void>
 }) {
   const [cargando, setCargando] = useState(false)
+  const inputRef = useRef<HTMLInputElement | null>(null)
+
+  const tieneDocumento =
+    Boolean(item.archivo) &&
+    item.archivo !== 'Sin adjunto'
+
+  const textoVisible =
+    children ||
+    (item.archivo && item.archivo !== 'Sin adjunto'
+      ? item.archivo
+      : 'Sin asunto')
 
   const abrirArchivo = async () => {
-    if (cargando) return
+    if (cargando || !tieneDocumento) return
 
     const nuevaVentana = window.open('', '_blank')
 
@@ -28,7 +46,9 @@ export default function DocumentLink({
     try {
       const { data, error } = await supabase
         .from('mesa_partes_2026')
-        .select('archivo_data, archivo_tipo, archivo')
+        .select(
+          'archivo_data, archivo_tipo, archivo'
+        )
         .eq('id', item.id)
         .single()
 
@@ -49,22 +69,34 @@ export default function DocumentLink({
         : data.archivo_data
 
       const byteCharacters = atob(base64)
-      const byteNumbers = new Array(byteCharacters.length)
+      const byteNumbers = new Array(
+        byteCharacters.length
+      )
 
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i)
+      for (
+        let i = 0;
+        i < byteCharacters.length;
+        i++
+      ) {
+        byteNumbers[i] =
+          byteCharacters.charCodeAt(i)
       }
 
-      const byteArray = new Uint8Array(byteNumbers)
+      const byteArray = new Uint8Array(
+        byteNumbers
+      )
 
       const blob = new Blob(
         [byteArray],
         {
-          type: data.archivo_tipo || 'application/pdf'
+          type:
+            data.archivo_tipo ||
+            'application/pdf'
         }
       )
 
-      const url = URL.createObjectURL(blob)
+      const url =
+        URL.createObjectURL(blob)
 
       nuevaVentana.location.href = url
 
@@ -80,34 +112,90 @@ export default function DocumentLink({
         error
       )
 
-      alert('Ocurrió un error al abrir el archivo.')
+      alert(
+        'Ocurrió un error al abrir el archivo.'
+      )
 
     } finally {
       setCargando(false)
     }
   }
 
-  if (!item.archivo || item.archivo === 'Sin adjunto') {
-    if (children) {
-      return (
-        <span
-          className="table-cell-text"
-          title="Sin documento"
-        >
-          {children}
-        </span>
-      )
-    }
+  const seleccionarArchivo = () => {
+    inputRef.current?.click()
+  }
 
+  const manejarArchivo = async (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+    const file =
+      event.target.files?.[0]
+
+    event.target.value = ''
+
+    if (!file || !onAttach) return
+
+    await onAttach(file)
+  }
+
+  /*
+   * =========================================================
+   * SIN DOCUMENTO
+   * =========================================================
+   */
+
+  if (!tieneDocumento) {
     return (
-      <span
-        className="table-cell-text"
-        title={item.documentos || 'Sin documento'}
-      >
-        {item.documentos || 'Sin documento'}
+      <span className="document-pending">
+       <span
+          className="document-text-without-file"
+          title={
+            item.asunto
+              ? 'Documento pendiente de adjuntar'
+              : 'Sin asunto ni documento'
+          }
+        >
+          {textoVisible}
+        </span>
+
+        {item.asunto && (
+          <span className="document-missing">
+            ⚠ Falta documento
+          </span>
+        )}
+
+        {onAttach && (
+          <>
+            <button
+              type="button"
+              className="document-attach-button"
+              onClick={seleccionarArchivo}
+              disabled={cargando}
+            >
+              📎 Adjuntar
+            </button>
+
+            <input
+              ref={inputRef}
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              style={{ display: 'none' }}
+              onChange={manejarArchivo}
+            />
+          </>
+        )}
       </span>
     )
   }
+
+  /*
+   * =========================================================
+   * CON DOCUMENTO
+   *
+   * El ASUNTO se convierte en el enlace del documento.
+   * Si no existe asunto, se muestra el nombre del archivo.
+   * =========================================================
+   */
 
   return (
     <button
@@ -116,16 +204,11 @@ export default function DocumentLink({
       onClick={abrirArchivo}
       disabled={cargando}
       title={`Abrir ${item.archivo}`}
-      style={{
-        border: 'none',
-        background: 'none',
-        padding: 0,
-        cursor: cargando ? 'wait' : 'pointer'
-      }}
     >
       {cargando
         ? '⏳ Cargando...'
-        : children || `▣ ${item.archivo}`}
+        : textoVisible}
     </button>
   )
 }
+

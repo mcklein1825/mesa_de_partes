@@ -362,7 +362,6 @@ export default function NewExpedienteView({
                   name="archivo"
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png"
-                  required
                   onChange={event =>
                     setSelectedFileName(
                       event.target.files?.[0]?.name || ''
@@ -374,7 +373,7 @@ export default function NewExpedienteView({
               <small>
                 {selectedFileName
                   ? `Seleccionado: ${selectedFileName}`
-                  : 'Máximo 5 MB.'}
+                  : 'Opcional. Puede adjuntarlo ahora o posteriormente. Máximo 5 MB.'}
               </small>
             </div>
           </div>

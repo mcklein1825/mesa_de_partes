@@ -347,32 +347,44 @@ if (oficiosError) {
     const data = new FormData(form)
     const selectedFile = data.get('archivo')
 
-    const duplicadoDesdeId = String(
-      data.get('duplicadoDesdeId') || ''
-    ).trim()
+const archivoSeleccionado =
+  selectedFile instanceof File && selectedFile.size > 0
+    ? selectedFile
+    : null
 
-    const esDuplicado =
-      String(data.get('esDuplicado') || '').toLowerCase() === 'true'
+const duplicadoDesdeId = String(
+  data.get('duplicadoDesdeId') || ''
+).trim()
 
-    if (!(selectedFile instanceof File) || !selectedFile.size) {
-      notify('Seleccione un archivo antes de registrar el expediente')
-      return
-    }
-    if (selectedFile.size > 5 * 1024 * 1024) {
-      notify('El archivo supera el límite de 5 MB')
-      return
-    }
+const esDuplicado =
+  String(data.get('esDuplicado') || '').toLowerCase() === 'true'
 
-    let fileData = ''
-    try {
-      setIsSaving(true)
-      fileData = await readFileAsDataUrl(selectedFile)
-    } catch (error) {
-      notify(error instanceof Error ? error.message : 'No se pudo leer el archivo seleccionado')
-      setIsSaving(false)
-      return
-    }
+if (
+  archivoSeleccionado &&
+  archivoSeleccionado.size > 5 * 1024 * 1024
+) {
+  notify('El archivo supera el límite de 5 MB')
+  return
+}
 
+let fileData = ''
+
+try {
+  setIsSaving(true)
+
+  if (archivoSeleccionado) {
+    fileData = await readFileAsDataUrl(archivoSeleccionado)
+  }
+} catch (error) {
+  notify(
+    error instanceof Error
+      ? error.message
+      : 'No se pudo leer el archivo seleccionado'
+  )
+
+  setIsSaving(false)
+  return
+}
     const expedienteOriginal =
   esDuplicado && duplicadoDesdeId
     ? expedientes.find(
@@ -465,8 +477,19 @@ const historialInicial = esDuplicado && expedienteOriginal
       contenido: String(data.get('contenido') || ''), area: '', areaDestino: '', estado: 'Pendiente',
       plazo: addDays(fechaIngreso, 7),
       prioridad: String(data.get('prioridad') || 'Normal') as 'Normal' | 'Alta',
-      archivo: selectedFile.name || 'Sin adjunto', archivoData: fileData,
-      archivoTipo: selectedFile.type || 'application/octet-stream', archivoTamano: selectedFile.size,
+      archivo: archivoSeleccionado
+        ? archivoSeleccionado.name
+        : 'Sin adjunto',
+
+      archivoData: fileData,
+
+      archivoTipo: archivoSeleccionado
+        ? archivoSeleccionado.type
+        : '',
+
+      archivoTamano: archivoSeleccionado
+        ? archivoSeleccionado.size
+        : 0,
       documentos: String(data.get('documentos') || ''),
       modalidadRecepcion: String(data.get('canalRecepcion') || ''), entregadoA: '',
       canalRecepcion: String(data.get('canalRecepcion') || ''),
@@ -533,6 +556,129 @@ notify(
   `Expediente ${nextId} registrado correctamente`
 )
   }
+  const adjuntarDocumento = async (
+  expedienteId: string,
+  file: File
+) => {
+  if (!currentUser) {
+    notify('No hay un usuario activo')
+    return
+  }
+
+  if (!userPermissions?.puedeRegistrar) {
+    notify('No tiene permisos para adjuntar documentos')
+    return
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    notify('El archivo supera el límite de 5 MB')
+    return
+  }
+
+  const tiposPermitidos = [
+    'application/pdf',
+    'image/jpeg',
+    'image/png'
+  ]
+
+  const extensionValida =
+  /\.(pdf|jpg|jpeg|png)$/i.test(file.name)
+
+  if (
+    file.type &&
+    !tiposPermitidos.includes(file.type) &&
+    !extensionValida
+  ) {
+    notify('Solo se permiten archivos PDF, JPG, JPEG o PNG')
+    return
+  }
+
+  try {
+    setIsSaving(true)
+
+    const archivoData = await readFileAsDataUrl(file)
+
+    const expediente = expedientes.find(
+      item => item.id === expedienteId
+    )
+
+    if (!expediente) {
+      notify('No se encontró el expediente')
+      return
+    }
+
+    const historialActual = Array.isArray(expediente.historial)
+      ? expediente.historial
+      : []
+
+    const nuevoHistorial = [
+      ...historialActual,
+      {
+        fechaHora: new Date().toISOString(),
+        fechaIngreso: expediente.fechaIngreso || '',
+        areaOrigen: currentUser.area || 'Mesa de Partes',
+        areaDestino: getAreaDestino(expediente),
+        accion: 'Documento adjuntado',
+        observacion: `Se adjuntó posteriormente el documento "${file.name}".`,
+        responsable: `${currentUser.nombre} - ${currentUser.area || ''}`
+      }
+    ]
+
+    const { error } = await supabase
+      .from('mesa_partes_2026')
+      .update({
+        archivo: file.name,
+        archivo_data: archivoData,
+        archivo_tipo: file.type || 'application/octet-stream',
+        archivo_tamano: file.size,
+        historial: nuevoHistorial
+      })
+      .eq('id', expedienteId)
+
+    if (error) {
+      console.error(
+        'Error adjuntando documento:',
+        error
+      )
+
+      notify(
+        `No se pudo adjuntar el documento: ${error.message}`
+      )
+
+      return
+    }
+
+    setExpedientes(prev =>
+      prev.map(item =>
+        item.id === expedienteId
+          ? {
+              ...item,
+              archivo: file.name,
+              archivoData: archivoData,
+              archivoTipo: file.type || 'application/octet-stream',
+              archivoTamano: file.size,
+              historial: nuevoHistorial
+            }
+          : item
+      )
+    )
+
+    notify(
+      `Documento "${file.name}" adjuntado correctamente`
+    )
+
+  } catch (error) {
+    console.error(
+      'Error inesperado al adjuntar documento:',
+      error
+    )
+
+    notify('Ocurrió un error al adjuntar el documento')
+
+  } finally {
+    setIsSaving(false)
+  }
+}
 
   const openDocumentType = (id: string, tipo: string) => {
   const expediente = expedientes.find(item => item.id === id)
@@ -999,13 +1145,21 @@ const updateMemoEstado = async (
               {view === 'inicio' && <DashboardView expedientes={expedientes} onNew={() => setView('nuevo')} onViewAll={() => setView('expedientes')} currentDate={currentDate} />}
               {view === 'expedientes' && (
                 <ExpedientesView
-                  items={filteredExpedientes} query={query} setQuery={setQuery} areaFilter={areaFilter}
-                  areaOptions={areaOptions} setAreaFilter={setAreaFilter} remitenteFilter={remitenteFilter}
-                  setRemitenteFilter={setRemitenteFilter} statusFilter={statusFilter} setStatusFilter={setStatusFilter}
+                  items={filteredExpedientes}
+                  query={query}
+                  setQuery={setQuery}
+                  areaFilter={areaFilter}
+                  areaOptions={areaOptions}
+                  setAreaFilter={setAreaFilter}
+                  remitenteFilter={remitenteFilter}
+                  setRemitenteFilter={setRemitenteFilter}
+                  statusFilter={statusFilter}
+                  setStatusFilter={setStatusFilter}
                   onNew={() => setView('nuevo')}
                   onOpenDocumentType={openDocumentType}
                   expedienteDocumentos={expedienteDocumentos}
                   onTracking={setTrackingId}
+                  onAttachDocument={adjuntarDocumento}
                   onDuplicate={expediente => {
                     setExpedienteParaDuplicar(expediente)
                     setView('nuevo')
