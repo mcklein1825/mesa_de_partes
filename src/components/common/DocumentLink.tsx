@@ -5,7 +5,7 @@ import {
   useState
 } from 'react'
 import { supabase } from '../../lib/supabaseClient'
-import { Expediente } from '../../types'
+import { Expediente, Proveido } from '../../types'
 
 export default function DocumentLink({
   item,

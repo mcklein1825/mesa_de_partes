@@ -999,10 +999,6 @@ tbody tr:last-child td {
   min-height: 100vh;
 }
 
-.portal-shell .sidebar {
-  display: none;
-}
-
 .portal-shell .main-content {
   width: 100%;
 }

@@ -1,15 +1,17 @@
-import { Expediente } from '../../types'
+import { Expediente, Proveido } from '../../types'
 import { formatNroExp, getRemitenteNombre, getAreaDestino, daysUntilDeadline } from '../../utils/expedienteHelpers'
 import StatCard from '../common/StatCard'
 import StatusBadge from '../common/StatusBadge'
 
 export default function DashboardView({
   expedientes,
+  proveidos,
   onNew,
   onViewAll,
   currentDate
 }: {
   expedientes: Expediente[]
+  proveidos: Proveido[]
   onNew: () => void
   onViewAll: () => void
   currentDate: string
@@ -49,6 +51,80 @@ export default function DashboardView({
         <StatCard label="En atención" value={attention} detail="En las áreas responsables" tone="blue" icon="" />
         <StatCard label="Atendidos" value={attended} detail="Registros con seguimiento" tone="green" icon="✓" />
         <StatCard label="Total de expedientes" value={expedientes.length} detail={`Año ${new Date().getFullYear()}`} tone="purple" icon="▤" />
+      </section>
+            <section className="panel">
+        <div className="panel-header">
+          <div>
+            <h2>Proveídos recientes</h2>
+            <p>Últimas instrucciones registradas en los expedientes</p>
+          </div>
+        </div>
+
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>N.º PROVEÍDO</th>
+                <th>EXPEDIENTE</th>
+                <th>ÁREA DESTINO</th>
+                <th>RESPONSABLE</th>
+                <th>INSTRUCCIÓN</th>
+                <th>ESTADO</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {proveidos.slice(0, 4).map(proveido => (
+                <tr key={proveido.id}>
+                  <td>
+                    <b>{proveido.nroProveido || '—'}</b>
+                  </td>
+
+                  <td>
+                    <b className="exp-id">
+                      {proveido.nroExpediente || '—'}
+                    </b>
+                  </td>
+
+                  <td>
+                    {proveido.areaDestino || '—'}
+                  </td>
+
+                  <td>
+                    {proveido.responsable || '—'}
+                  </td>
+
+                  <td>
+                    {proveido.instruccion || '—'}
+                  </td>
+
+                  <td>
+                    <span
+                      className={`status-badge status-${proveido.estado
+                        .toLowerCase()
+                        .replace(/\s+/g, '-')}`}
+                    >
+                      {proveido.estado || '—'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+
+              {proveidos.length === 0 && (
+                <tr>
+                  <td colSpan={6}>
+                    <div
+                      className="empty-state"
+                      style={{ padding: '20px', textAlign: 'center' }}
+                    >
+                      No hay proveídos registrados.
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <div className="content-grid">
