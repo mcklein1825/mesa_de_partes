@@ -31,7 +31,7 @@ export default function NewExpedienteView({
   const [showExtraFields, setShowExtraFields] = useState(false)
 
   return (
-    <div className="legacy-form-page">
+    <div className="expediente-form-page">
       <form className="form-layout" onSubmit={onSubmit}>
 
         {expedienteParaDuplicar && (
@@ -41,8 +41,8 @@ export default function NewExpedienteView({
                 marginBottom: '20px',
                 padding: '14px',
                 borderRadius: '8px',
-                border: '1px solid #8ebdce',
-                background: '#f5fafc'
+                border: '1px solid #c5d2d8',
+                background: '#f5f8fa'
               }}
             >
               <strong>
@@ -107,8 +107,14 @@ export default function NewExpedienteView({
           </div>
         )}
 
-        <div className="legacy-title">
-          Registro de Expediente
+        <div className="page-heading compact">
+          <div>
+            <p className="eyebrow">GESTIÓN DOCUMENTAL</p>
+            <h1>Registro de Expediente</h1>
+            <p className="muted">
+              Complete los datos solicitados para registrar el expediente.
+            </p>
+          </div>
         </div>
 
         <section className="panel form-panel">

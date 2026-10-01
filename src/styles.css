@@ -994,86 +994,39 @@ tbody tr:last-child td {
    PORTAL STYLE (REGISTRO INSTITUCIONAL)
    ======================================== */
 .portal-shell {
-  display: block;
-  background: #fff;
+  display: flex;
+  background: #eef2f5;
   min-height: 100vh;
 }
 
 .portal-shell .main-content {
-  width: 100%;
-}
-
-.portal-bar {
-  height: 42px;
-  background: #f6f6f6;
-  border-bottom: 1px solid #d8d8d8;
-  padding: 0 calc((100% - 770px) / 2);
-  gap: 18px;
-  justify-content: flex-start;
-}
-
-.portal-brand {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-  color: #2b72a9;
-}
-
-.portal-mark {
-  width: 20px;
-  height: 20px;
-  border-radius: 2px;
-  background: #2e78b2;
-  color: #fff;
-  display: grid;
-  place-items: center;
-  font-size: 8px;
-  font-weight: 700;
-}
-
-.portal-brand strong {
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.portal-links {
-  display: flex;
-  align-items: stretch;
-  height: 100%;
-  gap: 15px;
-}
-
-.portal-links button {
-  font-size: 7px;
-  color: #6c6c6c;
-  padding: 0 2px;
-  border-bottom: 2px solid transparent;
-  white-space: nowrap;
-}
-
-.portal-links button:hover, .portal-links button.selected {
-  color: #24689e;
-  border-bottom-color: #2c78b4;
-}
-
-.portal-shell .top-actions {
-  margin-left: auto;
-}
-
-.portal-shell .profile-button {
-  font-size: 9px;
-}
-
-.portal-shell .profile-button .avatar {
-  width: 22px;
-  height: 22px;
-  font-size: 8px;
+  flex: 1;
+  min-width: 0;
 }
 
 .portal-shell .page {
-  padding: 29px 20px 42px;
-  max-width: none;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 42px 24px 60px;
+  background: transparent;
+}
+
+.portal-shell .sidebar .profile-menu {
+  position: relative;
+}
+
+.portal-shell .sidebar .profile-popover {
+  top: auto;
+  right: auto;
+  bottom: calc(100% + 8px);
+  left: 0;
+  width: min(240px, calc(100vw - 32px));
+}
+
+.portal-shell .sidebar .user-mini {
+  width: 100%;
+  text-align: left;
 }
 
 /* ========================================
@@ -1307,59 +1260,12 @@ tbody tr:last-child td {
 }
 
 @media (max-width: 700px) {
-  .portal-bar {
-    padding: 0 12px;
-  }
-  .portal-links {
-    gap: 6px;
-  }
-  .portal-links button {
-    font-size: 6px;
-  }
   .legacy-form-page {
     width: 100%;
   }
 }
 
 /* Ajustes específicos del Portal Shell */
-.portal-shell .topbar {
-  height: 62px;
-  padding: 0 max(24px, calc((100% - 1180px) / 2));
-}
-
-.portal-shell .portal-brand strong {
-  font-size: 16px;
-}
-
-.portal-shell .portal-mark {
-  width: 28px;
-  height: 28px;
-  font-size: 11px;
-}
-
-.portal-shell .portal-links {
-  gap: 22px;
-}
-
-.portal-shell .portal-links button {
-  font-size: 11px;
-}
-
-.portal-shell .profile-button {
-  font-size: 12px;
-}
-
-.portal-shell .profile-button .avatar {
-  width: 30px;
-  height: 30px;
-  font-size: 10px;
-}
-
-.portal-shell .page {
-  max-width: 1180px;
-  padding: 42px 24px 60px;
-}
-
 .portal-shell .page-heading h1 {
   font-size: 32px;
 }
@@ -1655,18 +1561,6 @@ tbody tr:last-child td {
 }
 
 /* Contraste reforzado para facilitar la lectura */
-.portal-shell {
-  background: #eef2f5;
-}
-
-.portal-shell .portal-bar {
-  border-bottom: 2px solid #9fb4bf;
-}
-
-.portal-shell .page {
-  background: #eef2f5;
-}
-
 .panel {
   border: 2px solid #c5d2d8;
   box-shadow: 0 2px 5px #294b5c18;
@@ -2115,7 +2009,7 @@ tbody tr:last-child td {
   }
   .brand > div:last-child,
   .menu-label,
-  .nav-item:not(.active)::after,
+  .nav-item .nav-label,
   .secure-note,
   .user-mini div:not(.avatar) {
     display: none;
@@ -2129,13 +2023,6 @@ tbody tr:last-child td {
   }
   .topbar {
     padding: 0 14px;
-  }
-  .portal-links {
-    gap: 2px;
-  }
-  .portal-links button {
-    font-size: 10px;
-    padding: 8px;
   }
   .page {
     padding: 24px 12px;
@@ -2151,6 +2038,9 @@ tbody tr:last-child td {
   }
   .list-panel table {
     min-width: 1800px;
+  }
+  .proveidos-list table {
+    min-width: 980px;
   }
 }
 
@@ -3243,6 +3133,207 @@ tbody tr:last-child td {
 .document-attach-button:disabled {
   cursor: wait;
   opacity: 0.65;
+}
+
+.portal-shell .expediente-form-page {
+  width: min(100%, 900px);
+  max-height: none;
+  margin: 0 auto;
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.portal-shell .expediente-form-page .form-layout {
+  max-width: none;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.portal-shell .expediente-form-page .page-heading {
+  margin-bottom: 28px;
+}
+
+.portal-shell .expediente-form-page .form-panel {
+  margin: 0 0 18px;
+  overflow: hidden;
+  border: 2px solid #c5d2d8;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 5px #294b5c18;
+}
+
+.portal-shell .expediente-form-page .form-panel .panel-header {
+  min-height: 58px;
+  padding: 16px 22px;
+  background: #fff;
+  border-bottom: 1px solid #e2e9ed;
+}
+
+.portal-shell .expediente-form-page .form-panel .panel-header h2 {
+  color: #243b48;
+  font: 700 17px 'Plus Jakarta Sans';
+}
+
+.portal-shell .expediente-form-page .form-panel .panel-header p {
+  display: block;
+  margin-top: 6px;
+  color: #8998a2;
+  font-size: 12px;
+}
+
+.portal-shell .expediente-form-page .section-strip {
+  min-height: 48px;
+  padding: 14px 22px;
+  border-bottom: 1px solid #e2e9ed;
+  background: #f3f8fa;
+  color: #3f5964;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 20px;
+}
+
+.portal-shell .expediente-form-page .form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 22px;
+  padding: 22px 24px 26px;
+}
+
+.portal-shell .expediente-form-page .form-grid label {
+  color: #52636c;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.portal-shell .expediente-form-page .form-grid input,
+.portal-shell .expediente-form-page .form-grid select,
+.portal-shell .expediente-form-page .form-grid textarea {
+  height: 44px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 1px solid #adbec6;
+  border-radius: 6px;
+  background: #fff;
+  color: #364a55;
+  font-size: 14px;
+}
+
+.portal-shell .expediente-form-page .form-grid input:focus,
+.portal-shell .expediente-form-page .form-grid select:focus,
+.portal-shell .expediente-form-page .form-grid textarea:focus {
+  border-color: #267e9c;
+  box-shadow: 0 0 0 2px #267e9c2b;
+}
+
+.portal-shell .expediente-form-page .form-grid textarea {
+  height: auto;
+  min-height: 100px;
+}
+
+.portal-shell .expediente-form-page .section-strip + .form-grid {
+  padding-top: 22px;
+}
+
+.portal-shell .expediente-form-page .legacy-blue-button,
+.portal-shell .expediente-form-page .file-button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 6px;
+  background: #1cabb0;
+  color: #fff;
+  font-size: 13px !important;
+  font-weight: 700;
+}
+
+.portal-shell .expediente-form-page .legacy-blue-button:hover,
+.portal-shell .expediente-form-page .file-button:hover {
+  background: #139397;
+}
+
+.portal-shell .expediente-form-page .inline-field .legacy-blue-button {
+  height: 44px;
+  margin-top: 8px;
+  border-radius: 0 6px 6px 0;
+}
+
+.portal-shell .expediente-form-page .inline-field input {
+  min-width: 0;
+  border-radius: 6px 0 0 6px;
+}
+
+.portal-shell .expediente-form-page .file-button {
+  width: max-content;
+  cursor: pointer;
+}
+
+.portal-shell .expediente-form-page .file-button input {
+  display: none;
+}
+
+.portal-shell .expediente-form-page .attachment-grid {
+  padding-bottom: 22px !important;
+}
+
+.portal-shell .expediente-form-page .attachment-grid small {
+  display: block;
+  margin-top: 9px;
+  color: #8998a2;
+  font-size: 12px;
+}
+
+.portal-shell .expediente-form-page .form-actions {
+  justify-content: flex-end;
+  gap: 12px;
+  margin: 0;
+  padding: 4px 0 22px;
+}
+
+.portal-shell .expediente-form-page .legacy-light-button {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid #d4dfe4;
+  border-radius: 6px;
+  background: #fff;
+  color: #52636c;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.portal-shell .expediente-form-page .legacy-light-button:hover {
+  background: #f5f8fa;
+}
+
+.portal-shell .expediente-form-page .saving-notice {
+  margin-bottom: 18px;
+  padding: 14px 18px;
+  border: 1px solid #c5d2d8;
+  border-radius: 8px;
+  background: #fff;
+  color: #3f5964;
+}
+
+@media (max-width: 700px) {
+  .portal-shell .expediente-form-page .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 18px 16px 22px;
+  }
+
+  .portal-shell .expediente-form-page .form-panel .panel-header,
+  .portal-shell .expediente-form-page .section-strip {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .portal-shell .expediente-form-page .form-actions {
+    flex-wrap: wrap;
+  }
 }
 .expediente-remitente {
   display: block;

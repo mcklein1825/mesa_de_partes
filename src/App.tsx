@@ -6,7 +6,7 @@
   import NuevoOficioView from './components/views/NuevoOficioView'
   import NuevoProveidoView from './components/views/NuevoProveidoView'
   // Tipos y Constantes
-  import { User, View, Expediente, Memo, Oficio, Status } from './types'
+  import { User, View, Expediente, Memo, Oficio, Proveido, Status } from './types'
   import { ROLE_PERMISSIONS, areas, AREA_RESPONSABLES } from './constants'
 
   // Utilidades
@@ -46,7 +46,7 @@
     
     const [memos, setMemos] = useState<Memo[]>([])
     const [oficios, setOficios] = useState<Oficio[]>([])
-    const [proveidos, setProveidos] = useState<any[]>([])
+    const [proveidos, setProveidos] = useState<Proveido[]>([])
     const [showOficioForm, setShowOficioForm] = useState(false)
     const [showProveidoForm, setShowProveidoForm] = useState(false)
     const [proveidoExpediente, setProveidoExpediente] = useState<Expediente | null>(null)
@@ -1077,65 +1077,17 @@
               <span>⌁</span>
               <div><b>Supabase</b><small>Datos almacenados en la base de datos</small></div>
             </div>
-            <div className="user-mini" onClick={() => setShowProfile(!showProfile)} role="button" tabIndex={0}>
-              <div className="avatar">{currentUser.nombre.split(' ').map(n => n[0]).slice(0, 2).join('')}</div>
-              <div><b>{currentUser.nombre}</b><small>{currentUser.rol === 'MesaPartes' ? 'Mesa de Partes' : currentUser.rol}</small></div>
-              <span>⋮</span>
-            </div>
-          </div>
-        </aside>
-
-        <main className="main-content">
-          <header className="topbar portal-bar">
-            <div className="portal-brand">
-              <div className="portal-mark">MP</div>
-              <strong>Mesa de Partes Virtual</strong>
-            </div>
-            <nav className="portal-links">
+            <div className="profile-menu">
               <button
-                className={view === 'nuevo' ? 'selected' : ''}
-                onClick={() => setView('nuevo')}
+                className="user-mini"
+                type="button"
+                aria-expanded={showProfile}
+                aria-haspopup="true"
+                onClick={() => setShowProfile(!showProfile)}
               >
-                Registro de Expediente
-              </button>
-
-              <button
-                className={view === 'expedientes' ? 'selected' : ''}
-                onClick={() => setView('expedientes')}
-              >
-                Consulta de Expedientes
-              </button>
-
-              <button
-                className={view === 'memos' ? 'selected' : ''}
-                onClick={() => {
-                  setMemoExpediente(null)
-                  setShowMemoForm(false)
-                  setShowMemoSelector(false)
-                  setView('memos')
-                }}
-              >
-                Memos
-              </button>
-
-              <button
-                className={view === 'reportes' ? 'selected' : ''}
-                onClick={() => setView('reportes')}
-              >
-                Reportes
-              </button>
-
-              <button
-                className={view === 'inicio' ? 'selected' : ''}
-                onClick={() => setView('inicio')}
-              >
-                Inicio
-              </button>
-            </nav>
-            <div className="top-actions">
-              <button className="profile-button" onClick={() => setShowProfile(!showProfile)}>
                 <div className="avatar">{currentUser.nombre.split(' ').map(n => n[0]).slice(0, 2).join('')}</div>
-                <span>{currentUser.nombre}</span><b>⌄</b>
+                <div><b>{currentUser.nombre}</b><small>{currentUser.rol === 'MesaPartes' ? 'Mesa de Partes' : currentUser.rol}</small></div>
+                <span>⋮</span>
               </button>
               {showProfile && (
                 <div className="profile-popover">
@@ -1148,8 +1100,10 @@
                 </div>
               )}
             </div>
-          </header>
+          </div>
+        </aside>
 
+        <main className="main-content">
           <div className="page">
             {loadingDb ? (
               <div className="empty-state">Cargando expedientes desde Supabase...</div>

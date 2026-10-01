@@ -61,13 +61,12 @@ export default function NuevoProveidoView({
   }
 
   return (
-    <section className="view-section">
-
-      <div className="page-header">
+    <>
+      <div className="page-heading compact">
         <div>
+          <p className="eyebrow">GESTIÓN DOCUMENTAL</p>
           <h1>Nuevo Proveído</h1>
-
-          <p>
+          <p className="muted">
             Registra una instrucción vinculada a un expediente.
           </p>
         </div>
@@ -111,7 +110,7 @@ export default function NuevoProveidoView({
             value={expediente}
             onChange={onExpedienteChange}
             areaOptions={areaOptions}
-            />
+          />
 
           <div className="form-group">
             <label>Área destino</label>
@@ -153,7 +152,7 @@ export default function NuevoProveidoView({
             </select>
           </div>
 
-          <div className="form-group full-width">
+          <div className="form-group wide">
             <label>Instrucción</label>
 
             <textarea
@@ -188,6 +187,6 @@ export default function NuevoProveidoView({
 
       </div>
 
-    </section>
+    </>
   )
 }

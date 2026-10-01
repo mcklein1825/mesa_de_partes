@@ -1,15 +1,5 @@
 import { useMemo, useState } from 'react'
-
-type Proveido = {
-  id: string
-  nroProveido: string
-  nroExpediente: string
-  fecha: string
-  areaDestino: string
-  responsable: string
-  instruccion: string
-  estado: string
-}
+import { Proveido } from '../../types'
 
 type Props = {
   proveidos: Proveido[]
@@ -44,14 +34,12 @@ export default function ProveidosView({
   }, [proveidos, busqueda, estadoFiltro])
 
   return (
-    <section className="view-section">
-
-      <div className="page-header">
-
+    <>
+      <div className="page-heading compact">
         <div>
+          <p className="eyebrow">GESTIÓN DOCUMENTAL</p>
           <h1>Proveídos</h1>
-
-          <p>
+          <p className="muted">
             Consulta y gestión de los proveídos vinculados a los expedientes.
           </p>
         </div>
@@ -61,52 +49,47 @@ export default function ProveidosView({
           className="primary-button"
           onClick={onNuevoProveido}
         >
-          + Nuevo Proveído
+          ＋ Nuevo Proveído
         </button>
-
       </div>
 
-      <div className="toolbar">
+      <section className="panel list-panel proveidos-list">
+        <div className="toolbar">
+          <div className="search-box">
+            <span>⌕</span>
+            <input
+              value={busqueda}
+              onChange={e => setBusqueda(e.target.value)}
+              placeholder="Buscar por proveído, expediente, área o instrucción..."
+            />
+          </div>
 
-        <div className="search-box">
+          <select
+            value={estadoFiltro}
+            onChange={e => setEstadoFiltro(e.target.value)}
+          >
+            <option value="Todos">
+              Todos los estados
+            </option>
 
-          <span>⌕</span>
+            <option value="Pendiente">
+              Pendiente
+            </option>
 
-          <input
-            value={busqueda}
-            onChange={e => setBusqueda(e.target.value)}
-            placeholder="Buscar por proveído, expediente, área o instrucción..."
-          />
+            <option value="Atendido">
+              Atendido
+            </option>
 
+            <option value="Archivado">
+              Archivado
+            </option>
+          </select>
+
+          <span className="result-count">{resultados.length} resultados</span>
         </div>
 
-        <select
-          value={estadoFiltro}
-          onChange={e => setEstadoFiltro(e.target.value)}
-        >
-          <option value="Todos">
-            Todos los estados
-          </option>
-
-          <option value="Pendiente">
-            Pendiente
-          </option>
-
-          <option value="Atendido">
-            Atendido
-          </option>
-
-          <option value="Archivado">
-            Archivado
-          </option>
-        </select>
-
-      </div>
-
-      <div className="table-container">
-
-        <table className="data-table">
-
+      <div className="table-wrap">
+        <table className="data-table proveidos-table">
           <thead>
             <tr>
               <th>N.º Proveído</th>
@@ -120,10 +103,8 @@ export default function ProveidosView({
           </thead>
 
           <tbody>
-
             {resultados.map(proveido => (
               <tr key={proveido.id}>
-
                 <td>
                   <strong>
                     {proveido.nroProveido || '—'}
@@ -153,7 +134,6 @@ export default function ProveidosView({
                 </td>
 
                 <td>
-
                   <span
                     className={`status-badge status-${proveido.estado
                       .toLowerCase()
@@ -163,40 +143,29 @@ export default function ProveidosView({
                   </span>
 
                 </td>
-
               </tr>
             ))}
 
             {resultados.length === 0 && (
               <tr>
                 <td colSpan={7}>
-
                   <div className="empty-state">
-
                     {busqueda || estadoFiltro !== 'Todos'
                       ? 'No se encontraron proveídos con esos criterios.'
                       : 'No hay proveídos registrados.'}
-
                   </div>
-
                 </td>
               </tr>
             )}
-
           </tbody>
-
         </table>
-
       </div>
 
-      <div className="results-summary">
-
+      <div className="pagination">
         Mostrando {resultados.length} de {proveidos.length} proveído
         {proveidos.length === 1 ? '' : 's'}.
-
       </div>
-
-    </section>
+      </section>
+    </>
   )
 }
-
