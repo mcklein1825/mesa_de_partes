@@ -16,16 +16,52 @@ export default function DashboardView({
   onViewAll: () => void
   currentDate: string
 }) {
-  const pending = expedientes.filter(item => item.estado === 'Pendiente').length
-  const attention = expedientes.filter(item => item.estado === 'Pendiente').length
-  const attended = expedientes.filter(item => item.estado === 'Atendido').length
+const pending = expedientes.filter(
+  item => item.estado === 'Pendiente'
+).length
 
-  const upcomingDeadlines = expedientes
-    .filter(item => item.estado === 'Pendiente' && item.plazo)
-    .map(item => ({ ...item, daysLeft: daysUntilDeadline(item.plazo) }))
-    .filter(item => item.daysLeft >= 0 && item.daysLeft <= 15)
-    .sort((a, b) => a.daysLeft - b.daysLeft)
-    .slice(0, 3)
+const noResponse = expedientes.filter(
+  item => item.estado === 'Sin respuesta'
+).length
+
+const attended = expedientes.filter(
+  item => item.estado === 'Atendido'
+).length
+
+const archived = expedientes.filter(
+  item => item.estado === 'Archivado'
+).length
+
+ const upcomingDeadlines = expedientes
+  .filter(item =>
+    item.estado === 'Pendiente' &&
+    item.plazo
+  )
+  .map(item => ({
+    ...item,
+    daysLeft: daysUntilDeadline(item.plazo)
+  }))
+  .filter(item => item.daysLeft >= 0 && item.daysLeft <= 15)
+  .sort((a, b) => a.daysLeft - b.daysLeft)
+  .filter((item, index, array) =>
+    index === array.findIndex(
+      other => other.nroExp === item.nroExp
+    )
+  )
+  .slice(0, 3)
+  const recentExpedientes = [...expedientes]
+  .sort((a, b) => {
+    const dateA = new Date(
+      a.fechaIngreso?.split('/').reverse().join('-') || ''
+    ).getTime()
+
+    const dateB = new Date(
+      b.fechaIngreso?.split('/').reverse().join('-') || ''
+    ).getTime()
+
+    return dateB - dateA
+  })
+  .slice(0, 4)
 
   const formatDateShort = (dateStr: string) => {
     const date = new Date(dateStr.split('/').reverse().join('-'))
@@ -47,10 +83,37 @@ export default function DashboardView({
       </div>
 
       <section className="stats-grid">
-        <StatCard label="Por atender" value={pending} detail="Requieren derivación" tone="orange" icon="◷" />
-        <StatCard label="En atención" value={attention} detail="En las áreas responsables" tone="blue" icon="" />
-        <StatCard label="Atendidos" value={attended} detail="Registros con seguimiento" tone="green" icon="✓" />
-        <StatCard label="Total de expedientes" value={expedientes.length} detail={`Año ${new Date().getFullYear()}`} tone="purple" icon="▤" />
+        <StatCard
+  label="Por atender"
+  value={pending}
+  detail="Pendientes de gestión"
+  tone="orange"
+  icon="◷"
+/>
+
+<StatCard
+  label="Sin respuesta"
+  value={noResponse}
+  detail="Requieren seguimiento"
+  tone="blue"
+  icon="!"
+/>
+
+<StatCard
+  label="Atendidos"
+  value={attended}
+  detail="Registros atendidos"
+  tone="green"
+  icon="✓"
+/>
+
+<StatCard
+  label="Archivados"
+  value={archived}
+  detail="Expedientes cerrados"
+  tone="purple"
+  icon="▤"
+/>
       </section>
             <section className="panel">
         <div className="panel-header">
@@ -77,7 +140,7 @@ export default function DashboardView({
               {proveidos.slice(0, 4).map(proveido => (
                 <tr key={proveido.id}>
                   <td>
-                    <b>{proveido.nroProveido || '—'}</b>
+                    <b>{proveido.nroExpediente || '—'}</b>
                   </td>
 
                   <td>
@@ -117,7 +180,7 @@ export default function DashboardView({
                       className="empty-state"
                       style={{ padding: '20px', textAlign: 'center' }}
                     >
-                      No hay proveídos registrados.
+                      No hay proveídos recientes para mostrar.
                     </div>
                   </td>
                 </tr>
@@ -150,7 +213,7 @@ export default function DashboardView({
                 </tr>
               </thead>
               <tbody>
-                {expedientes.slice(0, 4).map(item => (
+                {recentExpedientes.map(item => (
                   <tr key={item.id}>
                     <td>
                       <b className="exp-id">{formatNroExp(item.nroExp)}</b>

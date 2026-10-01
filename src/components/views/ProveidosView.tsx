@@ -1,15 +1,26 @@
 import { useMemo, useState } from 'react'
-import { Proveido } from '../../types'
-
+import { Expediente, Proveido } from '../../types'
+import ExpedienteSelector from '../common/ExpedienteSelector'
 type Props = {
   proveidos: Proveido[]
+  expedientes: Expediente[]
+  areaOptions: string[]
+  showSelector: boolean
   onNuevoProveido: () => void
+  onCloseSelector: () => void
+  onSelectExpediente: (expediente: Expediente) => void
 }
-
 export default function ProveidosView({
   proveidos,
-  onNuevoProveido
+  expedientes,
+  areaOptions,
+  showSelector,
+  onNuevoProveido,
+  onCloseSelector,
+  onSelectExpediente
 }: Props) {
+  const [expedienteSeleccionado, setExpedienteSeleccionado] =
+  useState<Expediente | null>(null)
   const [busqueda, setBusqueda] = useState('')
   const [estadoFiltro, setEstadoFiltro] = useState('Todos')
 
@@ -19,7 +30,6 @@ export default function ProveidosView({
     return proveidos.filter(proveido => {
       const coincideTexto =
         !texto ||
-        proveido.nroProveido.toLowerCase().includes(texto) ||
         proveido.nroExpediente.toLowerCase().includes(texto) ||
         proveido.areaDestino.toLowerCase().includes(texto) ||
         proveido.responsable.toLowerCase().includes(texto) ||
@@ -33,9 +43,41 @@ export default function ProveidosView({
     })
   }, [proveidos, busqueda, estadoFiltro])
 
-  return (
-    <>
-      <div className="page-heading compact">
+return (
+  <>
+    {showSelector && (
+      <section className="panel" style={{ marginBottom: '16px' }}>
+        <div className="panel-header">
+          <div>
+            <h2>Seleccionar expediente</h2>
+            <p className="muted">
+              Seleccione el expediente al que desea registrar el Proveído.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={onCloseSelector}
+          >
+            Cancelar
+          </button>
+        </div>
+
+        <ExpedienteSelector
+          expedientes={expedientes}
+          value={expedienteSeleccionado}
+          onChange={expediente => {
+           if (expediente) {
+    onSelectExpediente(expediente)
+  }
+}}
+          areaOptions={areaOptions}
+        />
+      </section>
+    )}
+
+    <div className="page-heading compact">
         <div>
           <p className="eyebrow">GESTIÓN DOCUMENTAL</p>
           <h1>Proveídos</h1>
@@ -47,7 +89,9 @@ export default function ProveidosView({
         <button
           type="button"
           className="primary-button"
-          onClick={onNuevoProveido}
+       onClick={() => {
+          onNuevoProveido()
+        }}  
         >
           ＋ Nuevo Proveído
         </button>
@@ -92,7 +136,6 @@ export default function ProveidosView({
         <table className="data-table proveidos-table">
           <thead>
             <tr>
-              <th>N.º Proveído</th>
               <th>Expediente</th>
               <th>Fecha</th>
               <th>Área destino</th>
@@ -105,12 +148,6 @@ export default function ProveidosView({
           <tbody>
             {resultados.map(proveido => (
               <tr key={proveido.id}>
-                <td>
-                  <strong>
-                    {proveido.nroProveido || '—'}
-                  </strong>
-                </td>
-
                 <td>
                   <strong>
                     {proveido.nroExpediente || '—'}
@@ -148,7 +185,7 @@ export default function ProveidosView({
 
             {resultados.length === 0 && (
               <tr>
-                <td colSpan={7}>
+                <td colSpan={6}>
                   <div className="empty-state">
                     {busqueda || estadoFiltro !== 'Todos'
                       ? 'No se encontraron proveídos con esos criterios.'

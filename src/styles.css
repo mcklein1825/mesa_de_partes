@@ -2358,46 +2358,280 @@ tbody tr:last-child td {
   color: #52727e;
   font-weight: 700;
 }
+/* =========================================================
+   NUEVO PROVEÍDO
+   ========================================================= */
 
-/* Expediente seleccionado */
-
-.selected-expediente {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 16px 18px;
-  border: 2px solid #8ebdce;
-  border-radius: 8px;
-  background: #f3f8fa;
+.proveido-form-panel-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid #e2e9ed;
+  background: #f8fbfc;
 }
 
-.selected-expediente > div {
-  min-width: 0;
-}
-
-.selected-expediente strong {
-  display: block;
-  margin-bottom: 7px;
-  color: #247f8b;
-  font-size: 14px;
+.proveido-form-panel-header h2 {
+  margin: 0;
+  color: #304954;
+  font-size: 17px;
   font-weight: 800;
 }
 
-.selected-expediente small {
+.proveido-form-panel-header p {
+  margin: 6px 0 0;
+  color: #71818a;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.proveido-expediente-field {
+  padding-bottom: 2px;
+}
+.proveido-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 24px;
+  padding: 22px 24px 26px;
+}
+
+.proveido-form-grid .form-group {
+  min-width: 0;
+}
+
+.proveido-form-grid .form-group.wide {
+  grid-column: 1 / -1;
+}
+
+.proveido-instruccion-field small {
   display: block;
-  margin-top: 4px;
+  margin-top: 7px;
+  color: #82919a;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.proveido-form-grid label {
+  display: block;
+  margin-bottom: 8px;
+  color: #3f5964;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.proveido-form-grid input,
+.proveido-form-grid select,
+.proveido-form-grid textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #adbec6;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #364a55;
+  font-size: 14px;
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.proveido-form-grid input,
+.proveido-form-grid select {
+  height: 44px;
+}
+
+.proveido-form-grid textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.proveido-form-grid input:focus,
+.proveido-form-grid select:focus,
+.proveido-form-grid textarea:focus {
+  border-color: #267e9c;
+  box-shadow: 0 0 0 2px #267e9c2b;
+}
+
+.proveido-form-grid input[readonly] {
+  background: #f4f7f8;
+  color: #536871;
+  cursor: default;
+}
+
+.proveido-form-grid select {
+  cursor: pointer;
+}
+
+@media (max-width: 800px) {
+  .proveido-form-grid {
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+
+  .proveido-form-grid .form-group.wide {
+    grid-column: auto;
+  }
+}
+.proveido-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-top: 0;
+  padding: 18px 24px 22px;
+  border-top: 1px solid #e2e9ed;
+  background: #fafcfd;
+}
+
+.proveido-form-actions .outline-button,
+.proveido-form-actions .primary-button {
+  min-height: 42px;
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.proveido-form-actions .outline-button {
+  border: 1px solid #cbd8dd;
+  background: #ffffff;
+  color: #52636c;
+}
+
+.proveido-form-actions .outline-button:hover {
+  background: #f3f7f8;
+  border-color: #aebfc6;
+}
+
+.proveido-form-actions .primary-button {
+  border: 1px solid #267e9c;
+  background: #267e9c;
+  color: #ffffff;
+}
+
+.proveido-form-actions .primary-button:hover {
+  background: #1f6d87;
+  border-color: #1f6d87;
+}
+
+@media (max-width: 800px) {
+  .proveido-form-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    padding: 16px 18px 18px;
+  }
+
+  .proveido-form-actions .outline-button,
+  .proveido-form-actions .primary-button {
+    width: 100%;
+  }
+}
+/* =========================================================
+   EXPEDIENTE SELECCIONADO
+   ========================================================= */
+
+.selected-expediente {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 20px 22px;
+  border: 2px solid #b9d9df;
+  border-left: 4px solid #267e9c;
+  border-radius: 8px;
+  background: #f7fbfc;
+  box-shadow: 0 2px 6px rgba(36, 79, 92, 0.06);
+}
+
+.selected-expediente-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.selected-expediente-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.selected-expediente-header strong {
+  color: #247f8b;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.selected-expediente-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 9px;
+  border: 1px solid #b9d9df;
+  border-radius: 999px;
+  background: #eaf5f7;
+  color: #247f8b;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.selected-expediente-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 20px;
+}
+
+.selected-expediente-details > div {
+  min-width: 0;
+}
+
+.selected-expediente-details small {
+  display: block;
+  margin-bottom: 5px;
+  color: #71818a;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.selected-expediente-details span {
+  display: block;
   overflow: hidden;
+  color: #304650;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #5d717b;
-  font-size: 11px;
+}
+
+.selected-expediente-details .selected-expediente-asunto {
+  grid-column: 1 / -1;
+}
+
+.selected-expediente-details .selected-expediente-asunto span {
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .selected-expediente .action-link {
   flex-shrink: 0;
+  align-self: center;
+  padding: 7px 12px;
+  border: 1px solid #c3d6dc;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #247f8b;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
+.selected-expediente .action-link:hover {
+  border-color: #8ebdce;
+  background: #edf7f9;
+}
 /* Mensaje sin resultados */
 
 .expediente-selector .empty-state {
@@ -2453,6 +2687,18 @@ tbody tr:last-child td {
     align-items: flex-start;
     flex-direction: column;
   }
+  .selected-expediente-details {
+  width: 100%;
+  grid-template-columns: 1fr;
+}
+
+.selected-expediente-details .selected-expediente-asunto {
+  grid-column: auto;
+}
+
+.selected-expediente .action-link {
+  align-self: flex-start;
+}
 
 }
 .duplicate-modal-overlay {

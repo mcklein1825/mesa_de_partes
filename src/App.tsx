@@ -50,6 +50,7 @@
     const [showOficioForm, setShowOficioForm] = useState(false)
     const [showProveidoForm, setShowProveidoForm] = useState(false)
     const [proveidoExpediente, setProveidoExpediente] = useState<Expediente | null>(null)
+    const [showProveidoSelector, setShowProveidoSelector] = useState(false)
     const [expedienteDocumentos, setExpedienteDocumentos] = useState<
     { expedienteId: string; tipoDocumento: 'Memo' | 'Oficio' }[]
   >([])
@@ -1271,13 +1272,23 @@
     />
   )}
   {view === 'proveidos' && !showProveidoForm && (
-    <ProveidosView
-      proveidos={proveidos}
-      onNuevoProveido={() => {
-        setShowProveidoForm(true)
-        setProveidoExpediente(null)
-      }}
-    />
+  <ProveidosView
+  proveidos={proveidos}
+  expedientes={expedientes}
+  areaOptions={areaOptions}
+  showSelector={showProveidoSelector}
+  onCloseSelector={() => {
+    setShowProveidoSelector(false)
+  }}
+  onNuevoProveido={() => {
+    setShowProveidoSelector(true)
+  }}
+  onSelectExpediente={expediente => {
+    setProveidoExpediente(expediente)
+    setShowProveidoSelector(false)
+    setShowProveidoForm(true)
+  }}
+/>
   )}
 
   {view === 'proveidos' && showProveidoForm && (
@@ -1290,18 +1301,44 @@
         setShowProveidoForm(false)
         setProveidoExpediente(null)
       }}
-      onGuardar={datos => {
-        setProveidos(prev => [
-          ...prev,
-          {
-            id: crypto.randomUUID(),
-            ...datos
-          }
-        ])
+      onGuardar={async datos => {
+  const { data, error } = await supabase.rpc(
+    'registrar_proveido',
+    {
+      p_expediente_id: Number(datos.expedienteId),
+      p_nro_expediente: datos.nroExpediente,
+      p_fecha: datos.fecha,
+      p_area_destino: datos.areaDestino,
+      p_responsable: datos.responsable,
+      p_instruccion: datos.instruccion,
+      p_estado: datos.estado
+    }
+  )
 
-        setShowProveidoForm(false)
-        setProveidoExpediente(null)
-      }}
+  if (error) {
+    console.error('Error al guardar proveído:', error)
+    alert(`No se pudo guardar el proveído: ${error.message}`)
+    return
+  }
+
+  setProveidos(prev => [
+    ...prev,
+    {
+      id: String(data.id),
+      expedienteId: String(data.expediente_id),
+      nroExpediente: data.nro_expediente,
+      fecha: data.fecha,
+      areaDestino: data.area_destino,
+      responsable: data.responsable || '',
+      instruccion: data.instruccion,
+      estado: data.estado,
+      createdAt: data.created_at
+    }
+  ])
+
+  setShowProveidoForm(false)
+  setProveidoExpediente(null)
+}}
     />
   )}
 

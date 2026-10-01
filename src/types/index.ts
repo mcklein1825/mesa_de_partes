@@ -62,7 +62,6 @@ export type Oficio = {
 }
 export type Proveido = {
   id: string
-  nroProveido: string
   expedienteId: string
   nroExpediente: string
   fecha: string

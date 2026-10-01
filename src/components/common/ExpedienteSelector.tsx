@@ -82,33 +82,48 @@ export default function ExpedienteSelector({
         <label>Expediente *</label>
 
         <div className="selected-expediente">
-          <div>
-            <strong>
-              {formatNroExp(value.nroExp)}
-              {value.esDuplicado ? ' *' : ''}
-            </strong>
+  <div className="selected-expediente-info">
 
-            <small>
-              {getRemitenteNombre(value)}
-            </small>
+    <div className="selected-expediente-header">
+      <strong>
+        {formatNroExp(value.nroExp)}
+        {value.esDuplicado ? ' *' : ''}
+      </strong>
 
-            <small>
-              {area || 'Sin área'}
-            </small>
+      <span className="selected-expediente-status">
+        Expediente seleccionado
+      </span>
+    </div>
 
-            <small>
-              {value.asunto || 'Sin asunto'}
-            </small>
-          </div>
+    <div className="selected-expediente-details">
 
-          <button
-            type="button"
-            className="action-link"
-            onClick={() => onChange(null)}
-          >
-            Cambiar
-          </button>
-        </div>
+      <div>
+        <small>Remitente</small>
+        <span>{getRemitenteNombre(value)}</span>
+      </div>
+
+      <div>
+        <small>Área actual</small>
+        <span>{area || 'Sin área'}</span>
+      </div>
+
+      <div className="selected-expediente-asunto">
+        <small>Asunto</small>
+        <span>{value.asunto || 'Sin asunto'}</span>
+      </div>
+
+    </div>
+
+  </div>
+
+  <button
+    type="button"
+    className="action-link"
+    onClick={() => onChange(null)}
+  >
+    Cambiar
+  </button>
+</div>
       </div>
     )
   }

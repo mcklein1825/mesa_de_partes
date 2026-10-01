@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Expediente } from '../../types'
+import { AREA_RESPONSABLES } from '../../constants'
 import ExpedienteSelector from '../common/ExpedienteSelector'
 type Props = {
   expediente: Expediente | null
@@ -8,7 +9,6 @@ type Props = {
   onExpedienteChange: (expediente: Expediente | null) => void
   onCancelar: () => void
   onGuardar: (datos: {
-    nroProveido: string
     expedienteId: string
     nroExpediente: string
     fecha: string
@@ -27,12 +27,11 @@ export default function NuevoProveidoView({
   onCancelar,
   onGuardar
 }: Props) {
-  const [nroProveido, setNroProveido] = useState('')
   const [fecha, setFecha] = useState(
     new Date().toISOString().split('T')[0]
   )
   const [areaDestino, setAreaDestino] = useState('')
-  const [responsable, setResponsable] = useState('')
+  const responsable = AREA_RESPONSABLES[areaDestino] || ''
   const [instruccion, setInstruccion] = useState('')
   const [estado, setEstado] =
     useState<'Pendiente' | 'Atendido' | 'Archivado'>('Pendiente')
@@ -43,13 +42,17 @@ export default function NuevoProveidoView({
       return
     }
 
+    if (!areaDestino) {
+      alert('Debe seleccionar un área destino.')
+      return
+    }
+
     if (!instruccion.trim()) {
       alert('Debe ingresar la instrucción del proveído.')
       return
     }
 
     onGuardar({
-      nroProveido,
       expedienteId: expediente.id,
       nroExpediente: expediente.nroExp,
       fecha,
@@ -74,98 +77,101 @@ export default function NuevoProveidoView({
 
       <div className="panel">
 
-        <div className="panel-header">
-          <div>
-            <h2>Datos del proveído</h2>
-            <p>
-              La instrucción quedará asociada al expediente seleccionado.
-            </p>
-          </div>
-        </div>
+  <div className="proveido-form-panel-header">
+    <div>
+      <h2>Datos del proveído</h2>
+      <p>
+        Registra la instrucción y el área responsable asociada al expediente.
+      </p>
+    </div>
+  </div>
 
-        <div className="form-grid">
+  <div className="proveido-form-grid">
 
-          <div className="form-group">
-            <label>N.º Proveído</label>
+    <div className="form-group">
+      <label>Fecha</label>
 
-            <input
-              value={nroProveido}
-              onChange={e => setNroProveido(e.target.value)}
-              placeholder="Ej. 001"
-            />
-          </div>
+      <input
+        type="date"
+        value={fecha}
+        onChange={e => setFecha(e.target.value)}
+      />
+    </div>
 
-          <div className="form-group">
-            <label>Fecha</label>
+    <div className="form-group">
+      <label>Estado</label>
 
-            <input
-              type="date"
-              value={fecha}
-              onChange={e => setFecha(e.target.value)}
-            />
-          </div>
+      <select
+        value={estado}
+        onChange={e =>
+          setEstado(
+            e.target.value as
+              | 'Pendiente'
+              | 'Atendido'
+              | 'Archivado'
+          )
+        }
+      >
+        <option value="Pendiente">Pendiente</option>
+        <option value="Atendido">Atendido</option>
+        <option value="Archivado">Archivado</option>
+      </select>
+    </div>
 
-          <ExpedienteSelector
-            expedientes={expedientes}
-            value={expediente}
-            onChange={onExpedienteChange}
-            areaOptions={areaOptions}
-          />
+    <div className="form-group wide proveido-expediente-field">
+      <ExpedienteSelector
+        expedientes={expedientes}
+        value={expediente}
+        onChange={onExpedienteChange}
+        areaOptions={areaOptions}
+      />
+    </div>
 
-          <div className="form-group">
-            <label>Área destino</label>
+    <div className="form-group">
+      <label>Área destino</label>
 
-            <input
-              value={areaDestino}
-              onChange={e => setAreaDestino(e.target.value)}
-              placeholder="Área a la que se deriva"
-            />
-          </div>
+      <select
+        value={areaDestino}
+        onChange={e => setAreaDestino(e.target.value)}
+      >
+        <option value="">Seleccione un área</option>
 
-          <div className="form-group">
-            <label>Responsable</label>
+        {Object.keys(AREA_RESPONSABLES).map(area => (
+          <option key={area} value={area}>
+            {area}
+          </option>
+        ))} 
+      </select>
+    </div>
 
-            <input
-              value={responsable}
-              onChange={e => setResponsable(e.target.value)}
-              placeholder="Responsable"
-            />
-          </div>
+    <div className="form-group">
+      <label>Responsable</label>
 
-          <div className="form-group">
-            <label>Estado</label>
+      <input
+        type="text"
+        value={responsable}
+        readOnly
+        placeholder="Se completará automáticamente"
+      />
+    </div>
 
-            <select
-              value={estado}
-              onChange={e =>
-                setEstado(
-                  e.target.value as
-                    | 'Pendiente'
-                    | 'Atendido'
-                    | 'Archivado'
-                )
-              }
-            >
-              <option value="Pendiente">Pendiente</option>
-              <option value="Atendido">Atendido</option>
-              <option value="Archivado">Archivado</option>
-            </select>
-          </div>
+    <div className="form-group wide proveido-instruccion-field">
+      <label>Instrucción</label>
 
-          <div className="form-group wide">
-            <label>Instrucción</label>
+      <textarea
+        value={instruccion}
+        onChange={e => setInstruccion(e.target.value)}
+        placeholder="Escriba la instrucción que se debe realizar..."
+        rows={5}
+      />
 
-            <textarea
-              value={instruccion}
-              onChange={e => setInstruccion(e.target.value)}
-              placeholder="Escriba la instrucción del proveído..."
-              rows={5}
-            />
-          </div>
+      <small>
+        Indique la acción o disposición que debe ejecutarse sobre el expediente.
+      </small>
+    </div>
 
-        </div>
-
-        <div className="form-actions">
+  </div>
+        <div className="proveido-form-actions">
 
           <button
             type="button"
@@ -187,6 +193,6 @@ export default function NuevoProveidoView({
 
       </div>
 
-    </>
+    </> 
   )
 }
