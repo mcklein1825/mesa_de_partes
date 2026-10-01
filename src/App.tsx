@@ -143,6 +143,43 @@
     setLoadingDb(false)
     return
   }
+  const { data: proveidosData, error: proveidosError } =
+  await supabase
+    .from('proveidos')
+    .select(`
+      id,
+      expediente_id,
+      nro_expediente,
+      fecha,
+      area_destino,
+      responsable,
+      instruccion,
+      estado,
+      created_at
+    `)
+    .order('id', { ascending: false })
+
+if (proveidosError) {
+  console.error(
+    'Error al cargar proveídos:',
+    proveidosError
+  )
+} else if (proveidosData) {
+  console.log('PROVEÍDOS CARGADOS DESDE SUPABASE:', proveidosData)
+  setProveidos(
+    proveidosData.map((item: any) => ({
+      id: String(item.id),
+      expedienteId: String(item.expediente_id),
+      nroExpediente: String(item.nro_expediente),
+      fecha: item.fecha,
+      areaDestino: item.area_destino,
+      responsable: item.responsable || '',
+      instruccion: item.instruccion,
+      estado: item.estado,
+      createdAt: item.created_at
+    }))
+  )
+}
 
         if (data) {
           const normalizados: Expediente[] = data.map((item: any) => {
