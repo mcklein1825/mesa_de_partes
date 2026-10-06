@@ -41,7 +41,7 @@ const archived = expedientes.filter(
     ...item,
     daysLeft: daysUntilDeadline(item.plazo)
   }))
-  .filter(item => item.daysLeft >= 0 && item.daysLeft <= 15)
+  .filter(item => item.daysLeft <= 15)
   .sort((a, b) => a.daysLeft - b.daysLeft)
   .filter((item, index, array) =>
     index === array.findIndex(
@@ -127,8 +127,8 @@ const archived = expedientes.filter(
           <table>
             <thead>
               <tr>
-                <th>N.º PROVEÍDO</th>
                 <th>EXPEDIENTE</th>
+                <th>FECHA</th>
                 <th>ÁREA DESTINO</th>
                 <th>RESPONSABLE</th>
                 <th>INSTRUCCIÓN</th>
@@ -139,14 +139,14 @@ const archived = expedientes.filter(
             <tbody>
               {proveidos.slice(0, 4).map(proveido => (
                 <tr key={proveido.id}>
-                  <td>
-                    <b>{proveido.nroExpediente || '—'}</b>
-                  </td>
-
-                  <td>
+                 <td>
                     <b className="exp-id">
                       {proveido.nroExpediente || '—'}
                     </b>
+                  </td>
+
+                  <td>
+                    {proveido.fecha || '—'}
                   </td>
 
                   <td>
@@ -241,8 +241,8 @@ const archived = expedientes.filter(
         <section className="panel deadlines-panel">
           <div className="panel-header">
             <div>
-              <h2>Próximos vencimientos</h2>
-              <p>Expedientes que requieren atención</p>
+              <h2>Vencimientos y plazos</h2>
+              <p>Expedientes próximos a vencer o con plazo vencido</p>
             </div>
             <span className="warning-icon">!</span>
           </div>
@@ -253,15 +253,29 @@ const archived = expedientes.filter(
                 const { day, month } = formatDateShort(item.plazo)
                 return (
                   <div className="deadline-item" key={item.id}>
-                    <div className={`deadline-date ${item.daysLeft <= 3 ? 'urgent' : ''}`}>
+                    <div
+                        className={`deadline-date ${
+                          item.daysLeft < 0
+                            ? 'overdue'
+                            : item.daysLeft <= 3
+                              ? 'urgent'
+                              : ''
+                        }`}
+                      >
                       <b>{day}</b>
                       <span>{month}</span>
                     </div>
                     <div>
                       <b>{formatNroExp(item.nroExp)}</b>
                       <p>{item.asunto}</p>
-                      <small>
-                        {item.daysLeft === 0 ? 'Vence hoy' : item.daysLeft === 1 ? 'Vence mañana' : `Vence en ${item.daysLeft} días`}
+                      <small className={item.daysLeft < 0 ? 'overdue' : ''}>
+                        {item.daysLeft < 0
+                          ? `Vencido hace ${Math.abs(item.daysLeft)} días`
+                          : item.daysLeft === 0
+                            ? 'Vence hoy'
+                            : item.daysLeft === 1
+                              ? 'Vence mañana'
+                              : `Vence en ${item.daysLeft} días`}
                       </small>
                     </div>
                   </div>

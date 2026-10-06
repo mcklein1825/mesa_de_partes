@@ -33,7 +33,9 @@ button {
    ======================================== */
 .app-shell {
   display: flex;
-  min-height: 100vh;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* ========================================
@@ -41,12 +43,14 @@ button {
    ======================================== */
 .sidebar {
   width: 248px;
+  height: 100vh;
   background: #102c3e;
   color: #d5e0e7;
   display: flex;
   flex-direction: column;
   padding: 27px 16px 20px;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 .brand {
@@ -212,8 +216,10 @@ button {
 .main-content {
   flex: 1;
   min-width: 0;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
-
 .topbar {
   height: 78px;
   border-bottom: 1px solid #e5e9ed;
@@ -653,7 +659,10 @@ tbody tr:last-child td {
   background: #fff0e6;
   color: #de8240;
 }
-
+.deadline-date.overdue {
+  background: #fdeaea;
+  color: #c94a4a;
+}
 .deadline-date b, .deadline-date span {
   display: block;
 }
@@ -687,7 +696,10 @@ tbody tr:last-child td {
   font-size: 9px;
   color: #d88a4a;
 }
-
+.deadline-item small.overdue {
+  color: #c94a4a;
+  font-weight: 700;
+}
 .deadlines-panel .outline-button {
   margin: 0 22px;
   width: calc(100% - 44px);
@@ -995,15 +1007,19 @@ tbody tr:last-child td {
    ======================================== */
 .portal-shell {
   display: flex;
+  width: 100%;
+  height: 100vh;
   background: #eef2f5;
-  min-height: 100vh;
+  overflow: hidden;
 }
 
 .portal-shell .main-content {
   flex: 1;
   min-width: 0;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
-
 .portal-shell .page {
   width: 100%;
   max-width: 1180px;
@@ -3646,4 +3662,26 @@ tbody tr:last-child td {
   padding: 12px;
   color: #6b7280;
   font-size: 0.85rem;
+}
+/* ========================================
+   SCROLL INDEPENDIENTE DEL CONTENIDO
+   ======================================== */
+
+.portal-shell .main-content {
+  min-width: 0;
+  min-height: 0;
+}
+
+.portal-shell .page {
+  min-width: 0;
+}
+
+.portal-shell .list-panel {
+  min-width: 0;
+}
+
+.portal-shell .table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
 }

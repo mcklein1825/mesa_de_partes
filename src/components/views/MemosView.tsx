@@ -1,8 +1,9 @@
-  import { useMemo, useState } from 'react'
+  import { useEffect, useMemo, useState } from 'react'
   import { Expediente, Memo } from '../../types'
   import { AREAS_UNICAS, getSubareas } from '../../constants'
   import ExpedienteSelector from '../common/ExpedienteSelector'
   import MemoDocumentLink from '../common/MemoDocumentLink'
+  import { supabase } from '../../lib/supabaseClient'
 
   export default function MemosView({
     expediente,
@@ -67,7 +68,57 @@
     const [estadoFilter, setEstadoFilter] = useState('Todos')
     const [page, setPage] = useState(1)
     const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null)
+    const [documentosExpedientes, setDocumentosExpedientes] = useState<
+      Record<string, { archivoData: string; archivo: string }>
+    >({})
     const pageSize = 20
+    useEffect(() => {
+    const cargarDocumentosExpedientes = async () => {
+      const ids = Array.from(
+        new Set(
+          memos
+            .map(memo => String(memo.expedienteId))
+            .filter(Boolean)
+        )
+      )
+
+      if (ids.length === 0) {
+        setDocumentosExpedientes({})
+        return
+      }
+
+      const { data, error } = await supabase
+        .from('mesa_partes_2026')
+        .select('id, archivo, archivo_data')
+        .in('id', ids.map(Number))
+
+      if (error) {
+        console.error(
+          'Error cargando documentos de expedientes:',
+          error
+        )
+        return
+      }
+
+      const documentos: Record<
+        string,
+        { archivoData: string; archivo: string }
+      > = {}
+
+      ;(data || []).forEach((item: any) => {
+        if (item.archivo_data) {
+          documentos[String(item.id)] = {
+            archivoData: item.archivo_data,
+            archivo: item.archivo || 'Documento'
+          }
+        }
+      })
+
+      setDocumentosExpedientes(documentos)
+    }
+
+    cargarDocumentosExpedientes()
+  }, [memos])
       /*
     * =========================================================
     * OPCIONES DE FILTROS
@@ -233,7 +284,13 @@
 
       return `EXP-2026-${nroExp.padStart(5, '0')}`
     }
-
+    const getExpedienteDeMemo = (memo: Memo) => {
+  return expedientes.find(
+    expediente =>
+      String(expediente.id) ===
+      String(memo.expedienteId)
+  )
+}
     /*
     * =========================================================
     * NUEVO MEMO
@@ -805,24 +862,54 @@ if (showMemoForm && expediente) {
         </b>
       </td>
 
-      <td>
-        <b>
-          {memo.nroExpediente}
-        </b>
-      </td>
+     <td>
+  <b>
+    {formatExpediente(memo.nroExpediente)}
+  </b>
+
+ {(() => {
+  const documentoExpediente =
+    documentosExpedientes[String(memo.expedienteId)]
+
+  if (!documentoExpediente?.archivoData) {
+    return null
+  }
+
+  return (
+    <div style={{ marginTop: '4px' }}>
+      <MemoDocumentLink
+        archivoData={documentoExpediente.archivoData}
+        archivo={documentoExpediente.archivo}
+      >
+        {documentoExpediente.archivo}
+      </MemoDocumentLink>
+    </div>
+  )
+})()}
+</td>
 
       <td>
         {memo.fecha || '—'}
       </td>
 
       <td>
-          <MemoDocumentLink
-            archivoData={memo.archivoData}
-            archivo={memo.archivo}
-          >
-            {memo.asunto || '—'}
-          </MemoDocumentLink>
-       </td>
+  <div>
+    <div>
+      {memo.asunto || '—'}
+    </div>
+
+    {memo.archivoData && (
+      <div style={{ marginTop: '6px' }}>
+        <MemoDocumentLink
+          archivoData={memo.archivoData}
+          archivo={memo.archivo}
+        >
+          {memo.archivo}
+        </MemoDocumentLink>
+      </div>
+    )}
+  </div>
+</td>
 
       {/* ESTADO */}
       <td className="memo-estado-columna">

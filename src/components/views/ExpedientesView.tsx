@@ -21,7 +21,8 @@ export default function ExpedientesView({
   onTracking,
   onDuplicate,
   expedienteDocumentos,
-  onAttachDocument
+  onAttachDocument,
+  onRegisterDate
 }: {
   items: Expediente[]
   query: string
@@ -44,6 +45,10 @@ export default function ExpedientesView({
   onAttachDocument: (
     id: string,
     file: File
+  ) => Promise<void>
+  onRegisterDate: (
+    expedienteId: string,
+    fecha: string
   ) => Promise<void>
 }) {
   const pageSize = 20
@@ -144,7 +149,51 @@ export default function ExpedientesView({
                         {item.esDuplicado ? ' *' : ''}
                       </b>
                     </td>
-                    <td>{displayDate(item.fechaIngreso || '')}</td>
+                    <td>
+                      {item.fechaIngreso ? (
+                        displayDate(item.fechaIngreso)
+                      ) : (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            flexDirection: 'column',
+                            alignItems: 'flex-start',
+                            gap: '6px'
+                          }}
+                        >
+                          <span
+                            style={{
+                              color: '#6b7280',
+                              fontSize: '13px'
+                            }}
+                          >
+                            Sin fecha
+                          </span>
+
+                          <input
+                            type="date"
+                            aria-label="Registrar fecha de ingreso"
+                            onChange={e => {
+                              const fecha = e.target.value
+
+                              if (fecha) {
+                                onRegisterDate(item.id, fecha)
+                              }
+                            }}
+                            style={{
+                              border: '1px solid #d1d5db',
+                              borderRadius: '6px',
+                              background: '#f8fafc',
+                              color: '#374151',
+                              padding: '5px 8px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: 500
+                            }}
+                          />
+                        </span>
+                      )}
+                    </td>
                     <td>
                       <span className="person-cell">
                         <span className="small-avatar">
@@ -158,8 +207,23 @@ export default function ExpedientesView({
                         </span>
                       </span>
                     </td>
-                   <td>
-                      <span className="table-cell-group expediente-asunto">
+                   <td
+                      style={{
+                        width: '28%',
+                        maxWidth: '28%',
+                        overflow: 'hidden'
+                      }}
+                    >
+                      <span
+                        className="table-cell-group expediente-asunto"
+                        style={{
+                          display: 'block',
+                          width: '100%',
+                          maxWidth: '100%',
+                          minWidth: 0,
+                          overflow: 'hidden'
+                        }}
+                      >
                         <DocumentLink
                           item={item}
                           onAttach={file =>

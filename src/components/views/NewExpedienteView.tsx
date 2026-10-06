@@ -156,7 +156,6 @@ export default function NewExpedienteView({
               Asunto de la solicitud
               <input
                 name="asunto"
-                required
                 placeholder="Registre en forma clara el asunto por el cual ingresa el documento."
                 defaultValue={
                   expedienteParaDuplicar?.asunto || ''
@@ -320,7 +319,7 @@ export default function NewExpedienteView({
 
           <div className="form-grid">
             <label>
-              Recibido presencial/virtual
+              Recibido
 
               <select
                 name="canalRecepcion"
@@ -330,20 +329,16 @@ export default function NewExpedienteView({
                   Seleccione el canal
                 </option>
 
-                <option>
-                  Físico
+                <option value="Mesa de partes general">
+                  Mesa de partes general
                 </option>
 
-                <option>
-                  Plataforma SINAD
+                <option value="Correo institucional">
+                  Correo institucional
                 </option>
 
-                <option>
-                  Virtual
-                </option>
-
-                <option>
-                  Presencial
+                <option value="Personal - presencial">
+                  Personal - presencial
                 </option>
               </select>
             </label>

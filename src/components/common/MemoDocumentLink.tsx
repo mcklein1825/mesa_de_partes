@@ -113,22 +113,29 @@ export default function MemoDocumentLink({
   }
 
   return (
-    <button
-      type="button"
-      className="document-link"
-      onClick={abrirArchivo}
-      disabled={cargando}
-      title={`Abrir ${archivo || 'documento del Memo'}`}
-      style={{
-        border: 'none',
-        background: 'none',
-        padding: 0,
-        cursor: cargando ? 'wait' : 'pointer'
-      }}
-    >
-      {cargando
-        ? '⏳ Cargando...'
-        : children}
-    </button>
-  )
+  <button
+    type="button"
+    className="document-link"
+    onClick={abrirArchivo}
+    disabled={cargando}
+    title={`Abrir ${archivo || 'documento del Memo'}`}
+    style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '6px',
+      border: '1px solid #d1d5db',
+      borderRadius: '6px',
+      background: '#f8fafc',
+      color: '#374151',
+      padding: '5px 10px',
+      cursor: cargando ? 'wait' : 'pointer',
+      fontSize: '13px',
+      fontWeight: 500
+    }}
+  >
+    {cargando
+      ? '⏳ Cargando...'
+      : `📄 ${archivo || 'Documento'}`}
+  </button>
+)
 }

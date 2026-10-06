@@ -100,7 +100,7 @@
     useEffect(() => {
       const cargarDeSupabase = async () => {
         setLoadingDb(true)
-        const { data, error } = await supabase
+  const { data, error } = await supabase
     .from('mesa_partes_2026')
     .select(`
       id,
@@ -201,7 +201,7 @@ if (proveidosError) {
               fechaSinRespuesta: item.fecha_sin_respuesta || '',
               prioridad: item.prioridad || 'Normal',
               archivo: item.archivo || 'Sin adjunto',
-              archivoData: '',
+              archivoData: item.archivo_data || '',
               archivoTipo: item.archivo_tipo || '',
               archivoTamano: item.archivo_tamano || 0,
               modalidadRecepcion: item.modalidad_recepcion || undefined,
@@ -230,6 +230,23 @@ if (proveidosError) {
             .order('id', { ascending: false })
 
         console.log('MEMOS CARGADOS DESDE SUPABASE:', memosData)
+        console.log(
+          'EXPEDIENTES CON ARCHIVO:',
+          data?.filter((item: any) => item.archivo_data)
+        )
+        console.log(
+          'PRIMER EXPEDIENTE CARGADO:',
+          data?.[0]
+        )
+        console.log(
+          'EXPEDIENTE 00049:',
+          data?.find(
+            (item: any) =>
+              String(item.nro_exp) === '49' ||
+              String(item.nro_exp) === 'EXP-2026-00049'
+          )
+        )
+              
         console.log('ERROR MEMOS:', memosError)
 
         if (memosError) {
@@ -722,6 +739,66 @@ if (proveidosError) {
       setIsSaving(false)
     }
   }
+    const registrarFechaExpediente = async (
+  expedienteId: string,
+  fecha: string
+) => {
+  if (!currentUser) {
+    notify('No hay un usuario activo')
+    return
+  }
+
+  if (!fecha) {
+    notify('Seleccione una fecha')
+    return
+  }
+
+  try {
+    setIsSaving(true)
+
+    const { error } = await supabase
+      .from('mesa_partes_2026')
+      .update({
+        fecha_ingreso: fecha
+      })
+      .eq('id', Number(expedienteId))
+
+    if (error) {
+      console.error(
+        'Error registrando fecha del expediente:',
+        error
+      )
+
+      notify(
+        `No se pudo registrar la fecha: ${error.message}`
+      )
+
+      return
+    }
+
+    setExpedientes(prev =>
+      prev.map(item =>
+        item.id === expedienteId
+          ? {
+              ...item,
+              fechaIngreso: fecha
+            }
+          : item
+      )
+    )
+
+    notify('Fecha registrada correctamente')
+  } catch (error) {
+    console.error(
+      'Error inesperado registrando fecha:',
+      error
+    )
+
+    notify('Ocurrió un error al registrar la fecha')
+  } finally {
+    setIsSaving(false)
+  }
+}
 
     const openDocumentType = (id: string, tipo: string) => {
     const expediente = expedientes.find(item => item.id === id)
@@ -1165,6 +1242,7 @@ if (proveidosError) {
                     expedienteDocumentos={expedienteDocumentos}
                     onTracking={setTrackingId}
                     onAttachDocument={adjuntarDocumento}
+                    onRegisterDate={registrarFechaExpediente}
                     onDuplicate={expediente => {
                       setExpedienteParaDuplicar(expediente)
                       setView('nuevo')

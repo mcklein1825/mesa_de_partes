@@ -24,10 +24,10 @@ export default function DocumentLink({
     item.archivo !== 'Sin adjunto'
 
   const textoVisible =
-    children ||
-    (item.archivo && item.archivo !== 'Sin adjunto'
-      ? item.archivo
-      : 'Sin asunto')
+  children ||
+  (item.archivo && item.archivo !== 'Sin adjunto'
+    ? item.archivo
+    : 'Sin asunto')
 
   const abrirArchivo = async () => {
     if (cargando || !tieneDocumento) return
@@ -197,18 +197,55 @@ export default function DocumentLink({
    * =========================================================
    */
 
-  return (
+return (
+  <span
+    style={{
+      display: 'inline-flex',
+      flexDirection: 'column',
+      alignItems: 'flex-start',
+      gap: '6px'
+    }}
+  >
+    <span
+  className="table-cell-text"
+  title={
+    typeof textoVisible === 'string'
+      ? textoVisible
+      : item.archivo || 'Documento'
+  }
+>
+      {textoVisible}
+    </span>
+
     <button
       type="button"
       className="document-link"
       onClick={abrirArchivo}
       disabled={cargando}
       title={`Abrir ${item.archivo}`}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '6px',
+        border: '1px solid #d1d5db',
+        borderRadius: '6px',
+        background: '#f8fafc',
+        color: '#374151',
+        padding: '5px 10px',
+        cursor: cargando ? 'wait' : 'pointer',
+        fontSize: '13px',
+        fontWeight: 500,
+        maxWidth: '100%',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap'
+      }}
     >
       {cargando
         ? '⏳ Cargando...'
-        : textoVisible}
+        : `📄 ${item.archivo}`}
     </button>
-  )
+  </span>
+)
 }
 
