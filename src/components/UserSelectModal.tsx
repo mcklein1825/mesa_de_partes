@@ -13,7 +13,7 @@ export default function UserSelectModal({
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
-
+  const [menuUsuario, setMenuUsuario] = useState<string | null>(null);
   const [nuevoNombre, setNuevoNombre] = useState('');
   const [nuevoRol, setNuevoRol] = useState<Role>('MesaPartes');
   const [nuevaArea, setNuevaArea] = useState('Mesa de Partes');
@@ -49,11 +49,53 @@ export default function UserSelectModal({
   const handleSelect = (user: User) => {
     // Solo recuerda el usuario seleccionado en esta computadora.
     // La lista de usuarios viene de Supabase.
-    localStorage.setItem('mesa-partes-user', JSON.stringify(user));
+    localStorage.setItem(
+  'mesa-partes-user',
+  JSON.stringify(user)
+)
+
+localStorage.setItem(
+  'mesa-partes-session-start',
+  String(Date.now())
+)
 
     onSelectUser(user);
   };
+  const handleDelete = async (user: User) => {
+  const confirmar = window.confirm(
+    `¿Está seguro de eliminar la cuenta de ${user.nombre}?\n\n` +
+    `Esta acción eliminará la cuenta de la lista de usuarios disponibles.`
+  )
 
+  if (!confirmar) {
+    return
+  }
+
+  const eliminado = await usuariosService.delete(user.id)
+
+  if (!eliminado) {
+    alert('No se pudo eliminar la cuenta.')
+    return
+  }
+
+  setUsers(actuales =>
+    actuales.filter(actual => actual.id !== user.id)
+  )
+
+  const usuarioGuardado = localStorage.getItem('mesa-partes-user')
+
+if (usuarioGuardado) {
+  try {
+    const guardado = JSON.parse(usuarioGuardado)
+
+    if (guardado?.id === user.id) {
+      localStorage.removeItem('mesa-partes-user')
+    }
+  } catch {
+    localStorage.removeItem('mesa-partes-user')
+  }
+}
+}
   const generarIdUsuario = () => {
     const numeros = users
       .map((user) => {
@@ -193,64 +235,169 @@ export default function UserSelectModal({
                   marginBottom: '24px'
                 }}
               >
-                {users.map((u) => (
-                  <button
-                    key={u.id}
-                    onClick={() => handleSelect(u)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '16px',
-                      padding: '16px',
-                      backgroundColor: '#fff',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      transition: 'all 0.2s',
-                      boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.borderColor = '#0284c7';
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.borderColor = '#e2e8f0';
-                    }}
-                  >
-                    <div className="avatar">
-                      {u.nombre
-                        .split(' ')
-                        .map((n) => n[0])
-                        .slice(0, 2)
-                        .join('')}
-                    </div>
+             {users.map((u) => (
+  <div
+    key={u.id}
+    style={{
+      position: 'relative',
+      display: 'flex',
+      alignItems: 'center',
+      backgroundColor: '#fff',
+      border: '1px solid #e2e8f0',
+      borderRadius: '8px',
+      boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+      overflow: 'visible'
+    }}
+  >
+    <button
+      type="button"
+      onClick={() => handleSelect(u)}
+      style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '16px',
+        padding: '16px',
+        backgroundColor: '#fff',
+        border: 'none',
+        borderRadius: '8px',
+        cursor: 'pointer',
+        textAlign: 'left',
+        transition: 'all 0.2s'
+      }}
+    >
+      <div className="avatar">
+        {u.nombre
+          .split(' ')
+          .map((n) => n[0])
+          .slice(0, 2)
+          .join('')}
+      </div>
 
-                    <div style={{ flex: 1 }}>
-                      <b
-                        style={{
-                          display: 'block',
-                          color: '#1e293b',
-                          fontSize: '15px'
-                        }}
-                      >
-                        {u.nombre}
-                      </b>
+      <div style={{ flex: 1 }}>
+        <b
+          style={{
+            display: 'block',
+            color: '#0f172a',
+            fontSize: '15px'
+          }}
+        >
+          {u.nombre}
+        </b>
 
-                      <small style={{ color: '#64748b' }}>
-                        {u.area} • {u.rol}
-                      </small>
-                    </div>
+        <small
+          style={{
+            display: 'block',
+            marginTop: '4px',
+            color: '#64748b'
+          }}
+        >
+          {u.area} • {u.rol}
+        </small>
+      </div>
+    </button>
 
-                    <span
-                      style={{
-                        color: '#0284c7',
-                        fontWeight: 'bold'
-                      }}
-                    >
-                      →
-                    </span>
-                  </button>
-                ))}
+    <div
+      style={{
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        paddingRight: '8px'
+      }}
+    >
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation()
+
+          setMenuUsuario(
+            menuUsuario === u.id
+              ? null
+              : u.id
+          )
+        }}
+        title="Opciones"
+        style={{
+          width: '32px',
+          height: '32px',
+          border: 'none',
+          borderRadius: '6px',
+          backgroundColor: 'transparent',
+          color: '#475569',
+          cursor: 'pointer',
+          fontSize: '20px',
+          fontWeight: 'bold',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        ⋮
+      </button>
+
+      {menuUsuario === u.id && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '36px',
+            right: 0,
+            width: '140px',
+            backgroundColor: '#fff',
+            border: '1px solid #e2e8f0',
+            borderRadius: '8px',
+            boxShadow:
+              '0 8px 20px rgba(0,0,0,0.12)',
+            zIndex: 20,
+            overflow: 'hidden'
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              setMenuUsuario(null)
+              alert(
+                'La edición de usuarios la agregaremos en el siguiente paso.'
+              )
+            }}
+            style={{
+              width: '100%',
+              padding: '10px 12px',
+              border: 'none',
+              backgroundColor: '#fff',
+              color: '#334155',
+              textAlign: 'left',
+              cursor: 'pointer',
+              fontSize: '13px'
+            }}
+          >
+            Editar
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setMenuUsuario(null)
+              handleDelete(u)
+            }}
+            style={{
+              width: '100%',
+              padding: '10px 12px',
+              border: 'none',
+              borderTop: '1px solid #f1f5f9',
+              backgroundColor: '#fff',
+              color: '#dc2626',
+              textAlign: 'left',
+              cursor: 'pointer',
+              fontSize: '13px'
+            }}
+          >
+            Eliminar
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
+))}
               </div>
             )}
 

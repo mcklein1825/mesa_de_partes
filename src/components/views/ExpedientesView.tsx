@@ -7,6 +7,9 @@ import DuplicateExpedienteModal from '../modals/DuplicateExpedienteModal'
 
 export default function ExpedientesView({
   items,
+  total,
+  currentPage,
+  onPageChange,
   query,
   setQuery,
   areaFilter,
@@ -25,10 +28,13 @@ export default function ExpedientesView({
   onRegisterDate
 }: {
   items: Expediente[]
+  total: number
+  currentPage: number
+  onPageChange: (page: number) => void
   query: string
   expedienteDocumentos: {
-    expedienteId: string
-    tipoDocumento: 'Memo' | 'Oficio'
+  expedienteId: string
+  tipoDocumento: 'Memo' | 'Oficio'
   }[]
   setQuery: (v: string) => void
   areaFilter: string
@@ -52,13 +58,10 @@ export default function ExpedientesView({
   ) => Promise<void>
 }) {
   const pageSize = 20
-  const [page, setPage] = useState(1)
-  const [selectedDocumentTypeById, setSelectedDocumentTypeById] = useState<Record<string, string>>({})
   const [showDuplicateModal, setShowDuplicateModal] = useState(false)
 
-  const pageCount = Math.max(1, Math.ceil(items.length / pageSize))
-  const currentPage = Math.min(page, pageCount)
-  const pageItems = items.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+  const pageCount = Math.max(1, Math.ceil(total / pageSize))
+  const pageItems = items
 
   const cell = (value: string, className = '') => (
   <span
@@ -102,28 +105,39 @@ export default function ExpedientesView({
             <span>⌕</span>
             <input
               value={query}
-              onChange={e => { setQuery(e.target.value); setPage(1) }}
+              onChange={e => {
+                setQuery(e.target.value)
+              }}
               placeholder="Buscar por N.° de expediente o asunto..."
             />
           </div>
           <input
             className="filter-input"
             value={remitenteFilter}
-            onChange={e => { setRemitenteFilter(e.target.value); setPage(1) }}
+           onChange={e => {
+            setRemitenteFilter(e.target.value)
+          }}
             placeholder="Filtrar por remitente..."
           />
-          <select value={areaFilter} onChange={e => { setAreaFilter(e.target.value); setPage(1) }}>
+         <select value={areaFilter} 
+          onChange={e => {
+            setAreaFilter(e.target.value)
+          }}>
             <option>Todas</option>
             {areaOptions.map(area => <option key={area}>{area}</option>)}
           </select>
-          <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1) }}>
+
+          <select value={statusFilter}
+           onChange={e => {
+            setStatusFilter(e.target.value)
+          }}>
             <option>Todos</option>
             <option>Pendiente</option>
             <option>Sin respuesta</option>
             <option>Atendido</option>
             <option>Archivado</option>
           </select>
-          <span className="result-count">{items.length} resultados</span>
+          <span className="result-count">{total} resultados</span>
         </div>
 
         <div className="table-wrap">
@@ -249,14 +263,23 @@ export default function ExpedientesView({
                       ◉ Ver seguimiento
                     </button>
 
-                   {item.estado === 'Pendiente' ? (
+                  {item.estado === 'Pendiente' ? (
+                  <>
                     <button
                       className="action-link"
                       onClick={() => onOpenDocumentType(item.id, 'Memo')}
                     >
                       Crear Memo
                     </button>
-                  ) : null}
+
+                    <button
+                      className="action-link"
+                      onClick={() => onOpenDocumentType(item.id, 'Oficio')}
+                    >
+                      Crear Oficio
+                    </button>
+                  </>
+                ) : null}
                   </td>
                   </tr>
                 )
@@ -269,10 +292,31 @@ export default function ExpedientesView({
         </div>
 
         <div className="pagination">
-          Mostrando <b>{items.length ? (currentPage - 1) * pageSize + 1 : 0}-{Math.min(currentPage * pageSize, items.length)}</b> de <b>{items.length}</b> expedientes
-          <button disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>‹</button>
+          Mostrando{' '}
+          <b>
+            {total === 0
+              ? 0
+              : (currentPage - 1) * pageSize + 1}
+            -
+            {Math.min(currentPage * pageSize, total)}
+          </b>{' '}
+          de <b>{total}</b> expedientes
+
+          <button
+            disabled={currentPage === 1}
+            onClick={() => onPageChange(currentPage - 1)}
+          >
+            ‹
+          </button>
+
           <b className="current-page">{currentPage}</b>
-          <button disabled={currentPage === pageCount} onClick={() => setPage(currentPage + 1)}>›</button>
+
+          <button
+            disabled={currentPage === pageCount}
+            onClick={() => onPageChange(currentPage + 1)}
+          >
+            ›
+          </button>
         </div>
       </section>
       <DuplicateExpedienteModal

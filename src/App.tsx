@@ -26,11 +26,62 @@
   import TrackingModal from './components/modals/TrackingModal'
 
   export default function App() {
+  
     const [currentUser, setCurrentUser] = useState<User | null>(null)
     const [view, setView] = useState<View>('nuevo')
+
+    useEffect(() => {
+      const usuarioGuardado =
+        localStorage.getItem('mesa-partes-user')
+
+      const sessionStart =
+        localStorage.getItem('mesa-partes-session-start')
+
+      if (!usuarioGuardado || !sessionStart) {
+        return
+      }
+
+      const inicio = Number(sessionStart)
+
+      if (!Number.isFinite(inicio)) {
+        localStorage.removeItem('mesa-partes-user')
+        localStorage.removeItem('mesa-partes-session-start')
+        return
+      }
+
+      const tiempoTranscurrido =
+        Date.now() - inicio
+
+      const duracionSesion =
+        30 * 60 * 1000
+
+      if (tiempoTranscurrido >= duracionSesion) {
+        localStorage.removeItem('mesa-partes-user')
+        localStorage.removeItem('mesa-partes-session-start')
+        return
+      }
+
+      try {
+        const usuario = JSON.parse(usuarioGuardado)
+
+        if (usuario?.id && usuario?.nombre) {
+          setCurrentUser(usuario)
+        } else {
+          localStorage.removeItem('mesa-partes-user')
+          localStorage.removeItem('mesa-partes-session-start')
+        }
+      } catch {
+        localStorage.removeItem('mesa-partes-user')
+        localStorage.removeItem('mesa-partes-session-start')
+      }
+    }, [])
+
+
     const [expedienteParaDuplicar, setExpedienteParaDuplicar] =
     useState<Expediente | null>(null)
     const [expedientes, setExpedientes] = useState<Expediente[]>([])
+    const [expedientesPage, setExpedientesPage] = useState(1)
+    const expedientesPageSize = 20
     const [memoExpediente, setMemoExpediente] = useState<Expediente | null>(null)
     const [oficioExpediente, setOficioExpediente] = useState<Expediente | null>(null)
     const [loadingDb, setLoadingDb] = useState(true)
@@ -77,13 +128,41 @@
       window.setTimeout(() => setToast(''), 3000)
     }, [])
 
+    const cargarHistorialExpediente = async (expedienteId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('mesa_partes_2026')
+      .select('historial')
+      .eq('id', Number(expedienteId))
+      .single()
+
+    if (error) {
+      console.error('Error cargando historial:', error)
+      notify('No se pudo cargar el historial del expediente')
+      return null
+    }
+
+    return Array.isArray(data?.historial)
+      ? data.historial
+      : []
+  } catch (error) {
+    console.error('Error inesperado cargando historial:', error)
+    notify('Ocurrió un error al cargar el historial')
+    return null
+  }
+}
+
     const sessionTimeoutRef = useRef<number | null>(null)
     const resetSessionTimeout = useCallback(() => {
       if (sessionTimeoutRef.current) window.clearTimeout(sessionTimeoutRef.current)
       sessionTimeoutRef.current = window.setTimeout(() => {
-        notify('Sesión expirada por inactividad')
-        setCurrentUser(null)
-      }, 30 * 60 * 1000)
+  notify('Sesión expirada por inactividad')
+
+  localStorage.removeItem('mesa-partes-user')
+  localStorage.removeItem('mesa-partes-session-start')
+
+  setCurrentUser(null)
+}, 30 * 60 * 1000)
     }, [notify])
 
     useEffect(() => {
@@ -100,42 +179,44 @@
     useEffect(() => {
       const cargarDeSupabase = async () => {
         setLoadingDb(true)
-  const { data, error } = await supabase
-    .from('mesa_partes_2026')
-    .select(`
-      id,
-      nro_exp,
-      fecha_ingreso,
-      remitente_nombre,
-      asunto,
-      contenido,
-      area,
-      area_destino,
-      estado,
-      plazo,
-      prioridad,
-      archivo,
-      archivo_tipo,
-      archivo_tamano,
-      documentos,
-      modalidad_recepcion,
-      entregado_a,
-      canal_recepcion,
-      folios,
-      anexos,
-      direccion,
-      correo,
-      celular,
-      representante,
-      cargo_representante,
-      usuario_registro,
-      fecha_hora_recepcion,
-      constancia_recepcion,
-      historial,
-      fecha_sin_respuesta,
-      es_duplicado
-    `)
-    .order('nro_exp', { ascending: false })
+        
+        const { data, error, count } = await supabase
+          .from('mesa_partes_2026')
+          .select(`
+            id,
+            nro_exp,
+            fecha_ingreso,
+            remitente_nombre,
+            asunto,
+            contenido,
+            area,
+            area_destino,
+            estado,
+            plazo,
+            prioridad,
+            archivo,
+            archivo_tipo,
+            archivo_tamano,
+            documentos,
+            modalidad_recepcion,
+            entregado_a,
+            canal_recepcion,
+            folios,
+            anexos,
+            direccion,
+            correo,
+            celular,
+            representante,
+            cargo_representante,
+            usuario_registro,
+            fecha_hora_recepcion,
+            constancia_recepcion,
+            es_duplicado,
+            fecha_sin_respuesta,
+            duplicado_de_id
+          `)
+            .order('nro_exp', { ascending: false })
+  
 
   if (error) {
     console.error('Supabase Error:', error)
@@ -143,6 +224,9 @@
     setLoadingDb(false)
     return
   }
+
+  setExpedientesPage(1)
+
   const { data: proveidosData, error: proveidosError } =
   await supabase
     .from('proveidos')
@@ -201,7 +285,7 @@ if (proveidosError) {
               fechaSinRespuesta: item.fecha_sin_respuesta || '',
               prioridad: item.prioridad || 'Normal',
               archivo: item.archivo || 'Sin adjunto',
-              archivoData: item.archivo_data || '',
+              archivoData: '',
               archivoTipo: item.archivo_tipo || '',
               archivoTamano: item.archivo_tamano || 0,
               modalidadRecepcion: item.modalidad_recepcion || undefined,
@@ -217,7 +301,7 @@ if (proveidosError) {
               usuarioRegistro: item.usuario_registro || '',
               fechaHoraRecepcion: item.fecha_hora_recepcion || '',
               constanciaRecepcion: item.constancia_recepcion || '',
-              historial: Array.isArray(item.historial) ? item.historial : []
+              historial: []
             })
           })
           setExpedientes(normalizados)
@@ -558,7 +642,8 @@ if (proveidosError) {
         celular: String(data.get('celular') || ''),
         usuarioRegistro: `${currentUser.nombre} - ${currentUser.area || ''}`,
         fechaHoraRecepcion: new Date().toISOString(),
-        constanciaRecepcion: `Cargo generado para ${nextId}`
+        constanciaRecepcion: `Cargo generado para ${nextId}`,
+        historial: historialInicial
       }
 
       const { data: insertedData, error } = await supabase.from('mesa_partes_2026').insert({
@@ -642,7 +727,7 @@ if (proveidosError) {
     ]
 
     const extensionValida =
-    /\.(pdf|jpg|jpeg|png)$/i.test(file.name)
+      /\.(pdf|jpg|jpeg|png)$/i.test(file.name)
 
     if (
       file.type &&
@@ -739,6 +824,7 @@ if (proveidosError) {
       setIsSaving(false)
     }
   }
+ 
     const registrarFechaExpediente = async (
   expedienteId: string,
   fecha: string
@@ -810,7 +896,6 @@ if (proveidosError) {
 
     if (tipo === 'Memo') {
       setMemoExpediente(expediente)
-
       setMemoNro('')
       setMemoFecha(todayInputValue())
       setMemoAsunto(expediente.asunto || '')
@@ -818,7 +903,13 @@ if (proveidosError) {
       setShowMemoSelector(false)
       setShowMemoForm(true)
       setView('memos')
+      return
+    }
 
+    if (tipo === 'Oficio') {
+      setOficioExpediente(expediente)
+      setShowOficioForm(true)
+      setView('oficios')
       return
     }
 
@@ -1211,7 +1302,17 @@ if (proveidosError) {
                   <span>Área: {currentUser.area || 'N/A'}</span>
                   <hr />
                   <button onClick={() => { notify('Configuración disponible en versión completa'); setShowProfile(false) }}>Configuración</button>
-                  <button onClick={() => { setCurrentUser(null); setShowProfile(false); notify('Sesión cerrada correctamente') }}>Cerrar sesión</button>
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem('mesa-partes-user')
+                      localStorage.removeItem('mesa-partes-session-start')
+                      setCurrentUser(null)
+                      setShowProfile(false)
+                      notify('Sesión cerrada correctamente')
+                    }}
+                  >
+                    Cerrar sesión
+                  </button>
                 </div>
               )}
             </div>
@@ -1224,10 +1325,16 @@ if (proveidosError) {
               <div className="empty-state">Cargando expedientes desde Supabase...</div>
             ) : (
               <>
-                {view === 'inicio' && <DashboardView expedientes={expedientes} proveidos={proveidos} onNew={() => setView('nuevo')} onViewAll={() => setView('expedientes')} currentDate={currentDate} />}  
+                {view === 'inicio' && <DashboardView expedientes={expedientes} proveidos={proveidos} onNew={() => setView('nuevo')} onViewAll={() => setView('expedientes')} currentDate={currentDate} currentUser={currentUser} />}  
                 {view === 'expedientes' && (
                   <ExpedientesView
-                    items={filteredExpedientes}
+                    items={filteredExpedientes.slice(
+                      (expedientesPage - 1) * expedientesPageSize,
+                      expedientesPage * expedientesPageSize
+                    )}
+                    total={filteredExpedientes.length}
+                    currentPage={expedientesPage}
+                    onPageChange={pagina => setExpedientesPage(pagina)}
                     query={query}
                     setQuery={setQuery}
                     areaFilter={areaFilter}
@@ -1240,7 +1347,22 @@ if (proveidosError) {
                     onNew={() => setView('nuevo')}
                     onOpenDocumentType={openDocumentType}
                     expedienteDocumentos={expedienteDocumentos}
-                    onTracking={setTrackingId}
+                    onTracking={async (id) => {
+                      const historial = await cargarHistorialExpediente(id)
+
+                      setExpedientes(prev =>
+                        prev.map(expediente =>
+                          expediente.id === id
+                            ? {
+                                ...expediente,
+                                historial: historial || []
+                              }
+                            : expediente
+                        )
+                      )
+
+                      setTrackingId(id)
+                    }}
                     onAttachDocument={adjuntarDocumento}
                     onRegisterDate={registrarFechaExpediente}
                     onDuplicate={expediente => {

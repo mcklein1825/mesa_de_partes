@@ -58,5 +58,19 @@ export const usuariosService = {
     }
 
     return data;
+  },
+
+  async delete(id: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('usuarios')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error al eliminar usuario:', error);
+      return false;
+    }
+
+    return true;
   }
 };

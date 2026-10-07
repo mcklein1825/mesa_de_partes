@@ -8,13 +8,17 @@ export default function DashboardView({
   proveidos,
   onNew,
   onViewAll,
-  currentDate
+  currentDate,
+  currentUser
 }: {
   expedientes: Expediente[]
   proveidos: Proveido[]
   onNew: () => void
   onViewAll: () => void
   currentDate: string
+  currentUser?: {
+    nombre?: string
+  } | null
 }) {
 const pending = expedientes.filter(
   item => item.estado === 'Pendiente'
@@ -76,7 +80,7 @@ const archived = expedientes.filter(
       <div className="page-heading">
         <div>
           <p className="eyebrow">{currentDate}</p>
-          <h1>Buenos días, Lucía <span>👋</span></h1>
+          <h1>Buenos días, {currentUser?.nombre || 'usuario'} </h1>
           <p className="muted">Aquí tienes el resumen de tu mesa de partes.</p>
         </div>
         <button className="primary-button" onClick={onNew}>＋ Nuevo expediente</button>
