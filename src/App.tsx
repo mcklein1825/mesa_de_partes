@@ -3,8 +3,9 @@
   import UserSelectModal from './components/UserSelectModal'
   import OficiosView from './components/views/OficiosView'
   import ProveidosView from './components/views/ProveidosView'
-  import NuevoOficioView from './components/views/NuevoOficioView'
+  import NuevoOficioView from './components/views/NuevoOficioView'2
   import NuevoProveidoView from './components/views/NuevoProveidoView'
+  0-+
   // Tipos y Constantes
   import { User, View, Expediente, Memo, Oficio, Proveido, Status } from './types'
   import { ROLE_PERMISSIONS, areas, AREA_RESPONSABLES } from './constants'
