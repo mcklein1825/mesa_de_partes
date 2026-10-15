@@ -793,9 +793,6 @@ tbody tr:last-child td {
 /* ========================================
    LISTADO DE EXPEDIENTES
    ======================================== */
-.list-panel table {
-  min-width: 800px;
-}
 
 .list-panel td {
   padding-top: 17px;
@@ -1354,12 +1351,6 @@ tbody tr:last-child td {
   font-size: 13px !important;
 }
 
-/* Formulario institucional mejorado */
-.legacy-form-page {
-  width: min(1000px, 92vw);
-  max-height: 88vh;
-  overflow-y: auto;
-}
 .legacy-title {
   height: 38px;
   line-height: 38px;
@@ -1802,95 +1793,12 @@ tbody tr:last-child td {
   color: #8799a2;
 }
 
-.timeline {
-  padding: 24px 34px 8px 42px;
-}
 
 .timeline-item {
   position: relative;
   padding: 0 0 20px 30px;
   border-left: 3px solid #b9d7df;
 }
-
-.timeline-item:last-child {
-  border-left-color: transparent;
-  padding-bottom: 4px;
-}
-
-.timeline-dot {
-  position: absolute;
-  left: -9px;
-  top: 0;
-  width: 15px;
-  height: 15px;
-  border: 3px solid #fff;
-  border-radius: 50%;
-  background: #1cabb0;
-  box-shadow: 0 0 0 2px #1cabb0;
-}
-
-.timeline-card {
-  border: 1px solid #cbdce2;
-  border-radius: 7px;
-  padding: 13px 15px;
-  background: #fbfdfe;
-}
-
-.timeline-card-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 15px;
-  align-items: center;
-}
-
-.timeline-card-header strong {
-  color: #247f8b;
-  font-size: 13px;
-}
-
-.timeline-card-header time {
-  color: #7d8e97;
-  font-size: 11px;
-  white-space: nowrap;
-}
-
-.timeline-card p {
-  margin: 9px 0 5px;
-  color: #3c5661;
-  font-size: 12px;
-}
-
-.timeline-card p span {
-  color: #7ca2ae;
-  margin: 0 5px;
-}
-
-.timeline-card small {
-  color: #71818a;
-  font-size: 11px;
-  line-height: 1.4;
-}
-
-.timeline-card .timeline-responsible {
-  display: block;
-  color: #3f6874;
-  font-weight: 700;
-  margin-bottom: 5px;
-}
-
-.timeline-dates {
-  display: flex;
-  gap: 18px;
-  flex-wrap: wrap;
-  margin: 8px 0;
-  color: #657b84;
-  font-size: 11px;
-}
-
-.timeline-dates b {
-  color: #3f6874;
-}
-
 .document-link {
   display: block;
   max-width: 100%;
@@ -2072,17 +1980,6 @@ tbody tr:last-child td {
     flex-direction: column;
     gap: 4px;
   }
-}
-.memo-estado-columna {
-  min-width: 150px;
-  width: 150px;
-  white-space: nowrap;
-}
-
-.memo-estado-columna .status-badge {
-  width: 135px;
-  min-width: 135px;
-  box-sizing: border-box;
 }
 /* ========================================
    MODAL DE DATOS DEL MEMO
@@ -3252,83 +3149,13 @@ tbody tr:last-child td {
     flex-direction: column;
   }
 }
+
 /* =========================================================
-   SEGUIMIENTO DEL EXPEDIENTE
-   ========================================================= */
-
-.timeline-card {
-  padding: 16px 18px;
-}
-
-.timeline-date {
-  display: block;
-  margin-bottom: 6px;
-  color: #6b7280;
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.timeline-action {
-  margin-bottom: 14px;
-  color: #111827;
-  font-size: 1.05rem;
-  font-weight: 700;
-}
-
-.timeline-route {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 16px;
-  color: #374151;
-  font-size: 0.94rem;
-}
-
-.timeline-route b {
-  font-weight: 600;
-}
-
-.timeline-responsible,
-.timeline-performed-by {
-  margin-top: 8px;
-  color: #4b5563;
-  font-size: 0.88rem;
-  line-height: 1.45;
-}
-
-.timeline-responsible span,
-.timeline-performed-by span {
-  display: block;
-  margin-bottom: 2px;
-  color: #9ca3af;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.timeline-responsible b,
-.timeline-performed-by b {
-  color: #111827;
-  font-weight: 600;
-}
-
-.timeline-observation {
-  margin: 14px 0 0;
-  padding-top: 12px;
-  border-top: 1px solid #e5e7eb;
-  color: #6b7280;
-  font-size: 0.88rem;
-  line-height: 1.5;
-}
-/* =========================================================
-   DOCUMENTO PENDIENTE / ADJUNTAR POSTERIORMENTE
+   DOCUMENTOS PENDIENTES Y ADJUNTOS
    ========================================================= */
 
 .document-pending {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
@@ -3340,36 +3167,10 @@ tbody tr:last-child td {
   font-weight: 700;
 }
 
-.document-attach-button {
-  border: 1px solid #8ebdce;
-  border-radius: 6px;
-  padding: 5px 9px;
-  background: #f3f8fa;
-  color: #247f8b;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.document-attach-button:hover {
-  background: #e8f3f6;
-  border-color: #5d9eab;
-}
-
-.document-attach-button:disabled {
-  opacity: 0.6;
-  cursor: wait;
-}
-.document-pending {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
 .document-link-without-file {
   color: #111827;
   cursor: default !important;
+  text-decoration: none;
 }
 
 .document-missing {
@@ -3389,6 +3190,8 @@ tbody tr:last-child td {
 }
 
 .document-attach-button:hover {
+  background: #e8f3f6;
+  border-color: #5d9eab;
   text-decoration: underline;
 }
 
@@ -3684,4 +3487,446 @@ tbody tr:last-child td {
   max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
+}
+
+/* =====================================================
+   TABLA DE EXPEDIENTES: DISTRIBUCIÓN COMPACTA
+   ===================================================== */
+
+.list-panel .expedientes-table {
+  width: 1415px;
+  min-width: 1415px;
+  table-layout: fixed;
+}
+
+/* Anchos de las 8 columnas */
+.list-panel .expedientes-table th:nth-child(1),
+.list-panel .expedientes-table td:nth-child(1) {
+  width: 130px;
+}
+
+.list-panel .expedientes-table th:nth-child(2),
+.list-panel .expedientes-table td:nth-child(2) {
+  width: 135px;
+}
+
+.list-panel .expedientes-table th:nth-child(3),
+.list-panel .expedientes-table td:nth-child(3) {
+  width: 155px;
+}
+
+.list-panel .expedientes-table th:nth-child(4),
+.list-panel .expedientes-table td:nth-child(4) {
+  width: 225px;
+}
+
+.list-panel .expedientes-table th:nth-child(5),
+.list-panel .expedientes-table td:nth-child(5) {
+  width: 280px;
+}
+
+.list-panel .expedientes-table th:nth-child(6),
+.list-panel .expedientes-table td:nth-child(6) {
+  width: 150px;
+  min-width: 0;
+  max-width: none;
+}
+
+.list-panel .expedientes-table th:nth-child(7),
+.list-panel .expedientes-table td:nth-child(7) {
+  width: 160px;
+  min-width: 0;
+  max-width: none;
+}
+
+.list-panel .expedientes-table th:nth-child(8),
+.list-panel .expedientes-table td:nth-child(8) {
+  width: 180px;
+  min-width: 0;
+  max-width: none;
+}
+
+/* Evitar que los nombres largos ensanchen la tabla */
+.list-panel .expedientes-table .person-cell {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  gap: 6px;
+}
+
+.list-panel .expedientes-table .person-cell .table-cell-group {
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Limitar el contenido de Asunto y Ubicación */
+.list-panel .expedientes-table td:nth-child(5),
+.list-panel .expedientes-table td:nth-child(6) {
+  overflow: hidden;
+}
+
+.list-panel .expedientes-table td:nth-child(5) .expediente-asunto {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Reducir el espacio interno de Acciones */
+.list-panel .expedientes-table td.actions-cell {
+  width: 180px;
+  min-width: 0;
+  max-width: 180px;
+  padding: 10px 8px;
+}
+
+
+/* =====================================================
+   PROVEÍDOS: TABLA COMPACTA Y ANCHO ADAPTABLE
+   ===================================================== */
+
+.list-panel.proveidos-list .table-wrap > table.data-table.proveidos-table {
+  width: 100% !important;
+  min-width: 1055px !important;
+  max-width: none !important;
+  table-layout: fixed !important;
+}
+
+/* Expediente: columna compacta */
+.list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(1),
+.list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(1) {
+  width: 9% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+/* Fecha */
+.list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(2),
+.list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(2) {
+  width: 11% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+/* Área destino */
+.list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(3),
+.list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(3) {
+  width: 16% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+/* Responsable */
+.list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(4),
+.list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(4) {
+  width: 23% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+/* Instrucción */
+.list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(5),
+.list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(5) {
+  width: 27% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+/* Documento */
+.list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(6),
+.list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(6) {
+  width: 14% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+/* Mantener las celdas ordenadas */
+.list-panel.proveidos-list .table-wrap > table.proveidos-table th,
+.list-panel.proveidos-list .table-wrap > table.proveidos-table td {
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   SEGUIMIENTO DEL EXPEDIENTE: CRONOLOGÍA MÁS INTUITIVA
+   ========================================================= */
+
+.tracking-modal .tracking-summary {
+  gap: 12px;
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+
+.tracking-modal .tracking-summary > span {
+  min-width: 0;
+  padding: 14px;
+  gap: 7px;
+  background: #f7f9fc;
+  border: 1px solid #e1e7ef;
+  border-radius: 12px;
+  overflow-wrap: anywhere;
+}
+
+.tracking-modal .tracking-summary > span > b {
+  color: #64748b;
+  font-size: 10px;
+  letter-spacing: 0.7px;
+}
+
+.tracking-modal .timeline {
+  padding: 24px 30px 12px 38px;
+}
+
+.tracking-modal .timeline-item {
+  margin-left: 16px;
+  padding: 0 0 24px 28px;
+  border-left: 2px solid #dbe5ef;
+}
+
+.tracking-modal .timeline-item:last-child {
+  border-left-color: transparent;
+  padding-bottom: 4px;
+}
+
+.tracking-modal .timeline-marker {
+  position: absolute;
+  left: -18px;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: #e0eafe;
+  color: #234e8a;
+  box-shadow: 0 0 0 1px #c5d5f1;
+  font-size: 12px;
+  font-weight: 800;
+  z-index: 1;
+}
+
+.tracking-modal .timeline-item.is-first .timeline-marker {
+  background: #d9f4e8;
+  color: #176747;
+  box-shadow: 0 0 0 1px #a9dfc5;
+}
+
+.tracking-modal .timeline-card {
+  min-width: 0;
+  padding: 18px;
+  background: #fff;
+  border: 1px solid #e0e7ef;
+  border-radius: 14px;
+  box-shadow: 0 3px 12px rgb(15 23 42 / 4%);
+  overflow-wrap: anywhere;
+}
+
+.tracking-modal .timeline-item.is-first .timeline-card {
+  border-left: 4px solid #37a477;
+}
+
+.tracking-modal .timeline-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #edf1f6;
+}
+
+.tracking-modal .timeline-step-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.tracking-modal .timeline-step {
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+}
+
+.tracking-modal .timeline-card-header strong {
+  color: #172b4d;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.tracking-modal .timeline-date {
+  display: inline-block;
+  padding: 6px 9px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: normal;
+}
+
+.tracking-modal .timeline-route {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.tracking-modal .timeline-location {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.tracking-modal .timeline-location > span,
+.tracking-modal .timeline-initial-location > span {
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.7px;
+}
+
+.tracking-modal .timeline-location > strong,
+.tracking-modal .timeline-initial-location > strong {
+  color: #233650;
+  font-size: 13px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.tracking-modal .timeline-location-destination {
+  border-color: #cbdcfb;
+  background: #f0f5ff;
+}
+
+.tracking-modal .timeline-route-connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #647fb0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.tracking-modal .timeline-initial-location {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 15px 0;
+  padding: 14px;
+  border: 1px solid #bfe8d4;
+  border-radius: 10px;
+  background: #f0fbf5;
+}
+
+.tracking-modal .timeline-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.tracking-modal .timeline-detail {
+  display: flex;
+  flex: 1 1 200px;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: #f8fafc;
+}
+
+.tracking-modal .timeline-detail > span {
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.tracking-modal .timeline-detail > strong {
+  color: #334155;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.tracking-modal .timeline-observation {
+  margin-top: 12px;
+  padding: 13px 14px;
+  border-left: 3px solid #9aafd0;
+  border-radius: 0 9px 9px 0;
+  background: #f5f8fc;
+}
+
+.tracking-modal .timeline-observation > span {
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+}
+
+.tracking-modal .timeline-observation p {
+  margin: 7px 0 0;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .tracking-modal .tracking-summary {
+    grid-template-columns: 1fr;
+    padding: 14px;
+  }
+
+  .tracking-modal .timeline {
+    padding: 20px 12px 10px 22px;
+  }
+
+  .tracking-modal .timeline-item {
+    margin-left: 12px;
+    padding-left: 21px;
+  }
+
+  .tracking-modal .timeline-marker {
+    left: -16px;
+    width: 30px;
+    height: 30px;
+  }
+
+  .tracking-modal .timeline-card {
+    padding: 14px;
+  }
+
+  .tracking-modal .timeline-route {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 7px;
+  }
+
+  .tracking-modal .timeline-route-connector {
+    min-height: 22px;
+    transform: rotate(90deg);
+  }
+
+  .tracking-modal .timeline-date {
+    width: fit-content;
+  }
 }

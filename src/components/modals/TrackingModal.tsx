@@ -97,58 +97,106 @@ export default function TrackingModal({
           </div>
         )}
 
-        <div className="timeline">
-          {history.map((entry, index) => (
-            <div
-              className="timeline-item"
-              key={`${entry.fechaHora}-${index}`}
-            >
-              <div className="timeline-dot" />
+                  
+          <div className="timeline">
+            {history.map((entry, index) => {
+              const accion = String(entry.accion || 'Movimiento registrado')
 
-              <div className="timeline-card">
-                {/* FECHA Y HORA */}
-                <time className="timeline-date">
-                  {formatTrackingDate(entry.fechaHora)}
-                </time>
+              const esRegistroInicial =
+                index === 0 &&
+                /(expediente registrado|registro inicial|pendiente)/i.test(accion)
 
-                {/* ACCIÓN */}
-                <div className="timeline-action">
-                  {entry.accion}
-                </div>
+              const fechaHoraTexto = String(entry.fechaHora || '').trim()
 
-                {/* RUTA */}
-                <div className="timeline-route">
-                  <b>{entry.areaOrigen || 'No especificado'}</b>
+              const fechaMovimiento =
+                fechaHoraTexto &&
+                !/^(fecha pendiente|fecha no registrada)$/i.test(fechaHoraTexto)
+                  ? fechaHoraTexto
+                  : entry.fechaIngreso || (index === 0 ? item.fechaIngreso : '') || ''
 
-                  <span> → </span>
+              const areaInicial =
+                entry.areaDestino || entry.areaOrigen || 'Mesa de Partes'
 
-                  <b>{entry.areaDestino || 'No especificado'}</b>
-                </div>
-
-                {/* RESPONSABLE DEL ÁREA */}
-                {entry.responsableDestino && (
-                  <div className="timeline-responsible">
-                    <span>Responsable:</span>{' '}
-                    <b>{entry.responsableDestino}</b>
+              return (
+                <div
+                  className={`timeline-item ${
+                    index === 0 ? 'is-first' : ''
+                  } ${
+                    index === history.length - 1 ? 'is-latest' : ''
+                  }`}
+                  key={`${entry.fechaHora}-${index}`}
+                >
+                  <div className="timeline-marker" aria-hidden="true">
+                    {index + 1}
                   </div>
-                )}
 
-                {/* QUIÉN REALIZÓ LA ACCIÓN */}
-                <div className="timeline-performed-by">
-                  <span>Realizado por:</span>{' '}
-                  <b>{entry.responsable || 'No registrado'}</b>
+                  <div className="timeline-card">
+                    <div className="timeline-card-header">
+                      <div className="timeline-step-group">
+                        <span className="timeline-step">
+                          {esRegistroInicial ? 'INICIO DEL TRÁMITE' : `MOVIMIENTO ${index + 1}`}
+                        </span>
+
+                        <strong>{accion}</strong>
+                      </div>
+
+                      <time className="timeline-date">
+                        {formatTrackingDate(fechaMovimiento)}
+                      </time>
+                    </div>
+
+                    {esRegistroInicial ? (
+                      <div className="timeline-initial-location">
+                        <span>EXPEDIENTE RECIBIDO EN</span>
+                        <strong>{areaInicial}</strong>
+                      </div>
+                    ) : (
+                      <div className="timeline-route">
+                        <div className="timeline-location timeline-location-origin">
+                          <span>ORIGEN</span>
+                          <strong>{entry.areaOrigen || 'No especificado'}</strong>
+                        </div>
+
+                        <div
+                          className="timeline-route-connector"
+                          aria-label="Derivado hacia"
+                        >
+                          →
+                        </div>
+
+                        <div className="timeline-location timeline-location-destination">
+                          <span>DESTINO</span>
+                          <strong>{entry.areaDestino || 'No especificado'}</strong>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="timeline-details">
+                      <div className="timeline-detail">
+                        <span>Realizado por</span>
+                        <strong>{entry.responsable || 'No registrado'}</strong>
+                      </div>
+
+                      {entry.responsableDestino && (
+                        <div className="timeline-detail">
+                          <span>Responsable de destino</span>
+                          <strong>{entry.responsableDestino}</strong>
+                        </div>
+                      )}
+                    </div>
+
+                    {entry.observacion && (
+                      <div className="timeline-observation">
+                        <span>DETALLE DEL MOVIMIENTO</span>
+                        <p>{entry.observacion}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
+              )
+            })}
+          </div>
 
-                {/* OBSERVACIÓN */}
-                {entry.observacion && (
-                  <p className="timeline-observation">
-                    {entry.observacion}
-                  </p>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
 
         <button
           className="outline-button tracking-close"

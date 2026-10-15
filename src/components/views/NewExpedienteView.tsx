@@ -137,6 +137,14 @@ export default function NewExpedienteView({
                 defaultValue={todayInputValue()}
               />
             </label>
+            <label>
+              Fecha límite (opcional)
+              <input
+                name="plazo"
+                type="date"
+              />
+            </label>
+
 
             <label className="wide">
               Nombre / apellido o razón social

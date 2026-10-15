@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Expediente } from '../../types'
 import { AREA_RESPONSABLES } from '../../constants'
 import ExpedienteSelector from '../common/ExpedienteSelector'
@@ -8,15 +8,15 @@ type Props = {
   areaOptions: string[]
   onExpedienteChange: (expediente: Expediente | null) => void
   onCancelar: () => void
-  onGuardar: (datos: {
+   onGuardar: (datos: {
     expedienteId: string
     nroExpediente: string
     fecha: string
     areaDestino: string
     responsable: string
     instruccion: string
-    estado: 'Pendiente' | 'Atendido' | 'Archivado'
-  }) => void
+    archivo: File | null
+  }) => Promise<void>
 }
 
 export default function NuevoProveidoView({
@@ -33,10 +33,15 @@ export default function NuevoProveidoView({
   const [areaDestino, setAreaDestino] = useState('')
   const responsable = AREA_RESPONSABLES[areaDestino] || ''
   const [instruccion, setInstruccion] = useState('')
-  const [estado, setEstado] =
-    useState<'Pendiente' | 'Atendido' | 'Archivado'>('Pendiente')
+  const [archivoSeleccionado, setArchivoSeleccionado] =
+  useState<File | null>(null)
+  const [guardando, setGuardando] = useState(false)
+  const guardandoRef = useRef(false)
 
-  const guardar = () => {
+
+  const guardar = async () => {
+    if (guardandoRef.current) return
+
     if (!expediente) {
       alert('Debe seleccionar un expediente.')
       return
@@ -52,16 +57,28 @@ export default function NuevoProveidoView({
       return
     }
 
-    onGuardar({
-      expedienteId: expediente.id,
-      nroExpediente: expediente.nroExp,
-      fecha,
-      areaDestino,
-      responsable,
-      instruccion,
-      estado
-    })
+    guardandoRef.current = true
+    setGuardando(true)
+
+    try {
+      await onGuardar({
+        expedienteId: expediente.id,
+        nroExpediente: expediente.nroExp,
+        fecha,
+        areaDestino,
+        responsable,
+        instruccion: instruccion.trim(),
+        archivo: archivoSeleccionado
+      })
+    } catch (error) {
+      console.error('Error al guardar el proveído:', error)
+      alert('Ocurrió un error al guardar el proveído.')
+    } finally {
+      guardandoRef.current = false
+      setGuardando(false)
+    }
   }
+
 
   return (
     <>
@@ -96,26 +113,6 @@ export default function NuevoProveidoView({
         value={fecha}
         onChange={e => setFecha(e.target.value)}
       />
-    </div>
-
-    <div className="form-group">
-      <label>Estado</label>
-
-      <select
-        value={estado}
-        onChange={e =>
-          setEstado(
-            e.target.value as
-              | 'Pendiente'
-              | 'Atendido'
-              | 'Archivado'
-          )
-        }
-      >
-        <option value="Pendiente">Pendiente</option>
-        <option value="Atendido">Atendido</option>
-        <option value="Archivado">Archivado</option>
-      </select>
     </div>
 
     <div className="form-group wide proveido-expediente-field">
@@ -154,6 +151,46 @@ export default function NuevoProveidoView({
         placeholder="Se completará automáticamente"
       />
     </div>
+    
+    <div className="form-group wide">
+      <label>Documento adjunto (opcional)</label>
+
+      <input
+        type="file"
+        accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+        onChange={e => {
+          const archivo = e.target.files?.[0] ?? null
+
+          if (archivo && archivo.size > 5 * 1024 * 1024) {
+            alert('El archivo no puede superar los 5 MB.')
+            e.target.value = ''
+            setArchivoSeleccionado(null)
+            return
+          }
+
+          setArchivoSeleccionado(archivo)
+        }}
+      />
+
+      {archivoSeleccionado && (
+        <div style={{ marginTop: '8px', fontSize: '12px' }}>
+          <span>Archivo seleccionado: {archivoSeleccionado.name}</span>
+
+          <button
+            type="button"
+            className="action-link"
+            onClick={() => setArchivoSeleccionado(null)}
+          >
+            Quitar archivo
+          </button>
+        </div>
+      )}
+
+      <small>
+        Puedes adjuntar un documento de hasta 5 MB.
+      </small>
+    </div>
+
 
     <div className="form-group wide proveido-instruccion-field">
       <label>Instrucción</label>

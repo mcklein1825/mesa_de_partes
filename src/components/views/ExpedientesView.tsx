@@ -20,13 +20,14 @@ export default function ExpedientesView({
   statusFilter,
   setStatusFilter,
   onNew,
-  onOpenDocumentType,
   onTracking,
   onDuplicate,
   expedienteDocumentos,
   onAttachDocument,
-  onRegisterDate
+  onRegisterDate,
+  onRegisterDeadline
 }: {
+
   items: Expediente[]
   total: number
   currentPage: number
@@ -45,21 +46,29 @@ export default function ExpedientesView({
   statusFilter: string
   setStatusFilter: (v: string) => void
   onNew: () => void
-  onOpenDocumentType: (id: string, tipo: string) => void
   onTracking: (id: string) => void
   onDuplicate: (expediente: Expediente) => void
   onAttachDocument: (
     id: string,
     file: File
   ) => Promise<void>
+
   onRegisterDate: (
+    expedienteId: string,
+    fecha: string
+  ) => Promise<void>
+
+  onRegisterDeadline: (
     expedienteId: string,
     fecha: string
   ) => Promise<void>
 }) {
   const pageSize = 20
   const [showDuplicateModal, setShowDuplicateModal] = useState(false)
-
+  const [editingDeadlineId, setEditingDeadlineId] = useState<string | null>(null)
+  const [deadlineDraft, setDeadlineDraft] = useState('')
+  const [editingIngresoDateId, setEditingIngresoDateId] = useState<string | null>(null)
+  const [ingresoDateDraft, setIngresoDateDraft] = useState('')
   const pageCount = Math.max(1, Math.ceil(total / pageSize))
   const pageItems = items
 
@@ -141,11 +150,12 @@ export default function ExpedientesView({
         </div>
 
         <div className="table-wrap">
-          <table>
+          <table className="expedientes-table">
             <thead>
               <tr>
                 <th>N.° EXP</th>
                 <th>FECHA</th>
+                <th>FECHA LÍMITE</th>
                 <th>NOMBRE / APELLIDO</th>
                 <th>ASUNTO</th>
                 <th>UBICACIÓN ACTUAL</th>
@@ -163,51 +173,164 @@ export default function ExpedientesView({
                         {item.esDuplicado ? ' *' : ''}
                       </b>
                     </td>
+                    
                     <td>
                       {item.fechaIngreso ? (
                         displayDate(item.fechaIngreso)
-                      ) : (
-                        <span
+                      ) : editingIngresoDateId === String(item.id) ? (
+                        <div
                           style={{
-                            display: 'inline-flex',
+                            display: 'flex',
                             flexDirection: 'column',
-                            alignItems: 'flex-start',
-                            gap: '6px'
+                            gap: '6px',
+                            minWidth: '130px'
                           }}
                         >
-                          <span
-                            style={{
-                              color: '#6b7280',
-                              fontSize: '13px'
-                            }}
-                          >
-                            Sin fecha
-                          </span>
-
                           <input
                             type="date"
+                            value={ingresoDateDraft}
+                            onChange={e => setIngresoDateDraft(e.target.value)}
                             aria-label="Registrar fecha de ingreso"
-                            onChange={e => {
-                              const fecha = e.target.value
-
-                              if (fecha) {
-                                onRegisterDate(item.id, fecha)
-                              }
-                            }}
-                            style={{
-                              border: '1px solid #d1d5db',
-                              borderRadius: '6px',
-                              background: '#f8fafc',
-                              color: '#374151',
-                              padding: '5px 8px',
-                              cursor: 'pointer',
-                              fontSize: '12px',
-                              fontWeight: 500
-                            }}
                           />
-                        </span>
+
+                          <div style={{ display: 'flex', gap: '5px' }}>
+                            <button
+                              type="button"
+                              disabled={!ingresoDateDraft}
+                              onClick={async () => {
+                                if (!ingresoDateDraft) return
+
+                                await onRegisterDate(
+                                  String(item.id),
+                                  ingresoDateDraft
+                                )
+
+                                setEditingIngresoDateId(null)
+                                setIngresoDateDraft('')
+                              }}
+                            >
+                              Guardar
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingIngresoDateId(null)
+                                setIngresoDateDraft('')
+                              }}
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          title="Asignar fecha de ingreso"
+                          onClick={() => {
+                            setIngresoDateDraft('')
+                            setEditingIngresoDateId(String(item.id))
+                          }}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            padding: '5px 8px',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '6px',
+                            background: '#f9fafb',
+                            color: '#6b7280',
+                            fontSize: '12px',
+                            fontWeight: 500,
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          Sin fecha
+                        </button>
                       )}
                     </td>
+
+                   
+                    <td>
+                      {editingDeadlineId === String(item.id) ? (
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '6px',
+                            minWidth: '145px'
+                          }}
+                        >
+                          <input
+                            type="date"
+                            value={deadlineDraft}
+                            onChange={e => setDeadlineDraft(e.target.value)}
+                            aria-label="Seleccionar fecha límite"
+                          />
+
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <button
+                              type="button"
+                              disabled={!deadlineDraft}
+                              onClick={async () => {
+                                if (!deadlineDraft) return
+
+                                await onRegisterDeadline(
+                                  String(item.id),
+                                  deadlineDraft
+                                )
+
+                                setEditingDeadlineId(null)
+                                setDeadlineDraft('')
+                              }}
+                            >
+                              Guardar
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingDeadlineId(null)
+                                setDeadlineDraft('')
+                              }}
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          title="Asignar o modificar fecha límite"
+                          aria-label={`Modificar fecha límite del expediente ${item.nroExp}`}
+                          onClick={() => {
+                            setDeadlineDraft(item.plazo || '')
+                            setEditingDeadlineId(String(item.id))
+                          }}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '5px 8px',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '6px',
+                            background: '#f9fafb',
+                            color: item.plazo ? '#374151' : '#6b7280',
+                            fontSize: '12px',
+                            fontWeight: 500,
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          <span>
+                            {item.plazo
+                              ? displayDate(item.plazo)
+                              : 'Sin fecha límite'}
+                          </span>
+                        </button>
+                      )}
+                    </td>
+
                     <td>
                       <span className="person-cell">
                         <span className="small-avatar">
@@ -223,8 +346,8 @@ export default function ExpedientesView({
                     </td>
                    <td
                       style={{
-                        width: '28%',
-                        maxWidth: '28%',
+                        width: 'auto',
+                        maxWidth: '100%',
                         overflow: 'hidden'
                       }}
                     >
@@ -255,31 +378,18 @@ export default function ExpedientesView({
                       </span>
                     </td>
                     <td><StatusBadge status={item.estado} /></td>
-                   <td className="actions-cell">
-                    <button
-                      className="tracking-button"
-                      onClick={() => onTracking(item.id)}
-                    >
+
+                    <td className="actions-cell">
+
+                      <button
+                        className="tracking-button"
+                        onClick={() => onTracking(item.id)}
+                      >
+
                       ◉ Ver seguimiento
                     </button>
 
-                  {item.estado === 'Pendiente' ? (
-                  <>
-                    <button
-                      className="action-link"
-                      onClick={() => onOpenDocumentType(item.id, 'Memo')}
-                    >
-                      Crear Memo
-                    </button>
-
-                    <button
-                      className="action-link"
-                      onClick={() => onOpenDocumentType(item.id, 'Oficio')}
-                    >
-                      Crear Oficio
-                    </button>
-                  </>
-                ) : null}
+                  
                   </td>
                   </tr>
                 )

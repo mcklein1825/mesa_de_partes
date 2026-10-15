@@ -60,6 +60,7 @@ export type Oficio = {
   fechaRegistro?: string
   createdAt?: string
 }
+
 export type Proveido = {
   id: string
   expedienteId: string
@@ -69,8 +70,13 @@ export type Proveido = {
   responsable: string
   instruccion: string
   estado: 'Pendiente' | 'Atendido' | 'Archivado'
+  archivo?: string
+  archivoData?: string
+  archivoTipo?: string
+  archivoTamano?: number
   createdAt?: string
 }
+
 
 export type Expediente = {
   id: string

@@ -3,9 +3,10 @@
   import UserSelectModal from './components/UserSelectModal'
   import OficiosView from './components/views/OficiosView'
   import ProveidosView from './components/views/ProveidosView'
-  import NuevoOficioView from './components/views/NuevoOficioView'2
+  import NuevoOficioView from './components/views/NuevoOficioView'
   import NuevoProveidoView from './components/views/NuevoProveidoView'
-  0-+
+
+
   // Tipos y Constantes
   import { User, View, Expediente, Memo, Oficio, Proveido, Status } from './types'
   import { ROLE_PERMISSIONS, areas, AREA_RESPONSABLES } from './constants'
@@ -25,7 +26,6 @@
   // Componentes Comunes y Modales
   import NavItem from './components/common/NavItem'
   import TrackingModal from './components/modals/TrackingModal'
-
   export default function App() {
   
     const [currentUser, setCurrentUser] = useState<User | null>(null)
@@ -230,6 +230,7 @@
 
   const { data: proveidosData, error: proveidosError } =
   await supabase
+    
     .from('proveidos')
     .select(`
       id,
@@ -240,8 +241,13 @@
       responsable,
       instruccion,
       estado,
+      archivo,
+      archivo_data,
+      archivo_tipo,
+      archivo_tamano,
       created_at
     `)
+
     .order('id', { ascending: false })
 
 if (proveidosError) {
@@ -251,19 +257,25 @@ if (proveidosError) {
   )
 } else if (proveidosData) {
   console.log('PROVEÍDOS CARGADOS DESDE SUPABASE:', proveidosData)
-  setProveidos(
-    proveidosData.map((item: any) => ({
-      id: String(item.id),
-      expedienteId: String(item.expediente_id),
-      nroExpediente: String(item.nro_expediente),
-      fecha: item.fecha,
-      areaDestino: item.area_destino,
-      responsable: item.responsable || '',
-      instruccion: item.instruccion,
-      estado: item.estado,
-      createdAt: item.created_at
-    }))
-  )
+  
+setProveidos(
+  proveidosData.map((item: any) => ({
+    id: String(item.id),
+    expedienteId: String(item.expediente_id),
+    nroExpediente: String(item.nro_expediente),
+    fecha: item.fecha,
+    areaDestino: item.area_destino,
+    responsable: item.responsable || '',
+    instruccion: item.instruccion,
+    estado: item.estado,
+    archivo: item.archivo || '',
+    archivoData: item.archivo_data || '',
+    archivoTipo: item.archivo_tipo || '',
+    archivoTamano: item.archivo_tamano || 0,
+    createdAt: item.created_at
+  }))
+)
+
 }
 
         if (data) {
@@ -594,21 +606,24 @@ if (proveidosError) {
 
     
 
-  const historialInicial = esDuplicado && expedienteOriginal
-    ? [
-        {
-          fechaHora: new Date().toISOString(),
-          fechaIngreso,
-          areaOrigen: 'Mesa de Partes',
-          areaDestino: '',
-          accion: 'Duplicado',
-          observacion: `Expediente creado como duplicado de EXP-2026-${String(
+  const fechaHoraRegistro = new Date().toISOString()
+
+const historialInicial = [
+  {
+    fechaHora: fechaHoraRegistro,
+    fechaIngreso,
+    areaOrigen: 'Mesa de Partes',
+    areaDestino: 'Mesa de Partes',
+    accion: 'Expediente registrado',
+    observacion:
+      esDuplicado && expedienteOriginal
+        ? `Expediente creado como duplicado de EXP-2026-${String(
             expedienteOriginal.nroExp
-          ).padStart(5, '0')}.`,
-          responsable: currentUser.nombre
-        }
-      ]
-    : []
+          ).padStart(5, '0')}.`
+        : 'Expediente recibido y registrado en Mesa de Partes.',
+    responsable: `${currentUser.nombre} - ${currentUser.area || ''}`
+  }
+]
       const newExpediente: Expediente = {
         id: '',
         nroExp: String(nextNumber),
@@ -619,8 +634,8 @@ if (proveidosError) {
         representante: String(data.get('representante') || ''),
         cargoRepresentante: String(data.get('cargoRepresentante') || ''),
         asunto: String(data.get('asunto') || ''),
-        contenido: String(data.get('contenido') || ''), area: '', areaDestino: '', estado: 'Pendiente',
-        plazo: addDays(fechaIngreso, 7),
+        contenido: String(data.get('contenido') || ''), area: '', areaDestino: '', estado: 'Pendiente',      
+        plazo: String(data.get('plazo') || ''),
         prioridad: String(data.get('prioridad') || 'Normal') as 'Normal' | 'Alta',
         archivo: archivoSeleccionado
           ? archivoSeleccionado.name
@@ -642,7 +657,7 @@ if (proveidosError) {
         direccion: String(data.get('direccion') || ''), correo: String(data.get('correo') || ''),
         celular: String(data.get('celular') || ''),
         usuarioRegistro: `${currentUser.nombre} - ${currentUser.area || ''}`,
-        fechaHoraRecepcion: new Date().toISOString(),
+      
         constanciaRecepcion: `Cargo generado para ${nextId}`,
         historial: historialInicial
       }
@@ -650,7 +665,9 @@ if (proveidosError) {
       const { data: insertedData, error } = await supabase.from('mesa_partes_2026').insert({
         nro_exp: newExpediente.nroExp, fecha_ingreso: fechaIngreso, 
         remitente_nombre: newExpediente.remitenteNombre,
-        asunto: newExpediente.asunto, contenido: newExpediente.contenido, plazo: newExpediente.plazo, prioridad: newExpediente.prioridad,
+        asunto: newExpediente.asunto, contenido: newExpediente.contenido, 
+        plazo: newExpediente.plazo || null,
+        prioridad: newExpediente.prioridad,
         archivo: newExpediente.archivo, archivo_data: newExpediente.archivoData,
         archivo_tipo: newExpediente.archivoTipo, archivo_tamano: newExpediente.archivoTamano,
         documentos: newExpediente.documentos,
@@ -886,7 +903,66 @@ if (proveidosError) {
     setIsSaving(false)
   }
 }
+  const registrarPlazoExpediente = async (
+  expedienteId: string,
+  fecha: string
+): Promise<void> => {
+  if (!currentUser) {
+    notify('No hay un usuario activo')
+    return
+  }
 
+  if (!fecha) {
+    notify('Seleccione una fecha límite')
+    return
+  }
+
+  try {
+    setIsSaving(true)
+
+    const { error } = await supabase
+      .from('mesa_partes_2026')
+      .update({
+        plazo: fecha
+      })
+      .eq('id', Number(expedienteId))
+
+    if (error) {
+      console.error(
+        'Error registrando fecha límite:',
+        error
+      )
+
+      notify(
+        `No se pudo registrar la fecha límite: ${error.message}`
+      )
+
+      return
+    }
+
+    setExpedientes(prev =>
+      prev.map(item =>
+        String(item.id) === String(expedienteId)
+          ? {
+              ...item,
+              plazo: fecha
+            }
+          : item
+      )
+    )
+
+    notify('Fecha límite registrada correctamente')
+  } catch (error) {
+    console.error(
+      'Error inesperado registrando fecha límite:',
+      error
+    )
+
+    notify('Ocurrió un error al registrar la fecha límite')
+  } finally {
+    setIsSaving(false)
+  }
+}
     const openDocumentType = (id: string, tipo: string) => {
     const expediente = expedientes.find(item => item.id === id)
 
@@ -1011,57 +1087,51 @@ if (proveidosError) {
 
         setMemos(prev => [memoNuevo, ...prev])
 
-        const historialActual = Array.isArray(memoExpediente.historial)
-          ? memoExpediente.historial
-          : []
 
-        const nuevoHistorial = [
-          ...historialActual,
-          {
-            fechaHora: new Date().toISOString(),
-            fechaIngreso: memoFecha,
-            areaOrigen: 'Mesa de Partes',
-            areaDestino: memoAreaDestino.trim(),
-            accion: 'Derivado',
-            observacion: `Expediente derivado mediante Memo ${memoNuevo.nroMemo}.`,
-            responsable: currentUser?.nombre || ''
-          }
-        ]
-
-        const { error: expedienteError } = await supabase
+        // Supabase ya actualizó el área y el historial mediante registrar_memo.
+        // Consultamos los datos actuales para sincronizar la pantalla sin
+        // sobrescribir el historial con una copia antigua.
+        const {
+          data: expedienteActualizado,
+          error: expedienteError
+        } = await supabase
           .from('mesa_partes_2026')
-          .update({
-            area: memoAreaDestino.trim(),
-            area_destino: memoAreaDestino.trim(),
-            entregado_a: '',
-            historial: nuevoHistorial
-          })
+          .select('area, area_destino, entregado_a, historial')
           .eq('id', expedienteId)
+          .single()
 
         if (expedienteError) {
           console.error(
-            'Error actualizando expediente después del Memo:',
+            'El Memo se guardó, pero no se pudo refrescar el expediente:',
             expedienteError
           )
           notify(
-            `Memo registrado, pero no se pudo actualizar el expediente: ${expedienteError.message}`
+            'El Memo se guardó, pero no se pudo actualizar la vista del expediente.'
           )
-          return
+        } else if (expedienteActualizado) {
+          setExpedientes(prev =>
+            prev.map(item =>
+              item.id === memoExpediente.id
+                ? {
+                    ...item,
+                    area:
+                      expedienteActualizado.area ||
+                      memoAreaDestino.trim(),
+                    areaDestino:
+                      expedienteActualizado.area_destino ||
+                      memoAreaDestino.trim(),
+                    entregadoA:
+                      expedienteActualizado.entregado_a || '',
+                    historial: Array.isArray(
+                      expedienteActualizado.historial
+                    )
+                      ? expedienteActualizado.historial
+                      : item.historial
+                  }
+                : item
+            )
+          )
         }
-
-        setExpedientes(prev =>
-          prev.map(item =>
-            item.id === memoExpediente.id
-              ?{
-                ...item,
-                area: memoAreaDestino.trim(),
-                areaDestino: memoAreaDestino.trim(),
-                entregadoA: '',
-                historial: nuevoHistorial
-              }
-              : item
-          )
-        )
 
 
         setMemoNro('')
@@ -1346,26 +1416,66 @@ if (proveidosError) {
                     statusFilter={statusFilter}
                     setStatusFilter={setStatusFilter}
                     onNew={() => setView('nuevo')}
-                    onOpenDocumentType={openDocumentType}
                     expedienteDocumentos={expedienteDocumentos}
                     onTracking={async (id) => {
-                      const historial = await cargarHistorialExpediente(id)
+                      const historialGuardado = await cargarHistorialExpediente(id)
 
                       setExpedientes(prev =>
-                        prev.map(expediente =>
-                          expediente.id === id
-                            ? {
-                                ...expediente,
-                                historial: historial || []
-                              }
-                            : expediente
-                        )
+                        prev.map(expediente => {
+                          if (expediente.id !== id) return expediente
+
+                          const historialActual = Array.isArray(historialGuardado)
+                            ? historialGuardado
+                            : Array.isArray(expediente.historial)
+                              ? expediente.historial
+                              : []
+
+                          const tieneRegistroInicial = historialActual.some((movimiento: any) => {
+                            const accion = String(movimiento?.accion || '').toLowerCase()
+                            const observacion = String(movimiento?.observacion || '').toLowerCase()
+
+                            return (
+                              accion === 'expediente registrado' ||
+                              accion === 'registro inicial' ||
+                              accion === 'pendiente' ||
+                              observacion.includes('expediente recibido') ||
+                              observacion.includes('expediente registrado')
+                            )
+                          })
+
+                          if (tieneRegistroInicial) {
+                            return {
+                              ...expediente,
+                              historial: historialActual
+                            }
+                          }
+
+                          const registroInicial = {
+                            fechaHora:
+                              expediente.fechaHoraRecepcion ||
+                              expediente.fechaIngreso ||
+                              '',
+                            fechaIngreso: expediente.fechaIngreso || '',
+                            areaOrigen: 'Mesa de Partes',
+                            areaDestino: 'Mesa de Partes',
+                            accion: 'Expediente registrado',
+                            observacion: 'Expediente recibido y registrado en Mesa de Partes.',
+                            responsable: expediente.usuarioRegistro || 'Responsable no registrado'
+                          }
+
+                          return {
+                            ...expediente,
+                            historial: [registroInicial, ...historialActual]
+                          }
+                        })
                       )
 
                       setTrackingId(id)
                     }}
+
                     onAttachDocument={adjuntarDocumento}
                     onRegisterDate={registrarFechaExpediente}
+                    onRegisterDeadline={registrarPlazoExpediente}
                     onDuplicate={expediente => {
                       setExpedienteParaDuplicar(expediente)
                       setView('nuevo')
@@ -1539,44 +1649,113 @@ if (proveidosError) {
         setShowProveidoForm(false)
         setProveidoExpediente(null)
       }}
+      
       onGuardar={async datos => {
-  const { data, error } = await supabase.rpc(
-    'registrar_proveido',
-    {
-      p_expediente_id: Number(datos.expedienteId),
-      p_nro_expediente: datos.nroExpediente,
-      p_fecha: datos.fecha,
-      p_area_destino: datos.areaDestino,
-      p_responsable: datos.responsable,
-      p_instruccion: datos.instruccion,
-      p_estado: datos.estado
-    }
-  )
+        let archivoData: string | null = null
 
-  if (error) {
-    console.error('Error al guardar proveído:', error)
-    alert(`No se pudo guardar el proveído: ${error.message}`)
-    return
-  }
+        // Leer el archivo antes de guardar el proveído.
+        if (datos.archivo) {
+          try {
+            archivoData = await readFileAsDataUrl(datos.archivo)
+          } catch (errorLectura) {
+            console.error(
+              'Error leyendo el archivo del proveído:',
+              errorLectura
+            )
+            alert('No se pudo leer el archivo seleccionado.')
+            return
+          }
+        }
 
-  setProveidos(prev => [
-    ...prev,
-    {
-      id: String(data.id),
-      expedienteId: String(data.expediente_id),
-      nroExpediente: data.nro_expediente,
-      fecha: data.fecha,
-      areaDestino: data.area_destino,
-      responsable: data.responsable || '',
-      instruccion: data.instruccion,
-      estado: data.estado,
-      createdAt: data.created_at
-    }
-  ])
+        // Guardar el proveído y su adjunto en una sola operación.
+        const { data, error } = await supabase.rpc(
+          'registrar_proveido_con_adjunto',
+          {
+            p_expediente_id: Number(datos.expedienteId),
+            p_nro_expediente: datos.nroExpediente,
+            p_fecha: datos.fecha,
+            p_area_destino: datos.areaDestino,
+            p_responsable: datos.responsable,
+            p_instruccion: datos.instruccion,
+            p_estado: 'Pendiente',
+            p_archivo: datos.archivo?.name ?? null,
+            p_archivo_data: archivoData,
+            p_archivo_tipo: datos.archivo
+              ? datos.archivo.type || 'application/octet-stream'
+              : null,
+            p_archivo_tamano: datos.archivo?.size ?? null
+          }
+        )
 
-  setShowProveidoForm(false)
-  setProveidoExpediente(null)
-}}
+        if (error) {
+          console.error('Error al guardar proveído:', error)
+          alert(`No se pudo guardar el proveído: ${error.message}`)
+          return
+        }
+
+        if (!data) {
+          alert('Supabase no devolvió los datos del proveído registrado.')
+          return
+        }
+
+        // Actualizar el expediente en pantalla con los datos persistidos.
+        const {
+          data: expedienteActualizado,
+          error: errorExpediente
+        } = await supabase
+          .from('mesa_partes_2026')
+          .select('area_destino, estado, historial')
+          .eq('id', Number(datos.expedienteId))
+          .single()
+
+        if (errorExpediente) {
+          console.error(
+            'El proveído se guardó, pero no se pudo refrescar el expediente:',
+            errorExpediente
+          )
+        } else if (expedienteActualizado) {
+          setExpedientes(prev =>
+            prev.map(item =>
+              String(item.id) === String(datos.expedienteId)
+                ? {
+                    ...item,
+                    area: expedienteActualizado.area_destino || item.area,
+                    areaDestino:
+                      expedienteActualizado.area_destino || item.areaDestino,
+                    estado: expedienteActualizado.estado || item.estado,
+                    historial: Array.isArray(expedienteActualizado.historial)
+                      ? expedienteActualizado.historial
+                      : item.historial
+                  }
+                : item
+            )
+          )
+        }
+
+        // Añadir a la lista los datos devueltos por Supabase.
+        setProveidos(prev => [
+          {
+            id: String(data.id),
+            expedienteId: String(data.expediente_id),
+            nroExpediente: data.nro_expediente,
+            fecha: data.fecha,
+            areaDestino: data.area_destino,
+            responsable: data.responsable || '',
+            instruccion: data.instruccion,
+            estado: data.estado,
+            archivo: data.archivo || '',
+            archivoData: data.archivo_data || '',
+            archivoTipo: data.archivo_tipo || '',
+            archivoTamano: Number(data.archivo_tamano || 0),
+            createdAt: data.created_at
+          },
+          ...prev
+        ])
+
+        setShowProveidoForm(false)
+        setProveidoExpediente(null)
+      }}
+
     />
   )}
 

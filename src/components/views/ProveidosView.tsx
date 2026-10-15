@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Expediente, Proveido } from '../../types'
 import ExpedienteSelector from '../common/ExpedienteSelector'
+import MemoDocumentLink from '../common/MemoDocumentLink'
 type Props = {
   proveidos: Proveido[]
   expedientes: Expediente[]
@@ -22,7 +23,6 @@ export default function ProveidosView({
   const [expedienteSeleccionado, setExpedienteSeleccionado] =
   useState<Expediente | null>(null)
   const [busqueda, setBusqueda] = useState('')
-  const [estadoFiltro, setEstadoFiltro] = useState('Todos')
 
   const resultados = useMemo(() => {
     const texto = busqueda.trim().toLowerCase()
@@ -35,47 +35,80 @@ export default function ProveidosView({
         proveido.responsable.toLowerCase().includes(texto) ||
         proveido.instruccion.toLowerCase().includes(texto)
 
-      const coincideEstado =
-        estadoFiltro === 'Todos' ||
-        proveido.estado === estadoFiltro
-
-      return coincideTexto && coincideEstado
+      return coincideTexto
     })
-  }, [proveidos, busqueda, estadoFiltro])
+ }, [proveidos, busqueda])
 
 return (
   <>
-    {showSelector && (
-      <section className="panel" style={{ marginBottom: '16px' }}>
-        <div className="panel-header">
+   
+{showSelector && (
+  <div
+    className="memo-modal-overlay"
+    onMouseDown={event => {
+      if (event.target === event.currentTarget) {
+        onCloseSelector()
+      }
+    }}
+  >
+    <div
+      className="memo-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="nuevo-proveido-title"
+    >
+      <div className="memo-modal-header">
+        <div>
+          <p className="eyebrow">GESTIÓN DOCUMENTAL</p>
+          <h2 id="nuevo-proveido-title">Nuevo Proveído</h2>
+          <p>
+            Seleccione el expediente al que desea asociar el Proveído.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          className="memo-modal-close"
+          onClick={onCloseSelector}
+          aria-label="Cerrar"
+        >
+          ×
+        </button>
+      </div>
+
+      <div className="memo-modal-body">
+        <div className="section-header">
           <div>
-            <h2>Seleccionar expediente</h2>
-            <p className="muted">
-              Seleccione el expediente al que desea registrar el Proveído.
+            <h3>Seleccionar expediente</h3>
+            <p>
+              Busque el expediente por número, asunto, remitente o área.
             </p>
           </div>
-
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={onCloseSelector}
-          >
-            Cancelar
-          </button>
         </div>
 
         <ExpedienteSelector
           expedientes={expedientes}
-          value={expedienteSeleccionado}
+          value={null}
           onChange={expediente => {
-           if (expediente) {
-    onSelectExpediente(expediente)
-  }
-}}
+            if (!expediente) return
+            onSelectExpediente(expediente)
+          }}
           areaOptions={areaOptions}
         />
-      </section>
-    )}
+      </div>
+
+      <div className="memo-modal-footer">
+        <button
+          type="button"
+          className="legacy-light-button"
+          onClick={onCloseSelector}
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
     <div className="page-heading compact">
         <div>
@@ -107,28 +140,6 @@ return (
               placeholder="Buscar por proveído, expediente, área o instrucción..."
             />
           </div>
-
-          <select
-            value={estadoFiltro}
-            onChange={e => setEstadoFiltro(e.target.value)}
-          >
-            <option value="Todos">
-              Todos los estados
-            </option>
-
-            <option value="Pendiente">
-              Pendiente
-            </option>
-
-            <option value="Atendido">
-              Atendido
-            </option>
-
-            <option value="Archivado">
-              Archivado
-            </option>
-          </select>
-
           <span className="result-count">{resultados.length} resultados</span>
         </div>
 
@@ -141,7 +152,7 @@ return (
               <th>Área destino</th>
               <th>Responsable</th>
               <th>Instrucción</th>
-              <th>Estado</th>
+              <th>Documento</th>
             </tr>
           </thead>
 
@@ -170,16 +181,16 @@ return (
                   {proveido.instruccion || '—'}
                 </td>
 
+                
                 <td>
-                  <span
-                    className={`status-badge status-${proveido.estado
-                      .toLowerCase()
-                      .replace(/\s+/g, '-')}`}
+                  <MemoDocumentLink
+                    archivoData={proveido.archivoData}
+                    archivo={proveido.archivo || ''}
                   >
-                    {proveido.estado || '—'}
-                  </span>
-
+                    {proveido.archivo || 'Sin adjunto'}
+                  </MemoDocumentLink>
                 </td>
+
               </tr>
             ))}
 
@@ -187,7 +198,7 @@ return (
               <tr>
                 <td colSpan={6}>
                   <div className="empty-state">
-                    {busqueda || estadoFiltro !== 'Todos'
+                    {busqueda
                       ? 'No se encontraron proveídos con esos criterios.'
                       : 'No hay proveídos registrados.'}
                   </div>
