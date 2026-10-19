@@ -6,3 +6,5 @@ dist/
 
 # Backup files
 *.backup
+# Variables de entorno locales
+.env.local
