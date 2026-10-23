@@ -4,6 +4,7 @@
   import ExpedienteSelector from '../common/ExpedienteSelector'
   import MemoDocumentLink from '../common/MemoDocumentLink'
   import { supabase } from '../../lib/supabaseClient'
+  import { displayDate } from '../../utils/expedienteHelpers'
 
   export default function MemosView({
     expediente,
@@ -889,27 +890,35 @@ if (showMemoForm && expediente) {
 </td>
 
       <td>
-        {memo.fecha || '—'}
+        <span style={{ whiteSpace: 'nowrap' }}>
+          {memo.fecha ? displayDate(memo.fecha) : '—'}
+        </span>
       </td>
 
       <td>
-  <div>
-    <div>
-      {memo.asunto || '—'}
-    </div>
-
-    {memo.archivoData && (
-      <div style={{ marginTop: '6px' }}>
-        <MemoDocumentLink
-          archivoData={memo.archivoData}
-          archivo={memo.archivo}
+        <div
+          title={memo.asunto || '—'}
+          style={{
+            maxWidth: '250px',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}
         >
-          {memo.archivo}
-        </MemoDocumentLink>
-      </div>
-    )}
-  </div>
-</td>
+          {memo.asunto || '—'}
+        </div>
+
+        {memo.archivoData && (
+          <div style={{ marginTop: '6px' }}>
+            <MemoDocumentLink
+              archivoData={memo.archivoData}
+              archivo={memo.archivo}
+            >
+              {memo.archivo}
+            </MemoDocumentLink>
+          </div>
+        )}
+      </td>
 
       {/* ESTADO */}
       <td className="memo-estado-columna">
@@ -1008,49 +1017,27 @@ if (showMemoForm && expediente) {
           </div>
 
           <div className="pagination">
-
             Mostrando{' '}
-
             <b>
               {memosFiltrados.length
                 ? (currentPage - 1) * pageSize + 1
                 : 0}
-              -
-              {Math.min(
-                currentPage * pageSize,
-                memosFiltrados.length
-              )}
+              -{Math.min(currentPage * pageSize, memosFiltrados.length)}
             </b>{' '}
-
-            de{' '}
-
-            <b>
-              {memosFiltrados.length}
-            </b>{' '}
-            Memos
-
+            de <b>{memosFiltrados.length}</b> Memos
             <button
               disabled={currentPage === 1}
-              onClick={() =>
-                setPage(currentPage - 1)
-              }
+              onClick={() => setPage(currentPage - 1)}
             >
               ‹
             </button>
-
-            <b className="current-page">
-              {currentPage}
-            </b>
-
+            <b className="current-page">{currentPage}</b>
             <button
               disabled={currentPage === pageCount}
-              onClick={() =>
-                setPage(currentPage + 1)
-              }
+              onClick={() => setPage(currentPage + 1)}
             >
               ›
             </button>
-
           </div>
 
                 </section>

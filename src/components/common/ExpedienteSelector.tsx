@@ -164,7 +164,17 @@ export default function ExpedienteSelector({
         </div>
 
         {resultados.length > 0 && (
-          <div className="expediente-selector-results">
+          <div
+            className="expediente-selector-results"
+            style={{
+              marginTop: '10px',
+              border: '1px solid #d1d5db',
+              borderRadius: '6px',
+              maxHeight: '350px',
+              overflowY: 'auto',
+              backgroundColor: '#fff'
+            }}
+          >
             {resultados.map(item => {
               const area = getAreaDestino(item)
 
@@ -173,30 +183,69 @@ export default function ExpedienteSelector({
                   key={item.id}
                   type="button"
                   className="expediente-selector-item"
-                 onClick={() => {
+                  onClick={() => {
                     onChange(item)
                     setQuery('')
                     setRemitenteFilter('')
                     setAreaFilter('Todas')
-                    }}
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: 'none',
+                    borderBottom: '1px solid #eef1f2',
+                    background: 'transparent',
+                    cursor: 'pointer',
+                    textAlign: 'left'
+                  }}
                 >
-                  <div className="selector-main">
-                    <strong>
+                  <div className="selector-main" style={{ flex: 1, minWidth: 0, paddingRight: '10px' }}>
+                    <strong style={{ display: 'block', fontSize: '12px', color: '#0f6b74' }}>
                       {formatNroExp(item.nroExp)}
                       {item.esDuplicado ? ' *' : ''}
                     </strong>
-
-                    <span>
+                    <span
+                      title={getRemitenteNombre(item)}
+                      style={{
+                        display: 'block',
+                        fontSize: '12px',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}
+                    >
                       {getRemitenteNombre(item)}
                     </span>
                   </div>
 
-                  <div className="selector-details">
-                    <small>
+                  <div className="selector-details" style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
+                    <small
+                      title={area || 'Sin área'}
+                      style={{
+                        display: 'block',
+                        fontSize: '11px',
+                        color: '#6b7280',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}
+                    >
                       {area || 'Sin área'}
                     </small>
-
-                    <small>
+                    <small
+                      title={item.asunto || 'Sin asunto'}
+                      style={{
+                        display: 'block',
+                        fontSize: '11px',
+                        color: '#374151',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}
+                    >
                       {item.asunto || 'Sin asunto'}
                     </small>
                   </div>
@@ -208,7 +257,7 @@ export default function ExpedienteSelector({
 
         {(query.trim() || remitenteFilter.trim() || areaFilter !== 'Todas') &&
           resultados.length === 0 && (
-            <div className="empty-state">
+            <div className="empty-state" style={{ padding: '20px', textAlign: 'center' }}>
               No se encontraron expedientes con esos criterios.
             </div>
           )}

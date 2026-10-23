@@ -580,29 +580,48 @@ tbody tr:last-child td {
 }
 
 .status-badge {
-  font-size: 9px;
-  font-weight: 600;
-  padding: 5px 8px;
-  border-radius: 15px;
-  white-space: nowrap;
-  display: inline-block;
+  display: inline-flex;
   align-items: center;
-  gap: 5px;
-  border: none;
-  cursor: pointer;
+  justify-content: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 4px 8px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
 }
 
 .status-badge i {
-  width: 5px;
-  height: 5px;
+  display: inline-block;
+  flex: 0 0 6px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: currentColor;
 }
 
-.status-badge.pendiente { background: #fff2e8; color: #d98647; }
-.status-badge.en-atención { background: #e9f4f8; color: #4c9cb5; }
-.status-badge.atendido { background: #e8f7f1; color: #35a681; }
-.status-badge.archivado { background: #f0f1f2; color: #7b8990; }
+.status-badge.pendiente {
+  background: #fff4d6;
+  color: #805600;
+}
+
+.status-badge.sin-respuesta {
+  background: #e8f1ff;
+  color: #174ea6;
+}
+
+.status-badge.atendido {
+  background: #e5f5e9;
+  color: #176534;
+}
+
+.status-badge.archivado {
+  background: #edf0f2;
+  color: #46545e;
+}
 
 .dots {
   color: #82919a;

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Expediente, Oficio } from '../../types'
-import { formatNroExp } from '../../utils/expedienteHelpers'
+import { formatNroExp, displayDate } from '../../utils/expedienteHelpers'
 
 type Props = {
   oficios: Oficio[]
@@ -37,11 +37,12 @@ export default function OficiosView({
   }, [oficios, busqueda, estadoFiltro])
 
   return (
-    <section className="view-section">
-      <div className="page-header">
+    <>
+      <div className="page-heading compact">
         <div>
+          <p className="eyebrow">GESTIÓN DOCUMENTAL</p>
           <h1>Oficios</h1>
-          <p>
+          <p className="muted">
             Consulta y gestión de los oficios vinculados a los expedientes.
           </p>
         </div>
@@ -51,11 +52,12 @@ export default function OficiosView({
           className="primary-button"
           onClick={onNuevoOficio}
         >
-          + Nuevo Oficio
+          ＋ Nuevo Oficio
         </button>
       </div>
 
-      <div className="toolbar">
+      <section className="panel list-panel">
+        <div className="toolbar">
         <div className="search-box">
           <span>⌕</span>
           <input
@@ -77,18 +79,18 @@ export default function OficiosView({
         </select>
       </div>
 
-      <div className="table-container">
+      <div className="table-wrap">
         <table className="data-table">
           <thead>
             <tr>
-              <th>N.° Registro</th>
-              <th>Expediente</th>
-              <th>Fecha</th>
-              <th>Destinatario</th>
-              <th>Área destino</th>
-              <th>Asunto</th>
-              <th>Responsable</th>
-              <th>Estado</th>
+              <th>N.° REGISTRO</th>
+              <th>EXPEDIENTE</th>
+              <th>FECHA</th>
+              <th>DESTINATARIO</th>
+              <th>ÁREA DESTINO</th>
+              <th>ASUNTO</th>
+              <th>RESPONSABLE</th>
+              <th>ESTADO</th>
             </tr>
           </thead>
 
@@ -96,46 +98,83 @@ export default function OficiosView({
             {resultados.map(oficio => (
               <tr key={oficio.id}>
                 <td>
-                  <strong>{oficio.nRegistro}</strong>
+                  <b className="exp-id">{oficio.nRegistro}</b>
                 </td>
 
                 <td>
-                  <strong>
+                  <b className="exp-id">
                     {oficio.nroExpediente
                       ? formatNroExp(oficio.nroExpediente)
                       : 'Sin expediente'}
-                  </strong>
-                </td>
-
-                <td>{oficio.fecha || '-'}</td>
-
-                <td>
-                  {oficio.destinatario || '-'}
+                  </b>
                 </td>
 
                 <td>
-                  {oficio.areaDestino || '-'}
+                  <span style={{ whiteSpace: 'nowrap' }}>
+                    {oficio.fecha ? displayDate(oficio.fecha) : '-'}
+                  </span>
                 </td>
 
                 <td>
-                  <div>
+                  <span
+                    title={oficio.destinatario || '-'}
+                    style={{
+                      display: 'block',
+                      maxWidth: '150px',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}
+                  >
+                    {oficio.destinatario || '-'}
+                  </span>
+                </td>
+
+                <td>
+                  <span
+                    title={oficio.areaDestino || '-'}
+                    style={{
+                      display: 'block',
+                      maxWidth: '150px',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}
+                  >
+                    {oficio.areaDestino || '-'}
+                  </span>
+                </td>
+
+                <td>
+                  <div
+                    title={[oficio.asuntoTipo, oficio.asuntoDetalle].filter(Boolean).join(' - ')}
+                    style={{
+                      maxWidth: '250px',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}
+                  >
                     {oficio.asuntoTipo && (
-                      <strong>{oficio.asuntoTipo}</strong>
+                      <strong>{oficio.asuntoTipo} </strong>
                     )}
-
-                    {oficio.asuntoDetalle && (
-                      <div>{oficio.asuntoDetalle}</div>
-                    )}
-
-                    {!oficio.asuntoTipo &&
-                      !oficio.asuntoDetalle && (
-                        <span>-</span>
-                      )}
+                    {oficio.asuntoDetalle || (!oficio.asuntoTipo ? '-' : '')}
                   </div>
                 </td>
 
                 <td>
-                  {oficio.responsable || '-'}
+                  <span
+                    title={oficio.responsable || '-'}
+                    style={{
+                      display: 'block',
+                      maxWidth: '150px',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}
+                  >
+                    {oficio.responsable || '-'}
+                  </span>
                 </td>
 
                 <td>
@@ -165,10 +204,11 @@ export default function OficiosView({
         </table>
       </div>
 
-      <div className="results-summary">
-        Mostrando {resultados.length} de {oficios.length} oficio
-        {oficios.length === 1 ? '' : 's'}.
-      </div>
-    </section>
+        <div className="pagination">
+          Mostrando {resultados.length} de {oficios.length} oficio
+          {oficios.length === 1 ? '' : 's'}.
+        </div>
+      </section>
+    </>
   )
 }

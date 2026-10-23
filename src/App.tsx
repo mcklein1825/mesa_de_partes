@@ -6,15 +6,24 @@
   import NuevoOficioView from './components/views/NuevoOficioView'
   import NuevoProveidoView from './components/views/NuevoProveidoView'
 
+  import {
+    House,
+    Files,
+    FileText,
+    Send,
+    ClipboardList,
+    FilePlus2,
+    ChartNoAxesCombined
+  } from 'lucide-react'
 
-  // Tipos y Constantes
+// Tipos y Constantes
   import { User, View, Expediente, Memo, Oficio, Proveido, Status } from './types'
   import { ROLE_PERMISSIONS, areas, AREA_RESPONSABLES } from './constants'
 
   // Utilidades
   import {
     normalizeExpediente, formatDate, todayInputValue, addDays,
-    readFileAsDataUrl, getAreaDestino, getRemitenteNombre
+    readFileAsDataUrl, getAreaDestino, getRemitenteNombre, getDeadlineState
   } from './utils/expedienteHelpers'
 
   import DashboardView from './components/views/DashboardView'
@@ -82,7 +91,7 @@
     useState<Expediente | null>(null)
     const [expedientes, setExpedientes] = useState<Expediente[]>([])
     const [expedientesPage, setExpedientesPage] = useState(1)
-    const expedientesPageSize = 20
+    const expedientesPageSize = 50
     const [memoExpediente, setMemoExpediente] = useState<Expediente | null>(null)
     const [oficioExpediente, setOficioExpediente] = useState<Expediente | null>(null)
     const [loadingDb, setLoadingDb] = useState(true)
@@ -217,6 +226,7 @@
             duplicado_de_id
           `)
             .order('nro_exp', { ascending: false })
+            .limit(2000)
   
 
   if (error) {
@@ -477,7 +487,9 @@ setProveidos(
 
       const matchesStatus =
         statusFilter === 'Todos' ||
-        item.estado === statusFilter
+        (statusFilter === 'Vencidos' && getDeadlineState(item).kind === 'vencido') ||
+        (statusFilter === 'Por vencer' && getDeadlineState(item).kind === 'por_vencer') ||
+        (statusFilter !== 'Vencidos' && statusFilter !== 'Por vencer' && item.estado === statusFilter)
 
       return (
         matchesQuery &&
@@ -493,6 +505,9 @@ setProveidos(
     remitenteFilter,
     statusFilter
   ])
+  useEffect(() => {
+    setExpedientesPage(1)
+  }, [query, areaFilter, remitenteFilter, statusFilter])
 
     const addExpediente = async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault()
@@ -607,20 +622,21 @@ setProveidos(
     
 
   const fechaHoraRegistro = new Date().toISOString()
+  const canalRecepcion = String(data.get('canalRecepcion') || 'Mesa de Partes')
 
 const historialInicial = [
   {
     fechaHora: fechaHoraRegistro,
     fechaIngreso,
     areaOrigen: 'Mesa de Partes',
-    areaDestino: 'Mesa de Partes',
+    areaDestino: canalRecepcion, // <-- AQUÍ SE GUARDA EL CANAL
     accion: 'Expediente registrado',
     observacion:
       esDuplicado && expedienteOriginal
         ? `Expediente creado como duplicado de EXP-2026-${String(
             expedienteOriginal.nroExp
           ).padStart(5, '0')}.`
-        : 'Expediente recibido y registrado en Mesa de Partes.',
+        : `Expediente recibido en Mesa de Partes vía ${canalRecepcion}.`, // <-- MENSAJE DINÁMICO
     responsable: `${currentUser.nombre} - ${currentUser.area || ''}`
   }
 ]
@@ -899,66 +915,6 @@ const historialInicial = [
     )
 
     notify('Ocurrió un error al registrar la fecha')
-  } finally {
-    setIsSaving(false)
-  }
-}
-  const registrarPlazoExpediente = async (
-  expedienteId: string,
-  fecha: string
-): Promise<void> => {
-  if (!currentUser) {
-    notify('No hay un usuario activo')
-    return
-  }
-
-  if (!fecha) {
-    notify('Seleccione una fecha límite')
-    return
-  }
-
-  try {
-    setIsSaving(true)
-
-    const { error } = await supabase
-      .from('mesa_partes_2026')
-      .update({
-        plazo: fecha
-      })
-      .eq('id', Number(expedienteId))
-
-    if (error) {
-      console.error(
-        'Error registrando fecha límite:',
-        error
-      )
-
-      notify(
-        `No se pudo registrar la fecha límite: ${error.message}`
-      )
-
-      return
-    }
-
-    setExpedientes(prev =>
-      prev.map(item =>
-        String(item.id) === String(expedienteId)
-          ? {
-              ...item,
-              plazo: fecha
-            }
-          : item
-      )
-    )
-
-    notify('Fecha límite registrada correctamente')
-  } catch (error) {
-    console.error(
-      'Error inesperado registrando fecha límite:',
-      error
-    )
-
-    notify('Ocurrió un error al registrar la fecha límite')
   } finally {
     setIsSaving(false)
   }
@@ -1292,21 +1248,21 @@ const historialInicial = [
           <div className="menu-label">MENÚ PRINCIPAL</div>
           <nav className="nav-menu">
     <NavItem
-      icon="⌂"
+      icon={<House size={18} strokeWidth={1.8} />}
       label="Inicio"
       active={view === 'inicio'}
       onClick={() => setView('inicio')}
     />
 
     <NavItem
-      icon="▤"
+      icon={<Files size={18} strokeWidth={1.8} />}
       label="Expedientes"
       active={view === 'expedientes'}
       onClick={() => setView('expedientes')}
       count={expedientes.filter(item => item.estado === 'Pendiente').length}
     />
     <NavItem
-    icon="▥"
+    icon={<ChartNoAxesCombined size={18} strokeWidth={1.8} />}
     label="Memos"
     active={view === 'memos'}
     onClick={() => {
@@ -1318,7 +1274,7 @@ const historialInicial = [
     count={memos.length}
   />
     <NavItem
-    icon="▤"
+    icon={<Send size={18} strokeWidth={1.8} />}
     label="Oficios"
     active={view === 'oficios'}
     onClick={() => {
@@ -1327,7 +1283,7 @@ const historialInicial = [
     count={oficios.length}
   />
       <NavItem
-      icon="✎"
+      icon={<ClipboardList size={18} strokeWidth={1.8} />}
       label="Proveídos"
       active={view === 'proveidos'}
       onClick={() => {
@@ -1336,14 +1292,14 @@ const historialInicial = [
       count={proveidos.length}
     />
     <NavItem
-      icon="＋"
+      icon={<FilePlus2 size={18} strokeWidth={1.8} />}
       label="Nuevo expediente"
       active={view === 'nuevo'}
       onClick={() => setView('nuevo')}
     />
 
     <NavItem
-      icon="▥"
+      icon={<ChartNoAxesCombined size={18} strokeWidth={1.8} />}
       label="Reportes"
       active={view === 'reportes'}
       onClick={() => setView('reportes')}
@@ -1396,8 +1352,22 @@ const historialInicial = [
               <div className="empty-state">Cargando expedientes desde Supabase...</div>
             ) : (
               <>
-                {view === 'inicio' && <DashboardView expedientes={expedientes} proveidos={proveidos} onNew={() => setView('nuevo')} onViewAll={() => setView('expedientes')} currentDate={currentDate} currentUser={currentUser} />}  
-                {view === 'expedientes' && (
+          {view === 'inicio' && (
+            <DashboardView
+              expedientes={expedientes}
+              proveidos={proveidos}
+              onNew={() => setView('nuevo')}
+              onViewAll={() => setView('expedientes')}
+              onFilterExp={(status) => {
+                setStatusFilter(status)
+                setExpedientesPage(1)
+                setView('expedientes')
+              }}
+              currentDate={currentDate}
+              currentUser={currentUser}
+            />
+          )}
+           {view === 'expedientes' && (
                   <ExpedientesView
                     items={filteredExpedientes.slice(
                       (expedientesPage - 1) * expedientesPageSize,
@@ -1406,6 +1376,7 @@ const historialInicial = [
                     total={filteredExpedientes.length}
                     currentPage={expedientesPage}
                     onPageChange={pagina => setExpedientesPage(pagina)}
+                    pageSize={expedientesPageSize}
                     query={query}
                     setQuery={setQuery}
                     areaFilter={areaFilter}
@@ -1456,7 +1427,7 @@ const historialInicial = [
                               expediente.fechaIngreso ||
                               '',
                             fechaIngreso: expediente.fechaIngreso || '',
-                            areaOrigen: 'Mesa de Partes',
+                            areaOrigen: currentUser.area || 'Mesa de Partes',
                             areaDestino: 'Mesa de Partes',
                             accion: 'Expediente registrado',
                             observacion: 'Expediente recibido y registrado en Mesa de Partes.',
@@ -1475,7 +1446,6 @@ const historialInicial = [
 
                     onAttachDocument={adjuntarDocumento}
                     onRegisterDate={registrarFechaExpediente}
-                    onRegisterDeadline={registrarPlazoExpediente}
                     onDuplicate={expediente => {
                       setExpedienteParaDuplicar(expediente)
                       setView('nuevo')
