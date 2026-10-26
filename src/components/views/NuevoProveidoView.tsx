@@ -116,6 +116,7 @@ export default function NuevoProveidoView({
     </div>
 
     <div className="form-group wide proveido-expediente-field">
+      <label>Expediente *</label>
       <ExpedienteSelector
         expedientes={expedientes}
         value={expediente}
@@ -125,7 +126,7 @@ export default function NuevoProveidoView({
     </div>
 
     <div className="form-group">
-      <label>Área destino</label>
+      <label>Área destino *</label>
 
       <select
         value={areaDestino}
@@ -193,7 +194,7 @@ export default function NuevoProveidoView({
 
 
     <div className="form-group wide proveido-instruccion-field">
-      <label>Instrucción</label>
+      <label>Instrucción *</label>
 
       <textarea
         value={instruccion}
@@ -208,12 +209,12 @@ export default function NuevoProveidoView({
     </div>
 
   </div>
-        <div className="proveido-form-actions">
-
+        <div className="proveido-form-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
           <button
             type="button"
             className="outline-button"
             onClick={onCancelar}
+            disabled={guardando}
           >
             Cancelar
           </button>
@@ -222,10 +223,10 @@ export default function NuevoProveidoView({
             type="button"
             className="primary-button"
             onClick={guardar}
+            disabled={guardando}
           >
-            Guardar Proveído
+            {guardando ? 'Guardando...' : 'Guardar Proveído'}
           </button>
-
         </div>
 
       </div>

@@ -24,7 +24,7 @@ export const createInitialHistory = (item: Expediente): HistoryEntry[] => [
     fechaHora: item.fechaHoraRecepcion || item.fechaIngreso || 'Fecha pendiente',
     fechaSalida: item.fechaHoraRecepcion || item.fechaIngreso || 'Fecha pendiente',
     fechaIngreso: item.fechaHoraRecepcion || item.fechaIngreso || 'Fecha pendiente',
-    areaOrigen: 'Mesa de Partes',
+    areaOrigen: item.usuarioRegistro?.split(' - ')[1]?.trim() || 'Mesa de Partes',
     areaDestino: getAreaDestino(item),
     accion: 'Derivado para atención',
     observacion: 'Expediente enviado al área responsable para su revisión.',
@@ -49,15 +49,52 @@ export const normalizeExpediente = (item: Expediente): Expediente => {
     historial: item.historial?.length ? item.historial : createInitialHistory(item)
   }
 }
+export const parseDate = (value: string): Date | null => {
+  if (!value) return null
+  const clean = value.trim()
 
-export const formatDate = (value: string) => {
-  const cleanValue = value.trim()
-  if (cleanValue.includes('-')) {
-    const [year, month, day] = cleanValue.split('-')
-    return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`
+  // ISO con timezone explícito (Z, ±HH:MM, ±HHMM) → parser nativo
+  if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2})?(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})$/.test(clean)) {
+    const d = new Date(clean)
+    return isNaN(d.getTime()) ? null : d
   }
-  const parts = cleanValue.split('/')
-  return parts.length === 3 ? `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[2]}` : cleanValue
+
+  // AAAA-MM-DD[ T HH:MM[:SS[.mmm]]] sin timezone → hora local
+  const iso = clean.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?)?$/)
+  if (iso) {
+    const [, y, m, d, h, mi, s] = iso
+    const date = new Date(+y, +m - 1, +d, h ? +h : 0, mi ? +mi : 0, s ? +s : 0)
+    if (date.getFullYear() !== +y || date.getMonth() !== +m - 1 || date.getDate() !== +d) return null
+    return date
+  }
+
+  // DD/MM/AAAA[ HH:MM[:SS]] → hora local
+  const dmy = clean.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/)
+  if (dmy) {
+    const [, d, m, y, h, mi, s] = dmy
+    const date = new Date(+y, +m - 1, +d, h ? +h : 0, mi ? +mi : 0, s ? +s : 0)
+    if (date.getFullYear() !== +y || date.getMonth() !== +m - 1 || date.getDate() !== +d) return null
+    return date
+  }
+
+  return null
+}
+export const formatDate = (value: string) => {
+  const date = parseDate(value)
+  if (!date) return value.trim()
+  const d = String(date.getDate()).padStart(2, '0')
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  return `${d}/${m}/${date.getFullYear()}`
+}
+
+export const formatDateTime = (value: string) => {
+  const date = parseDate(value)
+  if (!date) return value.trim()
+  const d = String(date.getDate()).padStart(2, '0')
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const hh = String(date.getHours()).padStart(2, '0')
+  const mm = String(date.getMinutes()).padStart(2, '0')
+  return `${d}/${m}/${date.getFullYear()} ${hh}:${mm}`
 }
 
 export const todayInputValue = () => new Date().toISOString().slice(0, 10)
@@ -70,10 +107,78 @@ export const addDays = (value: string, days: number) => {
 }
 
 export const daysUntilDeadline = (deadlineDate: string): number => {
-  const today = new Date(); today.setHours(0, 0, 0, 0)
-  const deadline = new Date(deadlineDate.split('/').reverse().join('-'))
-  const diffTime = deadline.getTime() - today.getTime()
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  const deadline = parseDate(deadlineDate)
+  if (!deadline) return Number.NaN
+  deadline.setHours(0, 0, 0, 0)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return Math.ceil((deadline.getTime() - today.getTime()) / 86400000)
+}
+export type DeadlineKind =
+  | 'sin_plazo'
+  | 'no_aplica'
+  | 'vencido'
+  | 'por_vencer'
+  | 'vigente'
+
+export interface DeadlineState {
+  kind: DeadlineKind
+  daysLeft: number | null
+  label: string
+}
+
+export const getDeadlineState = (
+  item: Pick<Expediente, 'estado' | 'plazo'>
+): DeadlineState => {
+  const plazo = (item.plazo || '').trim()
+
+  if (!plazo) {
+    return { kind: 'sin_plazo', daysLeft: null, label: 'Sin fecha límite' }
+  }
+
+  const days = daysUntilDeadline(plazo)
+
+  if (!Number.isFinite(days)) {
+    return { kind: 'sin_plazo', daysLeft: null, label: 'Fecha inválida' }
+  }
+
+  const aplica =
+    item.estado === 'Pendiente' || item.estado === 'Sin respuesta'
+
+  if (!aplica) {
+    return { kind: 'no_aplica', daysLeft: days, label: '' }
+  }
+
+  if (days < 0) {
+    const n = Math.abs(days)
+    return {
+      kind: 'vencido',
+      daysLeft: days,
+      label: `Vencido hace ${n} ${n === 1 ? 'día' : 'días'}`
+    }
+  }
+
+  if (days === 0) {
+    return { kind: 'por_vencer', daysLeft: 0, label: 'Vence hoy' }
+  }
+
+  if (days === 1) {
+    return { kind: 'por_vencer', daysLeft: 1, label: 'Vence mañana' }
+  }
+
+  if (days <= 3) {
+    return {
+      kind: 'por_vencer',
+      daysLeft: days,
+      label: `Vence en ${days} días`
+    }
+  }
+
+  return {
+    kind: 'vigente',
+    daysLeft: days,
+    label: `Vence en ${days} días`
+  }
 }
 
 export const calculateAverageResolutionTime = (expedientes: Expediente[]): number => {
@@ -85,9 +190,9 @@ export const calculateAverageResolutionTime = (expedientes: Expediente[]): numbe
     if (!startDate) return
     const attendedEntry = exp.historial?.find(h => h.accion === 'Atendido' || h.accion === 'Archivado')
     if (!attendedEntry?.fechaHora) return
-    const start = new Date(startDate.split('/').reverse().join('-'))
-    const end = new Date(attendedEntry.fechaHora)
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) return
+    const start = parseDate(startDate)
+    const end = parseDate(attendedEntry.fechaHora)
+    if (!start || !end) return
     const diffTime = Math.abs(end.getTime() - start.getTime())
     totalDays += Math.ceil(diffTime / (1000 * 60 * 60 * 24))
     count++

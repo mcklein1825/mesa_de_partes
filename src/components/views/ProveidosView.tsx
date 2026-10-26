@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Expediente, Proveido } from '../../types'
+import { displayDate } from '../../utils/expedienteHelpers'
 import ExpedienteSelector from '../common/ExpedienteSelector'
 import MemoDocumentLink from '../common/MemoDocumentLink'
 type Props = {
@@ -20,8 +21,6 @@ export default function ProveidosView({
   onCloseSelector,
   onSelectExpediente
 }: Props) {
-  const [expedienteSeleccionado, setExpedienteSeleccionado] =
-  useState<Expediente | null>(null)
   const [busqueda, setBusqueda] = useState('')
 
   const resultados = useMemo(() => {
@@ -147,12 +146,12 @@ return (
         <table className="data-table proveidos-table">
           <thead>
             <tr>
-              <th>Expediente</th>
-              <th>Fecha</th>
-              <th>Área destino</th>
-              <th>Responsable</th>
-              <th>Instrucción</th>
-              <th>Documento</th>
+              <th>N.° EXP</th>
+              <th>FECHA</th>
+              <th>ÁREA DESTINO</th>
+              <th>RESPONSABLE</th>
+              <th>INSTRUCCIÓN</th>
+              <th>DOCUMENTO</th>
             </tr>
           </thead>
 
@@ -160,28 +159,62 @@ return (
             {resultados.map(proveido => (
               <tr key={proveido.id}>
                 <td>
-                  <strong>
+                  <b className="exp-id">
                     {proveido.nroExpediente || '—'}
-                  </strong>
+                  </b>
                 </td>
 
                 <td>
-                  {proveido.fecha || '—'}
+                  <span style={{ whiteSpace: 'nowrap' }}>
+                    {proveido.fecha ? displayDate(proveido.fecha) : '—'}
+                  </span>
                 </td>
 
                 <td>
-                  {proveido.areaDestino || '—'}
+                  <span
+                    title={proveido.areaDestino || '—'}
+                    style={{
+                      display: 'block',
+                      maxWidth: '150px',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}
+                  >
+                    {proveido.areaDestino || '—'}
+                  </span>
                 </td>
 
                 <td>
-                  {proveido.responsable || '—'}
+                  <span
+                    title={proveido.responsable || '—'}
+                    style={{
+                      display: 'block',
+                      maxWidth: '150px',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}
+                  >
+                    {proveido.responsable || '—'}
+                  </span>
                 </td>
 
                 <td>
-                  {proveido.instruccion || '—'}
+                  <span
+                    title={proveido.instruccion || '—'}
+                    style={{
+                      display: 'block',
+                      maxWidth: '250px',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}
+                  >
+                    {proveido.instruccion || '—'}
+                  </span>
                 </td>
 
-                
                 <td>
                   <MemoDocumentLink
                     archivoData={proveido.archivoData}

@@ -1,9 +1,13 @@
+import { useEffect, useRef } from 'react'
 import { Expediente } from '../../types'
 import {
   formatNroExp,
   getRemitenteNombre,
   getAreaDestino,
-  createInitialHistory
+  createInitialHistory,
+  formatDateTime,
+  displayDate,
+  getDeadlineState
 } from '../../utils/expedienteHelpers'
 import StatusBadge from '../common/StatusBadge'
 import DocumentLink from '../common/DocumentLink'
@@ -17,28 +21,34 @@ export default function TrackingModal({
 }) {
   if (!item) return null
 
+  const modalRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose()
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    // Enfocar el modal para que el teclado funcione de inmediato
+    modalRef.current?.focus()
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [onClose])
+
+  // .reverse() hace que el más reciente salga primero
   const history = [
     ...(item.historial || createInitialHistory(item))
-  ]
+  ].reverse()
 
   const formatTrackingDate = (value: string) => {
     if (!value) return 'Fecha no registrada'
-
-    const date = new Date(value)
-
-    if (Number.isNaN(date.getTime())) {
-      return value
-    }
-
-    return date.toLocaleString('es-PE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    })
+    return formatDateTime(value)
   }
+
+  const deadline = getDeadlineState(item)
 
   return (
     <div
@@ -47,16 +57,20 @@ export default function TrackingModal({
       onClick={onClose}
     >
       <section
+        ref={modalRef}
+        tabIndex={-1}
         className="tracking-modal"
         role="dialog"
         aria-modal="true"
+        aria-labelledby="tracking-title"
         onClick={event => event.stopPropagation()}
+        style={{ outline: 'none' }}
       >
         <div className="tracking-header">
           <div>
             <p className="eyebrow">RUTA DEL EXPEDIENTE</p>
 
-            <h2>
+            <h2 id="tracking-title">
               {formatNroExp(item.nroExp)}
               {item.esDuplicado ? ' *' : ''}
             </h2>
@@ -88,6 +102,14 @@ export default function TrackingModal({
             <b>Ubicación actual</b>
             {getAreaDestino(item)}
           </span>
+
+          <span>
+            <b>Fecha límite</b>
+            {item.plazo ? displayDate(item.plazo) : 'Sin plazo'}
+            {deadline.kind === 'vencido' && (
+              <small style={{ color: '#b91c1c', marginLeft: '4px', fontWeight: 'bold' }}>({deadline.label})</small>
+            )}
+          </span>
         </div>
 
         {item.archivo && item.archivo !== 'Sin adjunto' && (
@@ -103,7 +125,7 @@ export default function TrackingModal({
               const accion = String(entry.accion || 'Movimiento registrado')
 
               const esRegistroInicial =
-                index === 0 &&
+                index === history.length - 1 &&
                 /(expediente registrado|registro inicial|pendiente)/i.test(accion)
 
               const fechaHoraTexto = String(entry.fechaHora || '').trim()
@@ -120,9 +142,9 @@ export default function TrackingModal({
               return (
                 <div
                   className={`timeline-item ${
-                    index === 0 ? 'is-first' : ''
+                    index === history.length - 1 ? 'is-first' : ''
                   } ${
-                    index === history.length - 1 ? 'is-latest' : ''
+                    index === 0 ? 'is-latest' : ''
                   }`}
                   key={`${entry.fechaHora}-${index}`}
                 >
@@ -188,7 +210,17 @@ export default function TrackingModal({
                     {entry.observacion && (
                       <div className="timeline-observation">
                         <span>DETALLE DEL MOVIMIENTO</span>
-                        <p>{entry.observacion}</p>
+                        <p
+                          style={{
+                            whiteSpace: 'pre-wrap',
+                            maxHeight: '120px',
+                            overflowY: 'auto',
+                            margin: '4px 0 0 0',
+                            paddingRight: '6px'
+                          }}
+                        >
+                          {entry.observacion}
+                        </p>
                       </div>
                     )}
                   </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Expediente, Status } from '../../types'
-import { formatNroExp, displayDate, getRemitenteNombre, getAreaDestino } from '../../utils/expedienteHelpers'
+import { formatNroExp, displayDate, getRemitenteNombre, getAreaDestino, getDeadlineState } from '../../utils/expedienteHelpers'
 import DocumentLink from '../common/DocumentLink'
 import StatusBadge from '../common/StatusBadge'
 import DuplicateExpedienteModal from '../modals/DuplicateExpedienteModal'
@@ -10,6 +10,7 @@ export default function ExpedientesView({
   total,
   currentPage,
   onPageChange,
+  pageSize,
   query,
   setQuery,
   areaFilter,
@@ -25,7 +26,6 @@ export default function ExpedientesView({
   expedienteDocumentos,
   onAttachDocument,
   onRegisterDate,
-  onRegisterDeadline
 }: {
 
   items: Expediente[]
@@ -57,16 +57,9 @@ export default function ExpedientesView({
     expedienteId: string,
     fecha: string
   ) => Promise<void>
-
-  onRegisterDeadline: (
-    expedienteId: string,
-    fecha: string
-  ) => Promise<void>
+    pageSize: number
 }) {
-  const pageSize = 20
   const [showDuplicateModal, setShowDuplicateModal] = useState(false)
-  const [editingDeadlineId, setEditingDeadlineId] = useState<string | null>(null)
-  const [deadlineDraft, setDeadlineDraft] = useState('')
   const [editingIngresoDateId, setEditingIngresoDateId] = useState<string | null>(null)
   const [ingresoDateDraft, setIngresoDateDraft] = useState('')
   const pageCount = Math.max(1, Math.ceil(total / pageSize))
@@ -141,6 +134,8 @@ export default function ExpedientesView({
             setStatusFilter(e.target.value)
           }}>
             <option>Todos</option>
+            <option>Vencidos</option>
+            <option>Por vencer</option>
             <option>Pendiente</option>
             <option>Sin respuesta</option>
             <option>Atendido</option>
@@ -165,6 +160,7 @@ export default function ExpedientesView({
             </thead>
             <tbody>
               {pageItems.map(item => {
+                const deadline = getDeadlineState(item)
                 return (
                   <tr key={item.id}>
                     <td>
@@ -250,87 +246,45 @@ export default function ExpedientesView({
                       )}
                     </td>
 
-                   
                     <td>
-                      {editingDeadlineId === String(item.id) ? (
-                        <div
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'flex-start',
+                          gap: '2px'
+                        }}
+                      >
+                        <span
                           style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '6px',
-                            minWidth: '145px'
-                          }}
-                        >
-                          <input
-                            type="date"
-                            value={deadlineDraft}
-                            onChange={e => setDeadlineDraft(e.target.value)}
-                            aria-label="Seleccionar fecha límite"
-                          />
-
-                          <div style={{ display: 'flex', gap: '6px' }}>
-                            <button
-                              type="button"
-                              disabled={!deadlineDraft}
-                              onClick={async () => {
-                                if (!deadlineDraft) return
-
-                                await onRegisterDeadline(
-                                  String(item.id),
-                                  deadlineDraft
-                                )
-
-                                setEditingDeadlineId(null)
-                                setDeadlineDraft('')
-                              }}
-                            >
-                              Guardar
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingDeadlineId(null)
-                                setDeadlineDraft('')
-                              }}
-                            >
-                              Cancelar
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          title="Asignar o modificar fecha límite"
-                          aria-label={`Modificar fecha límite del expediente ${item.nroExp}`}
-                          onClick={() => {
-                            setDeadlineDraft(item.plazo || '')
-                            setEditingDeadlineId(String(item.id))
-                          }}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            padding: '5px 8px',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '6px',
-                            background: '#f9fafb',
-                            color: item.plazo ? '#374151' : '#6b7280',
                             fontSize: '12px',
-                            fontWeight: 500,
-                            cursor: 'pointer',
+                            color: item.plazo ? '#1f2937' : '#6b7280',
                             whiteSpace: 'nowrap'
                           }}
                         >
-                          <span>
-                            {item.plazo
-                              ? displayDate(item.plazo)
-                              : 'Sin fecha límite'}
-                          </span>
-                        </button>
-                      )}
+                          {item.plazo
+                            ? displayDate(item.plazo)
+                            : 'Sin fecha límite'}
+                        </span>
+                        {item.plazo && deadline.label && (
+                          <small
+                            style={{
+                              fontSize: '10px',
+                              fontWeight: deadline.kind === 'vencido' ? 700 : 500,
+                              color:
+                                deadline.kind === 'vencido'
+                                  ? '#b91c1c'
+                                  : deadline.kind === 'por_vencer'
+                                    ? '#c2410c'
+                                    : '#6b7280',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            {deadline.label}
+                          </small>
+                        )}
+                      </div>
                     </td>
-
                     <td>
                       <span className="person-cell">
                         <span className="small-avatar">
@@ -358,8 +312,11 @@ export default function ExpedientesView({
                           width: '100%',
                           maxWidth: '100%',
                           minWidth: 0,
-                          overflow: 'hidden'
+                          overflow: 'hidden',
+                          whiteSpace: 'nowrap',
+                          textOverflow: 'ellipsis'
                         }}
+                        title={item.asunto}
                       >
                         <DocumentLink
                           item={item}

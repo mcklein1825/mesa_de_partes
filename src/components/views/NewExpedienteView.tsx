@@ -337,16 +337,20 @@ export default function NewExpedienteView({
                   Seleccione el canal
                 </option>
 
-                <option value="Mesa de partes general">
-                  Mesa de partes general
+                <option value="Mesa de Partes Presencial">
+                  Mesa de Partes Presencial
                 </option>
 
-                <option value="Correo institucional">
-                  Correo institucional
+                <option value="Mesa de Partes Virtual">
+                  Mesa de Partes Virtual
                 </option>
 
-                <option value="Personal - presencial">
-                  Personal - presencial
+                <option value="Correo Institucional">
+                  Correo Institucional
+                </option>
+
+                <option value="Presencial">
+                  Presencial
                 </option>
               </select>
             </label>

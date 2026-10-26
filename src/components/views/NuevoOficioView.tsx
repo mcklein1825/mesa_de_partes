@@ -96,11 +96,12 @@ export default function NuevoOficioView({
   }
 
   return (
-    <section className="view-section">
-      <div className="page-header">
+    <>
+      <div className="page-heading compact">
         <div>
+          <p className="eyebrow">GESTIÓN DOCUMENTAL</p>
           <h1>Nuevo Oficio</h1>
-          <p>
+          <p className="muted">
             Registro de un oficio vinculado a un expediente.
           </p>
         </div>
@@ -116,12 +117,12 @@ export default function NuevoOficioView({
       </div>
 
       {!expediente ? (
-        <div className="empty-state">
+        <div className="panel empty-state" style={{ padding: '30px', textAlign: 'center' }}>
           Seleccione primero un expediente para registrar el oficio.
         </div>
       ) : (
         <form onSubmit={handleSubmit}>
-          <div className="form-card">
+          <div className="panel form-card">
             <h2>Expediente</h2>
 
             <div className="form-grid">
@@ -180,7 +181,7 @@ export default function NuevoOficioView({
             </div>
           </div>
 
-          <div className="form-card">
+          <div className="panel form-card">
             <h2>Datos del Oficio</h2>
 
             <div className="form-grid">
@@ -263,6 +264,6 @@ export default function NuevoOficioView({
           </div>
         </form>
       )}
-    </section>
+    </>
   )
 }
