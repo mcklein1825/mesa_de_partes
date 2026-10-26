@@ -80,7 +80,7 @@ export default function OficiosView({
       </div>
 
       <div className="table-wrap">
-        <table className="data-table">
+        <table className="data-table oficios-table">
           <thead>
             <tr>
               <th>N.° REGISTRO</th>

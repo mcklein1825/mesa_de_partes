@@ -1,7 +1,24 @@
 @import "tailwindcss";
-
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
 :root {
-  font-family: 'Segoe UI', Arial, sans-serif;
+  /* Paleta Oficial - Modelo B (Hoja de Ruta) */
+  --mar: #102C3E;              /* Sidebar */
+  --mar-activo: #1B5264;       /* Sidebar seleccionado */
+  --turquesa: #21AEB0;         /* Botones principales */
+  --ruta: #8EBDCE;             /* Líneas y bordes */
+  --niebla: #F3F8FA;           /* Fondo de paneles */
+  --linea: #E2E9ED;            /* Bordes suaves */
+  --pendiente: #ED8C45;        /* Naranja */
+  --sin-respuesta: #D64545;    /* Rojo */
+  --atendido: #1F9D6B;         /* Verde */
+  --archivado: #71818A;        /* Gris */
+
+  /* Tipografías */
+  --font-ui: 'Plus Jakarta Sans', sans-serif;
+  --font-folio: 'IBM Plex Mono', monospace;
+}
+:root {
+  font-family: var(--font-ui);
   color: #172532;
   background: #f5f7fa;
   font-synthesis: none;
@@ -44,7 +61,7 @@ button {
 .sidebar {
   width: 248px;
   height: 100vh;
-  background: #102c3e;
+  background: var(--mar);
   color: #d5e0e7;
   display: flex;
   flex-direction: column;
@@ -65,7 +82,7 @@ button {
   width: 35px;
   height: 35px;
   border-radius: 9px;
-  background: #21aeb0;
+  background: var(--turquesa);
   display: grid;
   place-items: center;
   font: 800 13px 'Plus Jakarta Sans';
@@ -119,7 +136,7 @@ button {
 }
 
 .nav-item.active {
-  background: #1b5264;
+  background: var(--mar-activo);
   color: white;
   font-weight: 700;
 }
@@ -377,7 +394,7 @@ button {
    BOTONES
    ======================================== */
 .primary-button {
-  background: #1cabb0;
+  background: var(--turquesa);
   color: #fff;
   padding: 12px 18px;
   border-radius: 6px;
@@ -387,7 +404,7 @@ button {
 }
 
 .primary-button:hover {
-  background: #139397;
+  background: #139397; /* Puedes dejar este si te gusta el efecto hover oscuro */
 }
 
 .outline-button {
@@ -536,7 +553,7 @@ th {
 }
 
 td {
-  padding: 13px 15px;
+  padding: 13px 10px; /* Reducimos de 15px a 10px a los lados */
   border-bottom: 1px solid #f0f2f3;
   color: #52616a;
   vertical-align: middle;
@@ -548,8 +565,13 @@ tbody tr:last-child td {
 
 .exp-id {
   display: block;
-  color: #247f8b;
-  font-size: 11px;
+  color: var(--mar-activo);
+  font-size: 12px;
+  font-family: var(--font-folio);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  white-space: nowrap; /* Evita que el texto se rompa en dos líneas */
+  /* Quitamos overflow: hidden y text-overflow: ellipsis */
 }
 
 .exp-id + small, td > small, td b + small {
@@ -605,22 +627,22 @@ tbody tr:last-child td {
 
 .status-badge.pendiente {
   background: #fff4d6;
-  color: #805600;
+  color: var(--pendiente);
 }
 
 .status-badge.sin-respuesta {
   background: #e8f1ff;
-  color: #174ea6;
+  color: var(--sin-respuesta);
 }
 
 .status-badge.atendido {
   background: #e5f5e9;
-  color: #176534;
+  color: var(--atendido);
 }
 
 .status-badge.archivado {
   background: #edf0f2;
-  color: #46545e;
+  color: var(--archivado);
 }
 
 .dots {
@@ -1200,7 +1222,7 @@ tbody tr:last-child td {
 }
 
 .attachment-grid {
-  padding-bottom: 10px !important;
+  padding-bottom: 10px;
 }
 
 .attachment-grid small {
@@ -1212,13 +1234,13 @@ tbody tr:last-child td {
 }
 
 .file-button {
-  display: inline-block !important;
+  display: inline-block;
   background: #337eb6;
-  color: #fff !important;
+  color: #fff;
   padding: 5px 8px;
   margin-top: 4px;
   border-radius: 2px;
-  font-size: 8px !important;
+  font-size: 8px;
   cursor: pointer;
 }
 
@@ -1367,7 +1389,7 @@ tbody tr:last-child td {
 }
 
 .portal-shell .filter-button {
-  font-size: 13px !important;
+  font-size: 13px;
 }
 
 .legacy-title {
@@ -1448,7 +1470,7 @@ tbody tr:last-child td {
 .file-button {
   padding: 8px 12px;
   margin-top: 6px;
-  font-size: 11px !important;
+  font-size: 11px;
 }
 
 .legacy-form-page .form-actions {
@@ -1471,10 +1493,6 @@ tbody tr:last-child td {
   overflow-y: hidden;
   scrollbar-color: #8fb8c5 #edf3f5;
   scrollbar-width: auto;
-}
-
-.list-panel table {
-  min-width: 1900px;
 }
 
 .list-panel td {
@@ -2131,8 +2149,8 @@ tbody tr:last-child td {
 
 /* Tabla de Memos */
 .memos-table {
+  width: 100%;
   table-layout: fixed;
-  min-width: 1000px !important;
 }
 
 .memos-table th:nth-child(1) {
@@ -3188,7 +3206,7 @@ tbody tr:last-child td {
 
 .document-link-without-file {
   color: #111827;
-  cursor: default !important;
+  cursor: default;
   text-decoration: none;
 }
 
@@ -3332,7 +3350,7 @@ tbody tr:last-child td {
   border-radius: 6px;
   background: #1cabb0;
   color: #fff;
-  font-size: 13px !important;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -3362,7 +3380,7 @@ tbody tr:last-child td {
 }
 
 .portal-shell .expediente-form-page .attachment-grid {
-  padding-bottom: 22px !important;
+  padding-bottom: 22px;
 }
 
 .portal-shell .expediente-form-page .attachment-grid small {
@@ -3513,20 +3531,49 @@ tbody tr:last-child td {
    ===================================================== */
 
 .list-panel .expedientes-table {
-  width: 1415px;
-  min-width: 1415px;
+  width: 100%;
   table-layout: fixed;
 }
 
-/* Anchos de las 8 columnas */
+/* Anchos de las columnas */
 .list-panel .expedientes-table th:nth-child(1),
 .list-panel .expedientes-table td:nth-child(1) {
-  width: 130px;
+  width: 185px; /* Más espacio para EXP-2026-XXXXX * */
 }
 
 .list-panel .expedientes-table th:nth-child(2),
 .list-panel .expedientes-table td:nth-child(2) {
-  width: 135px;
+  width: 110px; /* Espacio justo para la fecha */
+}
+
+.list-panel .expedientes-table th:nth-child(3),
+.list-panel .expedientes-table td:nth-child(3) {
+  width: 140px; /* Fecha límite */
+}
+
+.list-panel .expedientes-table th:nth-child(4),
+.list-panel .expedientes-table td:nth-child(4) {
+  width: 220px; /* Nombre */
+}
+
+.list-panel .expedientes-table th:nth-child(5),
+.list-panel .expedientes-table td:nth-child(5) {
+  width: auto; /* Asunto (se adapta al espacio restante) */
+}
+
+.list-panel .expedientes-table th:nth-child(6),
+.list-panel .expedientes-table td:nth-child(6) {
+  width: 160px; /* Ubicación */
+}
+
+.list-panel .expedientes-table th:nth-child(7),
+.list-panel .expedientes-table td:nth-child(7) {
+  width: 130px; /* Estado */
+}
+
+.list-panel .expedientes-table th:nth-child(8),
+.list-panel .expedientes-table td:nth-child(8) {
+  width: 150px; /* Acciones */
 }
 
 .list-panel .expedientes-table th:nth-child(3),
@@ -3607,18 +3654,16 @@ tbody tr:last-child td {
    ===================================================== */
 
 .list-panel.proveidos-list .table-wrap > table.data-table.proveidos-table {
-  width: 100% !important;
-  min-width: 1055px !important;
-  max-width: none !important;
-  table-layout: fixed !important;
+  width: 100%;
+  table-layout: fixed;
 }
 
 /* Expediente: columna compacta */
 .list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(1),
 .list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(1) {
-  width: 9% !important;
-  min-width: 0 !important;
-  max-width: none !important;
+  width: 9%;
+  min-width: 0;
+  max-width: none;
 }
 
 /* Fecha */
@@ -3949,3 +3994,19 @@ tbody tr:last-child td {
     width: fit-content;
   }
 }
+/* =====================================================
+   OFICIOS: DISTRIBUCIÓN COMPACTA
+   ===================================================== */
+.list-panel .oficios-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.list-panel .oficios-table th:nth-child(1) { width: 90px; }  /* N.° REGISTRO */
+.list-panel .oficios-table th:nth-child(2) { width: 170px; } /* EXPEDIENTE */
+.list-panel .oficios-table th:nth-child(3) { width: 110px; } /* FECHA */
+.list-panel .oficios-table th:nth-child(4) { width: 200px; } /* DESTINATARIO */
+.list-panel .oficios-table th:nth-child(5) { width: 180px; } /* ÁREA DESTINO */
+.list-panel .oficios-table th:nth-child(6) { width: auto; }  /* ASUNTO */
+.list-panel .oficios-table th:nth-child(7) { width: 180px; } /* RESPONSABLE */
+.list-panel .oficios-table th:nth-child(8) { width: 120px; } /* ESTADO */
