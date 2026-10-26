@@ -4010,3 +4010,45 @@ tbody tr:last-child td {
 .list-panel .oficios-table th:nth-child(6) { width: auto; }  /* ASUNTO */
 .list-panel .oficios-table th:nth-child(7) { width: 180px; } /* RESPONSABLE */
 .list-panel .oficios-table th:nth-child(8) { width: 120px; } /* ESTADO */
+/* =========================================
+   AJUSTES FINALES DE TABLAS Y DASHBOARD
+   ========================================= */
+
+/* 1. Encabezados de tabla limpios (gris claro) */
+th {
+  color: #475569;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 700;
+}
+
+/* 2. Celdas y efecto Cebra (Filas intercaladas) */
+td {
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+/* Aplicamos el fondo gris a las filas pares de TODAS las tablas */
+tbody tr:nth-child(even) {
+  background-color: #f8fafc !important;
+}
+
+/* Efecto al pasar el mouse para resaltar la fila */
+tbody tr:hover {
+  background-color: #e2e8f0 !important;
+  transition: background-color 0.2s ease;
+}
+
+/* 3. Revertir Tarjetas del Dashboard (sin bordes de colores) */
+.stat-card {
+  border: 1px solid #e9edf0;
+  border-left: 1px solid #e9edf0 !important; /* Quitamos el borde de color */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  transform: none !important;
+}
+
+/* 4. Revertir Etiquetas de Estado (fondo pastel, sin bordes duros) */
+.status-badge {
+  border: 1px solid currentColor !important;
+}

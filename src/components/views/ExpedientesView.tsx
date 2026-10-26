@@ -295,6 +295,12 @@ export default function ExpedientesView({
                             getRemitenteNombre(item),
                             'expediente-remitente'
                           )}
+                          {/* AQUÍ MOSTRAMOS EL CARGO SI EXISTE */}
+                          {item.cargoRepresentante && (
+                            <small style={{ color: '#64748b', display: 'block', fontSize: '10px', marginTop: '2px' }}>
+                              {item.cargoRepresentante}
+                            </small>
+                          )}
                         </span>
                       </span>
                     </td>

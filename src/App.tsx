@@ -435,9 +435,18 @@ setProveidos(
 
     const userPermissions = currentUser ? ROLE_PERMISSIONS[currentUser.rol] : null
 
-    const areaOptions = useMemo(() =>
-      Array.from(new Set([...areas, ...expedientes.map(getAreaDestino).filter(Boolean)])).sort(),
-    [expedientes])
+    const areaOptions = useMemo(() => {
+      // Juntar áreas oficiales + áreas de la BD
+      const rawAreas = [...areas, ...expedientes.map(getAreaDestino).filter(Boolean)]
+      // Procesar: limpiar espacios y evitar duplicados (sin importar mayúsculas)
+      const cleaned = rawAreas
+        .map(a => a.trim())
+        .filter((value, index, self) =>
+        self.findIndex(v => v.toUpperCase() === value.toUpperCase()) === index
+        )
+
+      return cleaned.sort()
+    }, [expedientes])
 
     const currentDate = useMemo(() => {
       const now = new Date()
