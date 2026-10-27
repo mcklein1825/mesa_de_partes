@@ -973,7 +973,7 @@ if (showMemoForm && expediente) {
       {/* ESTADO */}
       <td className="memo-estado-columna">
         <select
-          className="status-badge"
+          className={`status-badge ${memo.estado.toLowerCase().replace(/\s+/g, '-')}`}
           value={memo.estado}
           onChange={e => {
             const nuevoEstado =

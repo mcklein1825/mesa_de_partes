@@ -4037,3 +4037,17 @@ tbody tr:hover {
 .status-badge {
   border: 1px solid currentColor !important;
 }
+/* Estados para Oficios */
+.status-badge.enviado {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+.status-badge.recepcionado {
+  background: #fef9c3;
+  color: #a16207;
+}
+.status-badge.anulado {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+/* (El estado "Atendido" ya tiene su color verde en el CSS global) */

@@ -3,6 +3,7 @@ import { Expediente, Proveido } from '../../types'
 import { displayDate } from '../../utils/expedienteHelpers'
 import ExpedienteSelector from '../common/ExpedienteSelector'
 import MemoDocumentLink from '../common/MemoDocumentLink'
+import StatusBadge from '../common/StatusBadge'
 
 type Props = {
   proveidos: Proveido[]
@@ -170,6 +171,7 @@ export default function ProveidosView({
                 <th>ÁREA DESTINO</th>
                 <th>RESPONSABLE</th>
                 <th>INSTRUCCIÓN</th>
+                <th>ESTADO</th>
                 <th>DOCUMENTO</th>
               </tr>
             </thead>
@@ -234,6 +236,11 @@ export default function ProveidosView({
                     </span>
                   </td>
 
+                  {/* NUEVO ESTADO */}
+                  <td>
+                    <StatusBadge status={proveido.estado as any} />
+                  </td>
+
                   <td>
                     <MemoDocumentLink
                       archivoData={proveido.archivoData}
@@ -247,7 +254,7 @@ export default function ProveidosView({
 
               {resultados.length === 0 && (
                 <tr>
-                  <td colSpan={6}>
+                  <td colSpan={7}>
                     <div className="empty-state">
                       {busqueda
                         ? 'No se encontraron proveídos con esos criterios.'
