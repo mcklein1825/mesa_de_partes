@@ -2153,35 +2153,20 @@ tbody tr:last-child td {
   table-layout: fixed;
 }
 
-.memos-table th:nth-child(1) {
-  width: 100px;
-}
-
-.memos-table th:nth-child(2) {
-  width: 150px;
-}
-
-.memos-table th:nth-child(3) {
-  width: 110px;
-}
-
-.memos-table th:nth-child(4) {
-  width: auto;
-}
-
-.memos-table th:nth-child(5) {
-  width: 130px;
-}
-
-.memos-table th:nth-child(6) {
-  width: 160px;
-}
+.memos-table th:nth-child(1) { width: 8%; }  /* N. MEMO */
+.memos-table th:nth-child(2) { width: 18%; } /* N. EXPEDIENTE */
+.memos-table th:nth-child(3) { width: 10%; } /* FECHA */
+.memos-table th:nth-child(4) { width: 27%; } /* ASUNTO */
+.memos-table th:nth-child(5) { width: 15%; } /* ÁREA DESTINO */
+.memos-table th:nth-child(6) { width: 12%; } /* ESTADO */
+.memos-table th:nth-child(7) { width: 10%; } /* MÁS DATOS */
 
 .memos-table td:nth-child(1),
 .memos-table td:nth-child(2),
 .memos-table td:nth-child(3),
 .memos-table td:nth-child(5),
-.memos-table td:nth-child(6) {
+.memos-table td:nth-child(6),
+.memos-table td:nth-child(7) {
   white-space: nowrap;
 }
 

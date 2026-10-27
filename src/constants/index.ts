@@ -25,8 +25,12 @@ export const VALID_TRANSITIONS: Record<Status, Status[]> = {
 export const areas = [
   'Unidad Académica',
   'Administración',
+  'Administración / Tesorería',
+  'Administración / Área de Personal',
+  'Administración / Patrimonio',
+  'Administración / Logística',
   'Secretaría Académica',
-  'Unidad de Bienestar del Estudiante',
+  'Unidad de Bienestar Estudiantil',
   'Unidad de Investigación',
   'Unidad de Formación Continua',
   'Área de Calidad',
@@ -37,7 +41,8 @@ export const areas = [
   'Electricidad',
   'Construcción Civil',
   'Mecatrónica Automotriz',
-  'Mecánica de Producción'
+  'Mecánica de Producción',
+  'Dirección General'
 ]
 
 export const AREAS_UNICAS = Array.from(

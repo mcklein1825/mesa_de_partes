@@ -5,16 +5,19 @@ import { formatNroExp, displayDate } from '../../utils/expedienteHelpers'
 type Props = {
   oficios: Oficio[]
   oficioExpediente: Expediente | null
+  areaOptions: string[] // <-- NUEVA PROP
   onNuevoOficio: () => void
 }
 
 export default function OficiosView({
   oficios,
   oficioExpediente,
+  areaOptions, // <-- NUEVA PROP
   onNuevoOficio
 }: Props) {
   const [busqueda, setBusqueda] = useState('')
   const [estadoFiltro, setEstadoFiltro] = useState('Todos')
+  const [areaFilter, setAreaFilter] = useState('Todas') // <-- NUEVO ESTADO
 
   const resultados = useMemo(() => {
     const texto = busqueda.trim().toLowerCase()
@@ -32,9 +35,14 @@ export default function OficiosView({
         estadoFiltro === 'Todos' ||
         oficio.estado === estadoFiltro
 
-      return coincideTexto && coincideEstado
+      // NUEVO FILTRO DE ÁREA
+      const coincideArea =
+        areaFilter === 'Todas' ||
+        oficio.areaDestino === areaFilter
+
+      return coincideTexto && coincideEstado && coincideArea
     })
-  }, [oficios, busqueda, estadoFiltro])
+  }, [oficios, busqueda, estadoFiltro, areaFilter]) // <-- Agregamos areaFilter a las dependencias
 
   return (
     <>
@@ -76,6 +84,19 @@ export default function OficiosView({
           <option value="Recepcionado">Recepcionado</option>
           <option value="Atendido">Atendido</option>
           <option value="Anulado">Anulado</option>
+        </select>
+
+        {/* NUEVO SELECTOR DE ÁREAS */}
+        <select
+          value={areaFilter}
+          onChange={e => setAreaFilter(e.target.value)}
+        >
+          <option value="Todas">Todas las áreas</option>
+          {areaOptions.map(area => (
+            <option key={area} value={area}>
+              {area}
+            </option>
+          ))}
         </select>
       </div>
 
