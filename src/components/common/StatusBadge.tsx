@@ -1,17 +1,11 @@
+export default function StatusBadge({ status }: { status: string }) {
+  // Convertimos el texto a minúsculas y cambiamos espacios por guiones.
+  // Ejemplo: "Sin respuesta" -> "sin-respuesta", "Enviado" -> "enviado"
+  const statusClass = (status || '').toLowerCase().replace(/\s+/g, '-')
 
-import type { Status } from '../../types'
-
-const statusClasses: Record<Status, string> = {
-  'Pendiente': 'pendiente',
-  'Sin respuesta': 'sin-respuesta',
-  'Atendido': 'atendido',
-  'Archivado': 'archivado'
-}
-
-export default function StatusBadge({ status }: { status: Status }) {
   return (
     <span
-      className={`status-badge ${statusClasses[status]}`}
+      className={`status-badge ${statusClass}`}
       role="status"
     >
       <i aria-hidden="true" />

@@ -113,6 +113,7 @@
     const [oficios, setOficios] = useState<Oficio[]>([])
     const [proveidos, setProveidos] = useState<Proveido[]>([])
     const [showOficioForm, setShowOficioForm] = useState(false)
+    const [showOficioSelector, setShowOficioSelector] = useState(false)
     const [showProveidoForm, setShowProveidoForm] = useState(false)
     const [proveidoExpediente, setProveidoExpediente] = useState<Expediente | null>(null)
     const [showProveidoSelector, setShowProveidoSelector] = useState(false)
@@ -1334,8 +1335,16 @@ const historialInicial = [
     <OficiosView
       oficios={oficios}
       oficioExpediente={oficioExpediente}
+      expedientes={expedientes}
       areaOptions={areaOptions}
+      showSelector={showOficioSelector}
+      onCloseSelector={() => setShowOficioSelector(false)}
       onNuevoOficio={() => {
+        setShowOficioSelector(true)
+      }}
+      onSelectExpediente={(exp) => {
+        setOficioExpediente(exp)
+        setShowOficioSelector(false)
         setShowOficioForm(true)
       }}
     />

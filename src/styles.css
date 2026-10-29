@@ -1060,7 +1060,7 @@ tbody tr:last-child td {
 }
 .portal-shell .page {
   width: 100%;
-  max-width: 1180px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 42px 24px 60px;
   background: transparent;
@@ -1082,218 +1082,6 @@ tbody tr:last-child td {
   width: 100%;
   text-align: left;
 }
-
-/* ========================================
-   FORMULARIO LEGACY (INSTITUCIONAL)
-   ======================================== */
-.legacy-form-page {
-  width: min(1000px, 92vw);
-  max-height: 88vh;
-  overflow-y: auto;
-  margin: 0 auto;
-  background: #fff;
-  border-radius: 18px;
-  box-shadow:
-    0 25px 70px rgba(0, 0, 0, 0.28),
-    0 8px 25px rgba(0, 0, 0, 0.12);
-}
-.legacy-form-page .form-layout {
-  max-width: none;
-  border: 1px solid #2875b3;
-  background: #fff;
-}
-
-.legacy-title {
-  height: 26px;
-  background: #337eb6;
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 26px;
-  padding: 0 9px;
-}
-
-.legacy-form-page .form-panel {
-  margin: 0 9px 10px;
-  border: 1px solid #9fd3e7;
-  border-radius: 0;
-  box-shadow: none;
-}
-
-.legacy-form-page .form-panel:first-of-type {
-  border-top: 0;
-  margin-top: 0;
-}
-
-.legacy-form-page .panel-header {
-  padding: 0 7px;
-  height: 30px;
-  background: #e0f4fb;
-  align-items: center;
-  border-bottom: 1px solid #a7d9e9;
-}
-
-.legacy-form-page .panel-header h2 {
-  font: 700 8px 'Segoe UI';
-  color: #3178a4;
-  margin: 0;
-}
-
-.legacy-form-page .panel-header p {
-  display: none;
-}
-
-.legacy-form-page .form-grid {
-  grid-template-columns: 1fr 1fr;
-  gap: 9px 21px;
-  padding: 9px 28px 12px;
-}
-
-.legacy-form-page .form-grid label {
-  font-size: 7px;
-  color: #171717;
-  font-weight: 700;
-}
-
-.legacy-form-page .form-grid input, 
-.legacy-form-page .form-grid select, 
-.legacy-form-page .form-grid textarea {
-  height: 22px;
-  border: 1px solid #c7c7c7;
-  border-radius: 1px;
-  padding: 3px 6px;
-  margin-top: 4px;
-  font-size: 8px;
-  color: #555;
-  box-shadow: none;
-}
-
-.legacy-form-page .form-grid textarea {
-  height: auto;
-  min-height: 48px;
-}
-
-.legacy-form-page .wide {
-  grid-column: 1 / -1;
-}
-
-.legacy-form-page .section-strip {
-  height: 23px;
-  background: #e0f4fb;
-  color: #337ca7;
-  font-size: 8px;
-  line-height: 23px;
-  padding: 0 7px;
-  border-bottom: 1px solid #a7d9e9;
-}
-
-.legacy-form-page .helper-text {
-  font-size: 7px;
-  line-height: 10px;
-  margin: 0;
-  color: #252525;
-}
-
-.inline-field {
-  display: flex;
-  align-items: stretch;
-}
-
-.inline-field input {
-  flex: 1;
-  min-width: 0;
-}
-
-.legacy-blue-button {
-  background: #337eb6;
-  color: #fff;
-  border: 0;
-  border-radius: 2px;
-  font-size: 8px;
-  font-weight: 700;
-  padding: 5px 10px;
-  white-space: nowrap;
-}
-
-.inline-field .legacy-blue-button {
-  margin-top: 4px;
-  height: 22px;
-  border-radius: 0;
-}
-
-.attachment-grid {
-  padding-bottom: 10px;
-}
-
-.attachment-grid small {
-  display: block;
-  font-size: 7px;
-  color: #777;
-  margin-top: 4px;
-  font-weight: 400;
-}
-
-.file-button {
-  display: inline-block;
-  background: #337eb6;
-  color: #fff;
-  padding: 5px 8px;
-  margin-top: 4px;
-  border-radius: 2px;
-  font-size: 8px;
-  cursor: pointer;
-}
-
-.file-button input {
-  display: none;
-}
-
-.attachment-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding: 0 28px 9px;
-}
-
-.legacy-red-button {
-  background: #ed777c;
-  color: #fff;
-  border-radius: 2px;
-  font-size: 8px;
-  font-weight: 700;
-  padding: 5px 10px;
-}
-
-.empty-files {
-  height: 28px;
-  border-top: 1px solid #ddd;
-  margin: 0 28px 12px;
-  text-align: center;
-  padding-top: 8px;
-  color: #888;
-  font-size: 7px;
-}
-
-.legacy-form-page .form-actions {
-  margin: 0;
-  padding: 0 9px 10px;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
-.legacy-form-page .form-actions .legacy-blue-button:last-child {
-  margin-left: 200px;
-}
-
-.legacy-light-button {
-  border: 1px solid #d4d4d4;
-  color: #777;
-  background: #fff;
-  border-radius: 2px;
-  font-size: 8px;
-  padding: 5px 10px;
-}
-
 /* ========================================
    RESPONSIVE MEDIA QUERIES
    ======================================== */
@@ -1312,13 +1100,6 @@ tbody tr:last-child td {
     display: none;
   }
 }
-
-@media (max-width: 700px) {
-  .legacy-form-page {
-    width: 100%;
-  }
-}
-
 /* Ajustes específicos del Portal Shell */
 .portal-shell .page-heading h1 {
   font-size: 32px;
@@ -1390,101 +1171,6 @@ tbody tr:last-child td {
 
 .portal-shell .filter-button {
   font-size: 13px;
-}
-
-.legacy-title {
-  height: 38px;
-  line-height: 38px;
-  font-size: 14px;
-  padding: 0 14px;
-}
-
-.legacy-form-page .form-panel {
-  margin: 0 12px 16px;
-}
-
-.legacy-form-page .panel-header {
-  height: 40px;
-  padding: 0 12px;
-}
-
-.legacy-form-page .panel-header h2 {
-  font-size: 12px;
-}
-
-.legacy-form-page .form-grid {
-  gap: 14px 28px;
-  padding: 16px 38px 20px;
-}
-
-.legacy-form-page .form-grid label {
-  font-size: 11px;
-}
-
-.legacy-form-page .form-grid input, 
-.legacy-form-page .form-grid select, 
-.legacy-form-page .form-grid textarea {
-  height: 34px;
-  padding: 6px 9px;
-  margin-top: 6px;
-  font-size: 12px;
-}
-
-.legacy-form-page .form-grid textarea {
-  min-height: 74px;
-}
-
-.legacy-form-page .section-strip {
-  height: 32px;
-  line-height: 32px;
-  padding: 0 12px;
-  font-size: 12px;
-}
-
-.legacy-form-page .helper-text {
-  font-size: 10px;
-  line-height: 14px;
-}
-
-.legacy-blue-button, .legacy-red-button {
-  font-size: 11px;
-  padding: 8px 14px;
-}
-
-.inline-field .legacy-blue-button {
-  height: 34px;
-  margin-top: 6px;
-}
-
-.attachment-actions {
-  padding: 0 38px 14px;
-}
-
-.empty-files {
-  height: 40px;
-  margin: 0 38px 18px;
-  padding-top: 12px;
-  font-size: 10px;
-}
-
-.file-button {
-  padding: 8px 12px;
-  margin-top: 6px;
-  font-size: 11px;
-}
-
-.legacy-form-page .form-actions {
-  padding: 0 12px 16px;
-  gap: 12px;
-}
-
-.legacy-form-page .form-actions .legacy-blue-button:last-child {
-  margin-left: 280px;
-}
-
-.legacy-light-button {
-  font-size: 11px;
-  padding: 8px 14px;
 }
 
 /* Consulta: tabla ancha con desplazamiento horizontal */
@@ -1641,34 +1327,6 @@ tbody tr:last-child td {
 .search-box:focus-within {
   border-color: #267e9c;
   box-shadow: 0 0 0 2px #267e9c2b;
-}
-
-.legacy-form-page .form-layout {
-  border: 2px solid #286d9f;
-  box-shadow: 0 3px 8px #294b5c22;
-}
-
-.legacy-form-page .form-panel {
-  border: 2px solid #8ebdce;
-}
-
-.legacy-form-page .panel-header, 
-.legacy-form-page .section-strip {
-  border-bottom: 2px solid #8ebdce;
-}
-
-.legacy-form-page .form-grid input, 
-.legacy-form-page .form-grid select, 
-.legacy-form-page .form-grid textarea {
-  border: 2px solid #aebec5;
-  background: #fff;
-}
-
-.legacy-form-page .form-grid input:focus, 
-.legacy-form-page .form-grid select:focus, 
-.legacy-form-page .form-grid textarea:focus {
-  border-color: #2879a7;
-  box-shadow: 0 0 0 2px #2879a733;
 }
 
 .upload-box {
@@ -2138,35 +1796,41 @@ tbody tr:last-child td {
    ======================================== */
 
 .memo-estado-columna {
-  min-width: 120px;
-  width: 120px;
+  min-width: 100px;
+  width: 100px;
 }
 
 .memo-estado-columna .status-badge {
-  width: 110px;
-  min-width: 110px;
+  width: 100%;
+  min-width: 90px;
+  max-width: 110px;
+  padding: 4px 6px;
+  cursor: pointer;
 }
 
 /* Tabla de Memos */
 .memos-table {
   width: 100%;
+  min-width: 1250px; /* Fuerza el ancho mínimo para que no se aplaste */
   table-layout: fixed;
 }
 
-.memos-table th:nth-child(1) { width: 8%; }  /* N. MEMO */
-.memos-table th:nth-child(2) { width: 18%; } /* N. EXPEDIENTE */
-.memos-table th:nth-child(3) { width: 10%; } /* FECHA */
-.memos-table th:nth-child(4) { width: 27%; } /* ASUNTO */
-.memos-table th:nth-child(5) { width: 15%; } /* ÁREA DESTINO */
-.memos-table th:nth-child(6) { width: 12%; } /* ESTADO */
-.memos-table th:nth-child(7) { width: 10%; } /* MÁS DATOS */
+.memos-table th:nth-child(1) { width: 6%; }  /* N. MEMO */
+.memos-table th:nth-child(2) { width: 14%; } /* N. EXPEDIENTE */
+.memos-table th:nth-child(3) { width: 9%; }  /* FECHA */
+.memos-table th:nth-child(4) { width: 24%; } /* ASUNTO */
+.memos-table th:nth-child(5) { width: 14%; } /* ÁREA DESTINO */
+.memos-table th:nth-child(6) { width: 14%; } /* RESPONSABLE */
+.memos-table th:nth-child(7) { width: 11%; } /* ESTADO */
+.memos-table th:nth-child(8) { width: 8%; }  /* MÁS DATOS */
 
 .memos-table td:nth-child(1),
 .memos-table td:nth-child(2),
 .memos-table td:nth-child(3),
 .memos-table td:nth-child(5),
 .memos-table td:nth-child(6),
-.memos-table td:nth-child(7) {
+.memos-table td:nth-child(7),
+.memos-table td:nth-child(8) {
   white-space: nowrap;
 }
 
@@ -3561,42 +3225,6 @@ tbody tr:last-child td {
   width: 150px; /* Acciones */
 }
 
-.list-panel .expedientes-table th:nth-child(3),
-.list-panel .expedientes-table td:nth-child(3) {
-  width: 155px;
-}
-
-.list-panel .expedientes-table th:nth-child(4),
-.list-panel .expedientes-table td:nth-child(4) {
-  width: 225px;
-}
-
-.list-panel .expedientes-table th:nth-child(5),
-.list-panel .expedientes-table td:nth-child(5) {
-  width: 280px;
-}
-
-.list-panel .expedientes-table th:nth-child(6),
-.list-panel .expedientes-table td:nth-child(6) {
-  width: 150px;
-  min-width: 0;
-  max-width: none;
-}
-
-.list-panel .expedientes-table th:nth-child(7),
-.list-panel .expedientes-table td:nth-child(7) {
-  width: 160px;
-  min-width: 0;
-  max-width: none;
-}
-
-.list-panel .expedientes-table th:nth-child(8),
-.list-panel .expedientes-table td:nth-child(8) {
-  width: 180px;
-  min-width: 0;
-  max-width: none;
-}
-
 /* Evitar que los nombres largos ensanchen la tabla */
 .list-panel .expedientes-table .person-cell {
   min-width: 0;
@@ -3640,6 +3268,7 @@ tbody tr:last-child td {
 
 .list-panel.proveidos-list .table-wrap > table.data-table.proveidos-table {
   width: 100%;
+  min-width: 1200px; /* Fuerza el ancho mínimo */
   table-layout: fixed;
 }
 
@@ -3654,41 +3283,41 @@ tbody tr:last-child td {
 /* Fecha */
 .list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(2),
 .list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(2) {
-  width: 11% !important;
-  min-width: 0 !important;
-  max-width: none !important;
+  width: 11%;
+  min-width: 0;
+  max-width: none;
 }
 
 /* Área destino */
 .list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(3),
 .list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(3) {
-  width: 16% !important;
-  min-width: 0 !important;
-  max-width: none !important;
+  width: 16%;
+  min-width: 0;
+  max-width: none;
 }
 
 /* Responsable */
 .list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(4),
 .list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(4) {
-  width: 23% !important;
-  min-width: 0 !important;
-  max-width: none !important;
+  width: 23%;
+  min-width: 0;
+  max-width: none;
 }
 
 /* Instrucción */
 .list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(5),
 .list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(5) {
-  width: 27% !important;
-  min-width: 0 !important;
-  max-width: none !important;
+  width: 27%;
+  min-width: 0;
+  max-width: none;
 }
 
 /* Documento */
 .list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(6),
 .list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(6) {
-  width: 14% !important;
-  min-width: 0 !important;
-  max-width: none !important;
+  width: 14%;
+  min-width: 0;
+  max-width: none;
 }
 
 /* Mantener las celdas ordenadas */
@@ -3984,70 +3613,15 @@ tbody tr:last-child td {
    ===================================================== */
 .list-panel .oficios-table {
   width: 100%;
+  min-width: 1250px;
   table-layout: fixed;
 }
 
-.list-panel .oficios-table th:nth-child(1) { width: 90px; }  /* N.° REGISTRO */
-.list-panel .oficios-table th:nth-child(2) { width: 170px; } /* EXPEDIENTE */
-.list-panel .oficios-table th:nth-child(3) { width: 110px; } /* FECHA */
-.list-panel .oficios-table th:nth-child(4) { width: 200px; } /* DESTINATARIO */
-.list-panel .oficios-table th:nth-child(5) { width: 180px; } /* ÁREA DESTINO */
-.list-panel .oficios-table th:nth-child(6) { width: auto; }  /* ASUNTO */
-.list-panel .oficios-table th:nth-child(7) { width: 180px; } /* RESPONSABLE */
-.list-panel .oficios-table th:nth-child(8) { width: 120px; } /* ESTADO */
-/* =========================================
-   AJUSTES FINALES DE TABLAS Y DASHBOARD
-   ========================================= */
-
-/* 1. Encabezados de tabla limpios (gris claro) */
-th {
-  color: #475569;
-  background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
-  border-bottom: 1px solid #e2e8f0;
-  font-weight: 700;
-}
-
-/* 2. Celdas y efecto Cebra (Filas intercaladas) */
-td {
-  color: #334155;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-/* Aplicamos el fondo gris a las filas pares de TODAS las tablas */
-tbody tr:nth-child(even) {
-  background-color: #f8fafc !important;
-}
-
-/* Efecto al pasar el mouse para resaltar la fila */
-tbody tr:hover {
-  background-color: #e2e8f0 !important;
-  transition: background-color 0.2s ease;
-}
-
-/* 3. Revertir Tarjetas del Dashboard (sin bordes de colores) */
-.stat-card {
-  border: 1px solid #e9edf0;
-  border-left: 1px solid #e9edf0 !important; /* Quitamos el borde de color */
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-  transform: none !important;
-}
-
-/* 4. Revertir Etiquetas de Estado (fondo pastel, sin bordes duros) */
-.status-badge {
-  border: 1px solid currentColor !important;
-}
-/* Estados para Oficios */
-.status-badge.enviado {
-  background: #e0f2fe;
-  color: #0369a1;
-}
-.status-badge.recepcionado {
-  background: #fef9c3;
-  color: #a16207;
-}
-.status-badge.anulado {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-/* (El estado "Atendido" ya tiene su color verde en el CSS global) */
+.list-panel .oficios-table th:nth-child(1) { width: 8%; }  /* N.° REGISTRO */
+.list-panel .oficios-table th:nth-child(2) { width: 14%; } /* EXPEDIENTE */
+.list-panel .oficios-table th:nth-child(3) { width: 9%; }  /* FECHA */
+.list-panel .oficios-table th:nth-child(4) { width: 22%; } /* ASUNTO */
+.list-panel .oficios-table th:nth-child(5) { width: 14%; } /* DESTINATARIO */
+.list-panel .oficios-table th:nth-child(6) { width: 15%; } /* ÁREA DESTINO */
+.list-panel .oficios-table th:nth-child(7) { width: 12%; } /* RESPONSABLE */
+.list-panel .oficios-table th:nth-child(8) { width: 6%; }  /* ESTADO */

@@ -679,7 +679,7 @@ if (showMemoForm && expediente) {
     */
 
     return (
-  <div className="page">
+  <>
 
     {showMemoSelector && !expediente && (
       <div
@@ -872,7 +872,7 @@ if (showMemoForm && expediente) {
 
           <div className="table-wrap">
 
-            <table className="memos-table">
+            <table className="data-table memos-table">
 
              <thead>
               <tr>
@@ -880,8 +880,9 @@ if (showMemoForm && expediente) {
                 <th>N.º EXPEDIENTE</th>
                 <th>FECHA</th>
                 <th>ASUNTO</th>
-                <th>ÁREA DESTINO</th> {/* <-- NUEVA COLUMNA */}
-                <th className="memo-estado-columna">ESTADO</th>
+                <th>ÁREA DESTINO</th>
+                <th>RESPONSABLE</th>
+                <th>ESTADO</th>
                 <th>MÁS DATOS</th>
               </tr>
             </thead>
@@ -970,8 +971,26 @@ if (showMemoForm && expediente) {
           {memo.areaDestino || '—'}
         </span>
       </td>
+
+      {/* NUEVA COLUMNA RESPONSABLE */}
+      <td>
+        <span
+          title={memo.responsable || '—'}
+          style={{
+            display: 'block',
+            maxWidth: '150px',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            fontSize: '11px',
+            color: '#374151'
+          }}
+        >
+          {memo.responsable || '—'}
+        </span>
+      </td>
       {/* ESTADO */}
-      <td className="memo-estado-columna">
+      <td>
         <select
           className={`status-badge ${memo.estado.toLowerCase().replace(/\s+/g, '-')}`}
           value={memo.estado}
@@ -1039,7 +1058,7 @@ if (showMemoForm && expediente) {
       </td>
 
       {/* MÁS DATOS */}
-      <td className="actions-cell">
+      <td>
         <button
           className="tracking-button"
           onClick={() => {
@@ -1233,7 +1252,7 @@ if (showMemoForm && expediente) {
           </div>
         )}
 
-      </div>
+      </>
     )
   }
 
