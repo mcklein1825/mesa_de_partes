@@ -1,5 +1,9 @@
   import { useState, useEffect, useMemo, useRef, useCallback, FormEvent } from 'react'
   import { supabase } from './lib/supabaseClient'
+  import { fetchExpedientes, fetchHistorialExpediente } from './services/expedientesService'
+  import { fetchProveidos } from './services/proveidosService'
+  import { fetchMemos } from './services/memosService'
+  import { fetchOficios } from './services/oficiosService'
   import UserSelectModal from './components/UserSelectModal'
   import OficiosView from './components/views/OficiosView'
   import ProveidosView from './components/views/ProveidosView'
@@ -36,7 +40,7 @@
   import NavItem from './components/common/NavItem'
   import TrackingModal from './components/modals/TrackingModal'
   export default function App() {
-  
+
     const [currentUser, setCurrentUser] = useState<User | null>(null)
     const [view, setView] = useState<View>('nuevo')
 
@@ -104,11 +108,12 @@
     const [showProfile, setShowProfile] = useState(false)
     const [toast, setToast] = useState('')
     const [isSaving, setIsSaving] = useState(false)
-    
+
     const [memos, setMemos] = useState<Memo[]>([])
     const [oficios, setOficios] = useState<Oficio[]>([])
     const [proveidos, setProveidos] = useState<Proveido[]>([])
     const [showOficioForm, setShowOficioForm] = useState(false)
+    const [showOficioSelector, setShowOficioSelector] = useState(false)
     const [showProveidoForm, setShowProveidoForm] = useState(false)
     const [proveidoExpediente, setProveidoExpediente] = useState<Expediente | null>(null)
     const [showProveidoSelector, setShowProveidoSelector] = useState(false)
@@ -131,37 +136,12 @@
     setMemoResponsable(
       AREA_RESPONSABLES[memoAreaDestino] || ''
     )
-  }, [memoAreaDestino]) 
-    
+  }, [memoAreaDestino])
+
     const notify = useCallback((message: string) => {
       setToast(message)
       window.setTimeout(() => setToast(''), 3000)
     }, [])
-
-    const cargarHistorialExpediente = async (expedienteId: string) => {
-  try {
-    const { data, error } = await supabase
-      .from('mesa_partes_2026')
-      .select('historial')
-      .eq('id', Number(expedienteId))
-      .single()
-
-    if (error) {
-      console.error('Error cargando historial:', error)
-      notify('No se pudo cargar el historial del expediente')
-      return null
-    }
-
-    return Array.isArray(data?.historial)
-      ? data.historial
-      : []
-  } catch (error) {
-    console.error('Error inesperado cargando historial:', error)
-    notify('Ocurrió un error al cargar el historial')
-    return null
-  }
-}
-
     const sessionTimeoutRef = useRef<number | null>(null)
     const resetSessionTimeout = useCallback(() => {
       if (sessionTimeoutRef.current) window.clearTimeout(sessionTimeoutRef.current)
@@ -189,229 +169,36 @@
     useEffect(() => {
       const cargarDeSupabase = async () => {
         setLoadingDb(true)
-        
-        const { data, error, count } = await supabase
-          .from('mesa_partes_2026')
-          .select(`
-            id,
-            nro_exp,
-            fecha_ingreso,
-            remitente_nombre,
-            asunto,
-            contenido,
-            area,
-            area_destino,
-            estado,
-            plazo,
-            prioridad,
-            archivo,
-            archivo_tipo,
-            archivo_tamano,
-            documentos,
-            modalidad_recepcion,
-            entregado_a,
-            canal_recepcion,
-            folios,
-            anexos,
-            direccion,
-            correo,
-            celular,
-            representante,
-            cargo_representante,
-            usuario_registro,
-            fecha_hora_recepcion,
-            constancia_recepcion,
-            es_duplicado,
-            fecha_sin_respuesta,
-            duplicado_de_id
-          `)
-            .order('nro_exp', { ascending: false })
-            .limit(2000)
-  
 
-  if (error) {
-    console.error('Supabase Error:', error)
-    notify('Error al cargar expedientes desde Supabase')
-    setLoadingDb(false)
-    return
-  }
-
-  setExpedientesPage(1)
-
-  const { data: proveidosData, error: proveidosError } =
-  await supabase
-    
-    .from('proveidos')
-    .select(`
-      id,
-      expediente_id,
-      nro_expediente,
-      fecha,
-      area_destino,
-      responsable,
-      instruccion,
-      estado,
-      archivo,
-      archivo_data,
-      archivo_tipo,
-      archivo_tamano,
-      created_at
-    `)
-
-    .order('id', { ascending: false })
-
-if (proveidosError) {
-  console.error(
-    'Error al cargar proveídos:',
-    proveidosError
-  )
-} else if (proveidosData) {
-  console.log('PROVEÍDOS CARGADOS DESDE SUPABASE:', proveidosData)
-  
-setProveidos(
-  proveidosData.map((item: any) => ({
-    id: String(item.id),
-    expedienteId: String(item.expediente_id),
-    nroExpediente: String(item.nro_expediente),
-    fecha: item.fecha,
-    areaDestino: item.area_destino,
-    responsable: item.responsable || '',
-    instruccion: item.instruccion,
-    estado: item.estado,
-    archivo: item.archivo || '',
-    archivoData: item.archivo_data || '',
-    archivoTipo: item.archivo_tipo || '',
-    archivoTamano: item.archivo_tamano || 0,
-    createdAt: item.created_at
-  }))
-)
-
-}
-
-        if (data) {
-          const normalizados: Expediente[] = data.map((item: any) => {
-            const nombreCompleto = item.remitente_nombre || 'Sin nombre'
-            const parts = nombreCompleto.split(/\s*-\s*/, 2)
-            return normalizeExpediente({
-              id: String(item.id || ''),
-              nroExp: String(item.nro_exp || ''),
-              esDuplicado: Boolean(item.es_duplicado),
-              fechaIngreso: item.fecha_ingreso || '',
-              remitente: nombreCompleto,
-              remitenteNombre: item.remitente_nombre || parts[0]?.trim() || nombreCompleto,
-              asunto: item.asunto || '',
-              contenido: item.contenido || '',
-              area: item.area || '',
-              areaDestino: item.area_destino || '',
-              estado: item.estado || 'Pendiente',
-              plazo: item.plazo || '',
-              fechaSinRespuesta: item.fecha_sin_respuesta || '',
-              prioridad: item.prioridad || 'Normal',
-              archivo: item.archivo || 'Sin adjunto',
-              archivoData: '',
-              archivoTipo: item.archivo_tipo || '',
-              archivoTamano: item.archivo_tamano || 0,
-              modalidadRecepcion: item.modalidad_recepcion || undefined,
-              entregadoA: item.entregado_a || '',
-              canalRecepcion: item.canal_recepcion || '',
-              folios: item.folios ?? 1,
-              anexos: item.anexos ?? 0,
-              direccion: item.direccion || '',
-              correo: item.correo || '',
-              celular: item.celular || '',
-              representante: item.representante || '',
-              cargoRepresentante: item.cargo_representante || '',
-              usuarioRegistro: item.usuario_registro || '',
-              fechaHoraRecepcion: item.fecha_hora_recepcion || '',
-              constanciaRecepcion: item.constancia_recepcion || '',
-              historial: []
-            })
-          })
-          setExpedientes(normalizados)
+        try {
+          const expedientesData = await fetchExpedientes()
+          setExpedientes(expedientesData)
+          setExpedientesPage(1)
+        } catch (error) {
+          console.error('Supabase Error:', error)
+          notify('Error al cargar expedientes desde Supabase')
+          setLoadingDb(false)
+          return
         }
 
-        const { data: memosData, error: memosError } =
-          await supabase
-            .from('memos')
-            .select('*')
-            .order('id', { ascending: false })
-
-        console.log('MEMOS CARGADOS DESDE SUPABASE:', memosData)
-        console.log(
-          'EXPEDIENTES CON ARCHIVO:',
-          data?.filter((item: any) => item.archivo_data)
-        )
-        console.log(
-          'PRIMER EXPEDIENTE CARGADO:',
-          data?.[0]
-        )
-        console.log(
-          'EXPEDIENTE 00049:',
-          data?.find(
-            (item: any) =>
-              String(item.nro_exp) === '49' ||
-              String(item.nro_exp) === 'EXP-2026-00049'
-          )
-        )
-              
-        console.log('ERROR MEMOS:', memosError)
-
-        if (memosError) {
-          console.error('Error cargando memos:', memosError)
-        } else if (memosData) {
-          const memosNormalizados: Memo[] = memosData.map((m: any) => ({
-            id: String(m.id),
-            nroMemo: m.nro_memo || '',
-            expedienteId: String(m.expediente_id),
-            nroExpediente: m.nro_expediente || '',
-            fecha: m.fecha || '',
-            asunto: m.asunto || '',
-            registradoPor: m.registrado_por || '',
-            areaDestino: m.area_destino || '',
-            responsable: m.responsable || '',
-            estado: m.estado || 'Pendiente',
-
-            archivo: m.archivo || '',
-            archivoData: m.archivo_data || '',
-            archivoTipo: m.archivo_tipo || '',
-            archivoTamano: m.archivo_tamano || 0,
-
-            createdAt: m.created_at
-          }))
-
-          console.log('MEMOS NORMALIZADOS:', memosNormalizados)
-
-          setMemos(memosNormalizados)
+        try {
+          const proveidosData = await fetchProveidos()
+          setProveidos(proveidosData)
+        } catch (error) {
+          console.error('Error al cargar proveídos:', error)
         }
-        const { data: oficiosData, error: oficiosError } = await supabase
-    .from('oficios')
-    .select('*')
-    .order('id', { ascending: false })
-
-  if (oficiosError) {
-    console.error('Error cargando oficios:', oficiosError)
-  } else if (oficiosData) {
-    const oficiosNormalizados: Oficio[] = oficiosData.map((item: any) => ({
-      id: String(item.id),
-      nRegistro: String(item.n_registro ?? ''),
-      expedienteId: String(item.expediente_id ?? ''),
-      nroExpediente: String(item.nro_expediente ?? ''),
-      fecha: item.fecha ?? '',
-      destinatario: item.destinatario ?? '',
-      asuntoTipo: item.asunto_tipo ?? '',
-      asuntoDetalle: item.asunto_detalle ?? '',
-      responsable: item.responsable ?? '',
-      codigoOad: item.codigo_oad ?? '',
-      codigoOgesup: item.codigo_ogesup ?? '',
-      anio: Number(item.anio ?? new Date().getFullYear()),
-      areaDestino: item.area_destino ?? '',
-      estado: item.estado ?? 'Enviado',
-      fechaRegistro: item.fecha_registro ?? '',
-      createdAt: item.created_at ?? ''
-    }))
-
-    setOficios(oficiosNormalizados)
-  }
+        try {
+          const memosData = await fetchMemos()
+          setMemos(memosData)
+        } catch (error) {
+          console.error('Error cargando memos:', error)
+        }
+        try {
+          const oficiosData = await fetchOficios()
+          setOficios(oficiosData)
+        } catch (error) {
+          console.error('Error cargando oficios:', error)
+        }
         // Cargar el tipo de documento asignado a cada expediente
         const { data: documentosData, error: documentosError } = await supabase
           .from('expediente_documentos')
@@ -435,9 +222,51 @@ setProveidos(
 
     const userPermissions = currentUser ? ROLE_PERMISSIONS[currentUser.rol] : null
 
-    const areaOptions = useMemo(() =>
-      Array.from(new Set([...areas, ...expedientes.map(getAreaDestino).filter(Boolean)])).sort(),
-    [expedientes])
+    const areaOptions = useMemo(() => {
+      // 1. Función para quitar tildes, mayúsculas y espacios (unifica "Secretaría" y "Secretaria")
+      const normalize = (str: string) =>
+        str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim()
+
+      // 2. Lista negra (basura a ocultar)
+      const blacklist = [
+        'NEGRON', 'PEÑALOZA', 'CORREO', 'DRELM', 'JEFATURA',
+        'LAS TIENE EL DIRECTOR', 'PENDIENTE DE ASIGNACIÓN',
+        'SE LE ENTREGÓ', 'OFICIO', 'FALTA DERIVAR',
+        'ENTREGADO A', 'ARCHIVO', 'COORDINADOR', 'FIRMO CARGO'
+      ]
+
+      // 3. Correcciones (unificar nombres)
+      const replacements: Record<string, string> = {
+        'SECRETARIA ACADEMICA': 'Secretaría Académica',
+        'UNIDAD DE BIENESTAR AL ESTUDIANTE': 'Unidad de Bienestar Estudiantil',
+        'UNIDAD DE BIENESTAR DEL ESTUDIANTE': 'Unidad de Bienestar Estudiantil',
+        'DIRECCION': 'Dirección General',
+        'ADMINISTRACION': 'Administración'
+      }
+
+      // 4. Juntar áreas oficiales + áreas de la BD
+      const rawAreas = [...areas, ...expedientes.map(getAreaDestino).filter(Boolean)]
+
+      // 5. Procesar
+      const cleaned = rawAreas
+        .map(a => a.trim())
+        .filter(a => {
+          const norm = normalize(a)
+          return !blacklist.some(badWord => norm.includes(badWord))
+        })
+        .map(a => {
+          const norm = normalize(a)
+          for (const [key, val] of Object.entries(replacements)) {
+            if (norm === key) return val
+          }
+          return a
+        })
+        .filter((value, index, self) =>
+          self.findIndex(v => normalize(v) === normalize(value)) === index
+        )
+
+      return cleaned.sort()
+    }, [expedientes])
 
     const currentDate = useMemo(() => {
       const now = new Date()
@@ -619,7 +448,7 @@ setProveidos(
     data.get('remitente') || ''
   ).trim()
 
-    
+
 
   const fechaHoraRegistro = new Date().toISOString()
   const canalRecepcion = String(data.get('canalRecepcion') || 'Mesa de Partes')
@@ -650,7 +479,7 @@ const historialInicial = [
         representante: String(data.get('representante') || ''),
         cargoRepresentante: String(data.get('cargoRepresentante') || ''),
         asunto: String(data.get('asunto') || ''),
-        contenido: String(data.get('contenido') || ''), area: '', areaDestino: '', estado: 'Pendiente',      
+        contenido: String(data.get('contenido') || ''), area: '', areaDestino: '', estado: 'Pendiente',
         plazo: String(data.get('plazo') || ''),
         prioridad: String(data.get('prioridad') || 'Normal') as 'Normal' | 'Alta',
         archivo: archivoSeleccionado
@@ -673,15 +502,15 @@ const historialInicial = [
         direccion: String(data.get('direccion') || ''), correo: String(data.get('correo') || ''),
         celular: String(data.get('celular') || ''),
         usuarioRegistro: `${currentUser.nombre} - ${currentUser.area || ''}`,
-      
+
         constanciaRecepcion: `Cargo generado para ${nextId}`,
         historial: historialInicial
       }
 
       const { data: insertedData, error } = await supabase.from('mesa_partes_2026').insert({
-        nro_exp: newExpediente.nroExp, fecha_ingreso: fechaIngreso, 
+        nro_exp: newExpediente.nroExp, fecha_ingreso: fechaIngreso,
         remitente_nombre: newExpediente.remitenteNombre,
-        asunto: newExpediente.asunto, contenido: newExpediente.contenido, 
+        asunto: newExpediente.asunto, contenido: newExpediente.contenido,
         plazo: newExpediente.plazo || null,
         prioridad: newExpediente.prioridad,
         archivo: newExpediente.archivo, archivo_data: newExpediente.archivoData,
@@ -858,7 +687,7 @@ const historialInicial = [
       setIsSaving(false)
     }
   }
- 
+
     const registrarFechaExpediente = async (
   expedienteId: string,
   fecha: string
@@ -985,7 +814,7 @@ const historialInicial = [
     if (archivo.size > 5 * 1024 * 1024) {
       notify('El archivo no puede superar los 5 MB')
       return
-    } 
+    }
       const expedienteId = Number(memoExpediente.id)
 
     if (Number.isNaN(expedienteId)) {
@@ -1389,7 +1218,7 @@ const historialInicial = [
                     onNew={() => setView('nuevo')}
                     expedienteDocumentos={expedienteDocumentos}
                     onTracking={async (id) => {
-                      const historialGuardado = await cargarHistorialExpediente(id)
+                      const historialGuardado = await fetchHistorialExpediente(id)
 
                       setExpedientes(prev =>
                         prev.map(expediente => {
@@ -1489,10 +1318,10 @@ const historialInicial = [
         if (expediente) {
           setMemoNro('')
           setMemoFecha(todayInputValue())
-          
+
           setMemoAsunto(expediente.asunto || '')
           setMemoAreaDestino('')
-    
+
           setShowMemoSelector(false)
           setShowMemoForm(true)
         } else {
@@ -1506,12 +1335,20 @@ const historialInicial = [
     <OficiosView
       oficios={oficios}
       oficioExpediente={oficioExpediente}
+      expedientes={expedientes}
+      areaOptions={areaOptions}
+      showSelector={showOficioSelector}
+      onCloseSelector={() => setShowOficioSelector(false)}
       onNuevoOficio={() => {
+        setShowOficioSelector(true)
+      }}
+      onSelectExpediente={(exp) => {
+        setOficioExpediente(exp)
+        setShowOficioSelector(false)
         setShowOficioForm(true)
       }}
     />
   )}
-
   {view === 'oficios' && showOficioForm && (
     <NuevoOficioView
       expediente={oficioExpediente}
@@ -1619,7 +1456,7 @@ const historialInicial = [
         setShowProveidoForm(false)
         setProveidoExpediente(null)
       }}
-      
+
       onGuardar={async datos => {
         let archivoData: string | null = null
 
@@ -1752,7 +1589,7 @@ const historialInicial = [
             item={expedientes.find(item => item.id === trackingId)}
             onClose={() => setTrackingId(null)}
           />
-        )}    
+        )}
         </div>
     )
   }

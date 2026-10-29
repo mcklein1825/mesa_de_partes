@@ -3,6 +3,8 @@ import { Expediente, Proveido } from '../../types'
 import { displayDate } from '../../utils/expedienteHelpers'
 import ExpedienteSelector from '../common/ExpedienteSelector'
 import MemoDocumentLink from '../common/MemoDocumentLink'
+import StatusBadge from '../common/StatusBadge'
+
 type Props = {
   proveidos: Proveido[]
   expedientes: Expediente[]
@@ -12,6 +14,7 @@ type Props = {
   onCloseSelector: () => void
   onSelectExpediente: (expediente: Expediente) => void
 }
+
 export default function ProveidosView({
   proveidos,
   expedientes,
@@ -22,6 +25,7 @@ export default function ProveidosView({
   onSelectExpediente
 }: Props) {
   const [busqueda, setBusqueda] = useState('')
+  const [areaFilter, setAreaFilter] = useState('Todas')
 
   const resultados = useMemo(() => {
     const texto = busqueda.trim().toLowerCase()
@@ -34,82 +38,85 @@ export default function ProveidosView({
         proveido.responsable.toLowerCase().includes(texto) ||
         proveido.instruccion.toLowerCase().includes(texto)
 
-      return coincideTexto
+      const coincideArea =
+        areaFilter === 'Todas' ||
+        proveido.areaDestino === areaFilter
+
+      return coincideTexto && coincideArea
     })
- }, [proveidos, busqueda])
+  }, [proveidos, busqueda, areaFilter])
 
-return (
-  <>
-   
-{showSelector && (
-  <div
-    className="memo-modal-overlay"
-    onMouseDown={event => {
-      if (event.target === event.currentTarget) {
-        onCloseSelector()
-      }
-    }}
-  >
-    <div
-      className="memo-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="nuevo-proveido-title"
-    >
-      <div className="memo-modal-header">
-        <div>
-          <p className="eyebrow">GESTIÓN DOCUMENTAL</p>
-          <h2 id="nuevo-proveido-title">Nuevo Proveído</h2>
-          <p>
-            Seleccione el expediente al que desea asociar el Proveído.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          className="memo-modal-close"
-          onClick={onCloseSelector}
-          aria-label="Cerrar"
+  return (
+    <>
+      {showSelector && (
+        <div
+          className="memo-modal-overlay"
+          onMouseDown={event => {
+            if (event.target === event.currentTarget) {
+              onCloseSelector()
+            }
+          }}
         >
-          ×
-        </button>
-      </div>
+          <div
+            className="memo-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="nuevo-proveido-title"
+          >
+            <div className="memo-modal-header">
+              <div>
+                <p className="eyebrow">GESTIÓN DOCUMENTAL</p>
+                <h2 id="nuevo-proveido-title">Nuevo Proveído</h2>
+                <p>
+                  Seleccione el expediente al que desea asociar el Proveído.
+                </p>
+              </div>
 
-      <div className="memo-modal-body">
-        <div className="section-header">
-          <div>
-            <h3>Seleccionar expediente</h3>
-            <p>
-              Busque el expediente por número, asunto, remitente o área.
-            </p>
+              <button
+                type="button"
+                className="memo-modal-close"
+                onClick={onCloseSelector}
+                aria-label="Cerrar"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="memo-modal-body">
+              <div className="section-header">
+                <div>
+                  <h3>Seleccionar expediente</h3>
+                  <p>
+                    Busque el expediente por número, asunto, remitente o área.
+                  </p>
+                </div>
+              </div>
+
+              <ExpedienteSelector
+                expedientes={expedientes}
+                value={null}
+                onChange={expediente => {
+                  if (!expediente) return
+                  onSelectExpediente(expediente)
+                }}
+                areaOptions={areaOptions}
+              />
+            </div>
+
+            <div className="memo-modal-footer">
+              <button
+                type="button"
+                className="legacy-light-button"
+                onClick={onCloseSelector}
+              >
+                Cancelar
+              </button>
+            </div>
           </div>
         </div>
+      )}
 
-        <ExpedienteSelector
-          expedientes={expedientes}
-          value={null}
-          onChange={expediente => {
-            if (!expediente) return
-            onSelectExpediente(expediente)
-          }}
-          areaOptions={areaOptions}
-        />
-      </div>
-
-      <div className="memo-modal-footer">
-        <button
-          type="button"
-          className="legacy-light-button"
-          onClick={onCloseSelector}
-        >
-          Cancelar
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-    <div className="page-heading compact">
+      <div className="page-heading compact">
         <div>
           <p className="eyebrow">GESTIÓN DOCUMENTAL</p>
           <h1>Proveídos</h1>
@@ -121,9 +128,9 @@ return (
         <button
           type="button"
           className="primary-button"
-       onClick={() => {
-          onNuevoProveido()
-        }}  
+          onClick={() => {
+            onNuevoProveido()
+          }}
         >
           ＋ Nuevo Proveído
         </button>
@@ -139,113 +146,131 @@ return (
               placeholder="Buscar por proveído, expediente, área o instrucción..."
             />
           </div>
+
+          <select
+            value={areaFilter}
+            onChange={e => setAreaFilter(e.target.value)}
+          >
+            <option value="Todas">Todas las áreas</option>
+            {areaOptions.map(area => (
+              <option key={area} value={area}>
+                {area}
+              </option>
+            ))}
+          </select>
+
           <span className="result-count">{resultados.length} resultados</span>
         </div>
 
-      <div className="table-wrap">
-        <table className="data-table proveidos-table">
-          <thead>
-            <tr>
-              <th>N.° EXP</th>
-              <th>FECHA</th>
-              <th>ÁREA DESTINO</th>
-              <th>RESPONSABLE</th>
-              <th>INSTRUCCIÓN</th>
-              <th>DOCUMENTO</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {resultados.map(proveido => (
-              <tr key={proveido.id}>
-                <td>
-                  <b className="exp-id">
-                    {proveido.nroExpediente || '—'}
-                  </b>
-                </td>
-
-                <td>
-                  <span style={{ whiteSpace: 'nowrap' }}>
-                    {proveido.fecha ? displayDate(proveido.fecha) : '—'}
-                  </span>
-                </td>
-
-                <td>
-                  <span
-                    title={proveido.areaDestino || '—'}
-                    style={{
-                      display: 'block',
-                      maxWidth: '150px',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis'
-                    }}
-                  >
-                    {proveido.areaDestino || '—'}
-                  </span>
-                </td>
-
-                <td>
-                  <span
-                    title={proveido.responsable || '—'}
-                    style={{
-                      display: 'block',
-                      maxWidth: '150px',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis'
-                    }}
-                  >
-                    {proveido.responsable || '—'}
-                  </span>
-                </td>
-
-                <td>
-                  <span
-                    title={proveido.instruccion || '—'}
-                    style={{
-                      display: 'block',
-                      maxWidth: '250px',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis'
-                    }}
-                  >
-                    {proveido.instruccion || '—'}
-                  </span>
-                </td>
-
-                <td>
-                  <MemoDocumentLink
-                    archivoData={proveido.archivoData}
-                    archivo={proveido.archivo || ''}
-                  >
-                    {proveido.archivo || 'Sin adjunto'}
-                  </MemoDocumentLink>
-                </td>
-
-              </tr>
-            ))}
-
-            {resultados.length === 0 && (
+        <div className="table-wrap">
+          <table className="data-table proveidos-table">
+            <thead>
               <tr>
-                <td colSpan={6}>
-                  <div className="empty-state">
-                    {busqueda
-                      ? 'No se encontraron proveídos con esos criterios.'
-                      : 'No hay proveídos registrados.'}
-                  </div>
-                </td>
+                <th>N.° EXP</th>
+                <th>FECHA</th>
+                <th>ÁREA DESTINO</th>
+                <th>RESPONSABLE</th>
+                <th>INSTRUCCIÓN</th>
+                <th>ESTADO</th>
+                <th>DOCUMENTO</th>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
 
-      <div className="pagination">
-        Mostrando {resultados.length} de {proveidos.length} proveído
-        {proveidos.length === 1 ? '' : 's'}.
-      </div>
+            <tbody>
+              {resultados.map(proveido => (
+                <tr key={proveido.id}>
+                  <td>
+                    <b className="exp-id">
+                      {proveido.nroExpediente || '—'}
+                    </b>
+                  </td>
+
+                  <td>
+                    <span style={{ whiteSpace: 'nowrap' }}>
+                      {proveido.fecha ? displayDate(proveido.fecha) : '—'}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span
+                      title={proveido.areaDestino || '—'}
+                      style={{
+                        display: 'block',
+                        maxWidth: '150px',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}
+                    >
+                      {proveido.areaDestino || '—'}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span
+                      title={proveido.responsable || '—'}
+                      style={{
+                        display: 'block',
+                        maxWidth: '150px',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}
+                    >
+                      {proveido.responsable || '—'}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span
+                      title={proveido.instruccion || '—'}
+                      style={{
+                        display: 'block',
+                        maxWidth: '250px',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}
+                    >
+                      {proveido.instruccion || '—'}
+                    </span>
+                  </td>
+
+                  {/* NUEVO ESTADO */}
+                  <td>
+                    <StatusBadge status={proveido.estado as any} />
+                  </td>
+
+                  <td>
+                    <MemoDocumentLink
+                      archivoData={proveido.archivoData}
+                      archivo={proveido.archivo || ''}
+                    >
+                      {proveido.archivo || 'Sin adjunto'}
+                    </MemoDocumentLink>
+                  </td>
+                </tr>
+              ))}
+
+              {resultados.length === 0 && (
+                <tr>
+                  <td colSpan={7}>
+                    <div className="empty-state">
+                      {busqueda
+                        ? 'No se encontraron proveídos con esos criterios.'
+                        : 'No hay proveídos registrados.'}
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="pagination">
+          Mostrando {resultados.length} de {proveidos.length} proveído
+          {proveidos.length === 1 ? '' : 's'}.
+        </div>
       </section>
     </>
   )

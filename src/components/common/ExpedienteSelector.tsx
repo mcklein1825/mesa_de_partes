@@ -155,10 +155,10 @@ export default function ExpedienteSelector({
             value={areaFilter}
             onChange={e => setAreaFilter(e.target.value)}
           >
-            <option>Todas</option>
+            <option value="Todas">Todas las áreas</option>
 
             {areaOptions.map(area => (
-              <option key={area}>{area}</option>
+              <option key={area} value={area}>{area}</option>
             ))}
           </select>
         </div>

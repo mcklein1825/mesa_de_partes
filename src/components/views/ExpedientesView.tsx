@@ -121,11 +121,11 @@ export default function ExpedientesView({
           }}
             placeholder="Filtrar por remitente..."
           />
-         <select value={areaFilter} 
+          <select value={areaFilter}
           onChange={e => {
             setAreaFilter(e.target.value)
           }}>
-            <option>Todas</option>
+            <option>Todas las áreas</option>
             {areaOptions.map(area => <option key={area}>{area}</option>)}
           </select>
 
@@ -133,7 +133,7 @@ export default function ExpedientesView({
            onChange={e => {
             setStatusFilter(e.target.value)
           }}>
-            <option>Todos</option>
+            <option>Todos los estados</option>
             <option>Vencidos</option>
             <option>Por vencer</option>
             <option>Pendiente</option>
@@ -145,7 +145,7 @@ export default function ExpedientesView({
         </div>
 
         <div className="table-wrap">
-          <table className="expedientes-table">
+          <table className="data-table expedientes-table">
             <thead>
               <tr>
                 <th>N.° EXP</th>
@@ -169,7 +169,7 @@ export default function ExpedientesView({
                         {item.esDuplicado ? ' *' : ''}
                       </b>
                     </td>
-                    
+
                     <td>
                       {item.fechaIngreso ? (
                         displayDate(item.fechaIngreso)
@@ -295,6 +295,12 @@ export default function ExpedientesView({
                             getRemitenteNombre(item),
                             'expediente-remitente'
                           )}
+                          {/* AQUÍ MOSTRAMOS EL CARGO SI EXISTE */}
+                          {item.cargoRepresentante && (
+                            <small style={{ color: '#64748b', display: 'block', fontSize: '10px', marginTop: '2px' }}>
+                              {item.cargoRepresentante}
+                            </small>
+                          )}
                         </span>
                       </span>
                     </td>
@@ -346,7 +352,7 @@ export default function ExpedientesView({
                       ◉ Ver seguimiento
                     </button>
 
-                  
+
                   </td>
                   </tr>
                 )

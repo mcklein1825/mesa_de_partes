@@ -61,7 +61,51 @@
     const [memoArchivo, setMemoArchivo] = useState<File | null>(null)
     const [memoArchivoNombre, setMemoArchivoNombre] = useState('')
     const [areaFilter, setAreaFilter] = useState('Todas')
+    const memoAreaOptions = useMemo(() => {
+      // 1. Función para quitar tildes, mayúsculas y espacios (para unificar "Secretaría" y "Secretaria")
+      const normalize = (str: string) =>
+        str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim()
 
+      // 2. Lista negra (basura a ocultar)
+      const blacklist = [
+        'NEGRON', 'PEÑALOZA', 'CORREO', 'DRELM', 'JEFATURA',
+        'LAS TIENE EL DIRECTOR', 'PENDIENTE DE ASIGNACIÓN',
+        'SE LE ENTREGÓ', 'OFICIO', 'FALTA DERIVAR',
+        'ENTREGADO A', 'ARCHIVO', 'COORDINADOR', 'FIRMO CARGO'
+      ]
+
+      // 3. Correcciones (unificar nombres)
+      const replacements: Record<string, string> = {
+        'SECRETARIA ACADEMICA': 'Secretaría Académica',
+        'UNIDAD DE BIENESTAR AL ESTUDIANTE': 'Unidad de Bienestar Estudiantil',
+        'UNIDAD DE BIENESTAR DEL ESTUDIANTE': 'Unidad de Bienestar Estudiantil',
+        'DIRECCION': 'Dirección General',
+        'ADMINISTRACION': 'Administración'
+      }
+
+      // 4. Juntar áreas oficiales + áreas de la BD
+      const rawAreas = [...areaOptions, ...memos.map(m => m.areaDestino).filter(Boolean)]
+
+      // 5. Procesar
+      const cleaned = rawAreas
+        .map(a => a.trim())
+        .filter(a => {
+          const norm = normalize(a)
+          return !blacklist.some(badWord => norm.includes(badWord))
+        })
+        .map(a => {
+          const norm = normalize(a)
+          for (const [key, val] of Object.entries(replacements)) {
+            if (norm === key) return val
+          }
+          return a
+        })
+        .filter((value, index, self) =>
+          self.findIndex(v => normalize(v) === normalize(value)) === index
+        )
+
+      return cleaned.sort()
+    }, [areaOptions, memos])
     const [destinoBusqueda, setDestinoBusqueda] = useState('')
     const [destinoAbierto, setDestinoAbierto] = useState(false)
     const [memoSubareaDestino, setMemoSubareaDestino] = useState('')
@@ -125,17 +169,6 @@
     * OPCIONES DE FILTROS
     * =========================================================
     */
-
-    const memoAreaOptions = useMemo(() => {
-      return Array.from(
-        new Set([
-          ...areaOptions,
-          ...memos
-            .map(memo => memo.areaDestino)
-            .filter(Boolean)
-        ])
-      ).sort()
-    }, [areaOptions, memos])
     const destinoOptions = useMemo(() => {
       return AREAS_UNICAS.map(area => ({
         value: area,
@@ -302,7 +335,7 @@
     * No se muestra al entrar normalmente a Memos.
     * =========================================================
     */
-    
+
     /*
     * =========================================================
     * FORMULARIO DE NUEVO MEMO
@@ -646,7 +679,7 @@ if (showMemoForm && expediente) {
     */
 
     return (
-  <div className="page">
+  <>
 
     {showMemoSelector && !expediente && (
       <div
@@ -839,7 +872,7 @@ if (showMemoForm && expediente) {
 
           <div className="table-wrap">
 
-            <table className="memos-table">
+            <table className="data-table memos-table">
 
              <thead>
               <tr>
@@ -847,7 +880,9 @@ if (showMemoForm && expediente) {
                 <th>N.º EXPEDIENTE</th>
                 <th>FECHA</th>
                 <th>ASUNTO</th>
-                <th className="memo-estado-columna">ESTADO</th>
+                <th>ÁREA DESTINO</th>
+                <th>RESPONSABLE</th>
+                <th>ESTADO</th>
                 <th>MÁS DATOS</th>
               </tr>
             </thead>
@@ -919,11 +954,45 @@ if (showMemoForm && expediente) {
           </div>
         )}
       </td>
+      {/* ÁREA DESTINO */}
+      <td>
+        <span
+          title={memo.areaDestino || '—'}
+          style={{
+            display: 'block',
+            maxWidth: '150px',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            fontSize: '11px',
+            color: '#374151'
+          }}
+        >
+          {memo.areaDestino || '—'}
+        </span>
+      </td>
 
+      {/* NUEVA COLUMNA RESPONSABLE */}
+      <td>
+        <span
+          title={memo.responsable || '—'}
+          style={{
+            display: 'block',
+            maxWidth: '150px',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            fontSize: '11px',
+            color: '#374151'
+          }}
+        >
+          {memo.responsable || '—'}
+        </span>
+      </td>
       {/* ESTADO */}
-      <td className="memo-estado-columna">
+      <td>
         <select
-          className="status-badge"
+          className={`status-badge ${memo.estado.toLowerCase().replace(/\s+/g, '-')}`}
           value={memo.estado}
           onChange={e => {
             const nuevoEstado =
@@ -989,7 +1058,7 @@ if (showMemoForm && expediente) {
       </td>
 
       {/* MÁS DATOS */}
-      <td className="actions-cell">
+      <td>
         <button
           className="tracking-button"
           onClick={() => {
@@ -1183,7 +1252,7 @@ if (showMemoForm && expediente) {
           </div>
         )}
 
-      </div>
+      </>
     )
   }
 

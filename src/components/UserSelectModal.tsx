@@ -539,7 +539,7 @@ if (usuarioGuardado) {
             >
               <button
                 type="button"
-                className="legacy-light-button"
+                className="outline-button"
                 style={{ flex: 1 }}
                 onClick={() => setShowCreate(false)}
               >
