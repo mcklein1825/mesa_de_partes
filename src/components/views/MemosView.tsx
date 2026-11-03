@@ -1,10 +1,11 @@
   import { useEffect, useMemo, useState } from 'react'
   import { Expediente, Memo } from '../../types'
-  import { AREAS_UNICAS, getSubareas } from '../../constants'
+  import { getSubareas } from '../../constants'
   import ExpedienteSelector from '../common/ExpedienteSelector'
   import MemoDocumentLink from '../common/MemoDocumentLink'
-  import { supabase } from '../../lib/supabaseClient'
+  import MemoDetailsModal from '../modals/MemoDetailsModal'
   import { displayDate } from '../../utils/expedienteHelpers'
+  import useMemosList from '../../features/mesaPartes/useMemosList'
 
   export default function MemosView({
     expediente,
@@ -57,125 +58,40 @@
     nuevoEstado: Memo['estado']
   ) => void
   }) {
-    const [query, setQuery] = useState('')
     const [memoArchivo, setMemoArchivo] = useState<File | null>(null)
     const [memoArchivoNombre, setMemoArchivoNombre] = useState('')
-    const [areaFilter, setAreaFilter] = useState('Todas')
-    const memoAreaOptions = useMemo(() => {
-      // 1. Función para quitar tildes, mayúsculas y espacios (para unificar "Secretaría" y "Secretaria")
-      const normalize = (str: string) =>
-        str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim()
-
-      // 2. Lista negra (basura a ocultar)
-      const blacklist = [
-        'NEGRON', 'PEÑALOZA', 'CORREO', 'DRELM', 'JEFATURA',
-        'LAS TIENE EL DIRECTOR', 'PENDIENTE DE ASIGNACIÓN',
-        'SE LE ENTREGÓ', 'OFICIO', 'FALTA DERIVAR',
-        'ENTREGADO A', 'ARCHIVO', 'COORDINADOR', 'FIRMO CARGO'
-      ]
-
-      // 3. Correcciones (unificar nombres)
-      const replacements: Record<string, string> = {
-        'SECRETARIA ACADEMICA': 'Secretaría Académica',
-        'UNIDAD DE BIENESTAR AL ESTUDIANTE': 'Unidad de Bienestar Estudiantil',
-        'UNIDAD DE BIENESTAR DEL ESTUDIANTE': 'Unidad de Bienestar Estudiantil',
-        'DIRECCION': 'Dirección General',
-        'ADMINISTRACION': 'Administración'
-      }
-
-      // 4. Juntar áreas oficiales + áreas de la BD
-      const rawAreas = [...areaOptions, ...memos.map(m => m.areaDestino).filter(Boolean)]
-
-      // 5. Procesar
-      const cleaned = rawAreas
-        .map(a => a.trim())
-        .filter(a => {
-          const norm = normalize(a)
-          return !blacklist.some(badWord => norm.includes(badWord))
-        })
-        .map(a => {
-          const norm = normalize(a)
-          for (const [key, val] of Object.entries(replacements)) {
-            if (norm === key) return val
-          }
-          return a
-        })
-        .filter((value, index, self) =>
-          self.findIndex(v => normalize(v) === normalize(value)) === index
-        )
-
-      return cleaned.sort()
-    }, [areaOptions, memos])
+    const {
+      query,
+      setQuery,
+      areaFilter,
+      setAreaFilter,
+      estadoFilter,
+      setEstadoFilter,
+      page,
+      setPage,
+      selectedMemo,
+      setSelectedMemo,
+      documentosExpedientes,
+      memoAreaOptions,
+      destinoOptions,
+      estadoOptions,
+      expedientesConMemo,
+      memosFiltrados,
+      pageItems,
+      pageSize,
+      pageCount,
+      currentPage,
+      formatExpediente
+    } = useMemosList(memos, expedientes, areaOptions)
     const [destinoBusqueda, setDestinoBusqueda] = useState('')
     const [destinoAbierto, setDestinoAbierto] = useState(false)
     const [memoSubareaDestino, setMemoSubareaDestino] = useState('')
     const [memoAreaPrincipalDestino, setMemoAreaPrincipalDestino] = useState('')
-    const [estadoFilter, setEstadoFilter] = useState('Todos')
-    const [page, setPage] = useState(1)
-    const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null)
-    const [documentosExpedientes, setDocumentosExpedientes] = useState<
-      Record<string, { archivoData: string; archivo: string }>
-    >({})
-    const pageSize = 20
-    useEffect(() => {
-    const cargarDocumentosExpedientes = async () => {
-      const ids = Array.from(
-        new Set(
-          memos
-            .map(memo => String(memo.expedienteId))
-            .filter(Boolean)
-        )
-      )
-
-      if (ids.length === 0) {
-        setDocumentosExpedientes({})
-        return
-      }
-
-      const { data, error } = await supabase
-        .from('mesa_partes_2026')
-        .select('id, archivo, archivo_data')
-        .in('id', ids.map(Number))
-
-      if (error) {
-        console.error(
-          'Error cargando documentos de expedientes:',
-          error
-        )
-        return
-      }
-
-      const documentos: Record<
-        string,
-        { archivoData: string; archivo: string }
-      > = {}
-
-      ;(data || []).forEach((item: any) => {
-        if (item.archivo_data) {
-          documentos[String(item.id)] = {
-            archivoData: item.archivo_data,
-            archivo: item.archivo || 'Documento'
-          }
-        }
-      })
-
-      setDocumentosExpedientes(documentos)
-    }
-
-    cargarDocumentosExpedientes()
-  }, [memos])
       /*
     * =========================================================
     * OPCIONES DE FILTROS
     * =========================================================
     */
-    const destinoOptions = useMemo(() => {
-      return AREAS_UNICAS.map(area => ({
-        value: area,
-        label: area,
-        searchText: area
-      }))
-    }, [])
     const destinosFiltrados = useMemo(() => {
     const termino = destinoBusqueda.trim().toLowerCase()
 
@@ -189,103 +105,11 @@
       .includes(termino)
   )
 }, [destinoBusqueda, destinoOptions])
-    const estadoOptions = useMemo(() => {
-      return Array.from(
-        new Set(
-          memos
-            .map(memo => memo.estado)
-            .filter(Boolean)
-        )
-      ).sort()
-    }, [memos])
-    const expedientesConMemo = useMemo(() => {
-    return memos.map(memo => String(memo.expedienteId))
-  }, [memos])
-
     /*
     * =========================================================
     * FILTROS
     * =========================================================
     */
-
-    const memosFiltrados = useMemo(() => {
-  const termino = query.trim().toLowerCase()
-
-  return memos.filter(memo => {
-    let coincideBusqueda = true
-
-    if (termino) {
-      const nroMemo = String(memo.nroMemo || '')
-        .trim()
-        .toLowerCase()
-
-      const nroExpediente = String(memo.nroExpediente || '')
-        .trim()
-        .toLowerCase()
-
-      const nroExpedienteFormateado =
-        nroExpediente.startsWith('exp-')
-          ? nroExpediente
-          : `exp-2026-${nroExpediente.padStart(5, '0')}`
-
-      const registradoPor = String(memo.registradoPor || '')
-        .trim()
-        .toLowerCase()
-
-      const asunto = String(memo.asunto || '')
-        .trim()
-        .toLowerCase()
-
-      const areaDestino = String(memo.areaDestino || '')
-        .trim()
-        .toLowerCase()
-
-      const responsable = String(memo.responsable || '')
-        .trim()
-        .toLowerCase()
-
-      const terminoEsNumero = /^\d+$/.test(termino)
-
-      if (terminoEsNumero) {
-        coincideBusqueda =
-          nroMemo === termino ||
-          nroExpediente === termino ||
-          nroExpedienteFormateado ===
-            `exp-2026-${termino.padStart(5, '0')}` ||
-          nroExpedienteFormateado.endsWith(
-            `-${termino.padStart(5, '0')}`
-          )
-      } else {
-        coincideBusqueda =
-          nroMemo.includes(termino) ||
-          nroExpedienteFormateado.includes(termino) ||
-          asunto.includes(termino) ||
-          registradoPor.includes(termino) ||
-          areaDestino.includes(termino) ||
-          responsable.includes(termino)
-      }
-    }
-
-    const coincideArea =
-      areaFilter === 'Todas' ||
-      memo.areaDestino === areaFilter
-
-    const coincideEstado =
-      estadoFilter === 'Todos' ||
-      memo.estado === estadoFilter
-
-    return (
-      coincideBusqueda &&
-      coincideArea &&
-      coincideEstado
-    )
-  })
-}, [
-  memos,
-  query,
-  areaFilter,
-  estadoFilter
-])
 
     /*
     * =========================================================
@@ -293,38 +117,12 @@
     * =========================================================
     */
 
-    const pageCount = Math.max(
-      1,
-      Math.ceil(memosFiltrados.length / pageSize)
-    )
-
-    const currentPage = Math.min(page, pageCount)
-
-    const pageItems = memosFiltrados.slice(
-      (currentPage - 1) * pageSize,
-      currentPage * pageSize
-    )
-
     /*
     * =========================================================
     * FORMATO DE EXPEDIENTE
     * =========================================================
     */
 
-    const formatExpediente = (nroExp: string) => {
-      if (nroExp.startsWith('EXP-')) {
-        return nroExp
-      }
-
-      return `EXP-2026-${nroExp.padStart(5, '0')}`
-    }
-    const getExpedienteDeMemo = (memo: Memo) => {
-  return expedientes.find(
-    expediente =>
-      String(expediente.id) ===
-      String(memo.expedienteId)
-  )
-}
     /*
     * =========================================================
     * NUEVO MEMO
@@ -1111,148 +909,11 @@ if (showMemoForm && expediente) {
 
                 </section>
 
-        {selectedMemo && (
-          <div className="modal-overlay">
-            <div className="modal-card">
-
-              <div className="section-header">
-
-                <div>
-                  <p className="eyebrow">
-                    GESTIÓN DOCUMENTAL
-                  </p>
-
-                  <h2>
-                    Datos del Memo {selectedMemo.nroMemo}
-                  </h2>
-                </div>
-
-                <button
-                  className="action-link"
-                  onClick={() => setSelectedMemo(null)}
-                >
-                  ✕
-                </button>
-
-              </div>
-
-              <div className="detail-grid">
-
-                <div>
-                  <strong>N.º Memo</strong>
-                  <p>
-                    {selectedMemo.nroMemo || '—'}
-                  </p>
-                </div>
-
-                <div>
-                  <strong>N.º Expediente</strong>
-                  <p>
-                    {selectedMemo.nroExpediente || '—'}
-                  </p>
-                </div>
-
-                <div>
-                  <strong>Fecha</strong>
-                  <p>
-                    {selectedMemo.fecha || '—'}
-                  </p>
-                </div>
-
-                <div>
-                  <strong>Registrado por</strong>
-                  <p>
-                    {selectedMemo.registradoPor || '—'}
-                  </p>
-                </div>
-
-                <div>
-                    <strong>Área destino</strong>
-                    <p>
-                      {selectedMemo.areaDestino
-                        ? selectedMemo.areaDestino.split(' / ')[0]
-                        : '—'}
-                    </p>
-                  </div>
-
-                  {selectedMemo.areaDestino?.includes(' / ') && (
-                    <div>
-                      <strong>Subárea</strong>
-                      <p>
-                        {selectedMemo.areaDestino.split(' / ')[1]}
-                      </p>
-                    </div>
-                  )}
-
-                <div>
-                  <strong>Responsable</strong>
-                  <p>
-                    {selectedMemo.responsable || '—'}
-                  </p>
-                </div>
-
-                <div>
-                  <strong>Estado</strong>
-                  <p>
-                    {selectedMemo.estado || '—'}
-                  </p>
-                </div>
-
-                <div>
-                  <strong>Archivo</strong>
-
-                  <p>
-                    {selectedMemo.archivo || 'Sin archivo'}
-                  </p>
-
-                  {selectedMemo.archivoData && (
-                    <button
-                      className="tracking-button"
-                      onClick={() => {
-                        window.open(
-                          selectedMemo.archivoData,
-                          '_blank',
-                          'noopener,noreferrer'
-                        )
-                      }}
-                    >
-                      ◉ Abrir archivo
-                    </button>
-                  )}
-                </div>
-
-              </div>
-
-              <div style={{ marginTop: '20px' }}>
-
-                <strong>Asunto</strong>
-
-                <p>
-                  {selectedMemo.asunto || 'Sin asunto'}
-                </p>
-
-              </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  marginTop: '24px'
-                }}
-              >
-                <button
-                  className="action-link"
-                  onClick={() => setSelectedMemo(null)}
-                >
-                  Cerrar
-                </button>
-              </div>
-
-            </div>
-          </div>
-        )}
+        <MemoDetailsModal
+          memo={selectedMemo}
+          onClose={() => setSelectedMemo(null)}
+        />
 
       </>
     )
   }
-

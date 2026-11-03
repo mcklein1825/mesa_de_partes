@@ -2,6 +2,8 @@ import { Expediente, Proveido } from '../../types'
 import { formatNroExp, getRemitenteNombre, getAreaDestino, getDeadlineState, parseDate } from '../../utils/expedienteHelpers'
 import StatCard from '../common/StatCard'
 import StatusBadge from '../common/StatusBadge'
+import RiskInsightPanel from '../common/RiskInsightPanel'
+import type { ExpedienteRiskAnalysis } from '../../utils/expedienteRiskModel'
 
 export default function DashboardView({
   expedientes,
@@ -10,7 +12,8 @@ export default function DashboardView({
   onViewAll,
   onFilterExp,
   currentDate,
-  currentUser
+  currentUser,
+  riskAnalysis
 }: {
   expedientes: Expediente[]
   proveidos: Proveido[]
@@ -21,6 +24,7 @@ export default function DashboardView({
   currentUser?: {
     nombre?: string
   } | null
+  riskAnalysis: ExpedienteRiskAnalysis
 }) {
 const pending = expedientes.filter(
   item => item.estado === 'Pendiente'
@@ -130,6 +134,12 @@ const archived = expedientes.filter(
 
         />
       </section>
+
+      <RiskInsightPanel
+        analysis={riskAnalysis}
+        compact
+        onViewAll={onViewAll}
+      />
 
       <div className="content-grid">
         <section className="panel recent-panel">
