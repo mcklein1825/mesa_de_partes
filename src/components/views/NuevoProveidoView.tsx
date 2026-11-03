@@ -81,135 +81,125 @@ export default function NuevoProveidoView({
 
 
   return (
-    <>
-      <div className="page-heading compact">
+    <div className="document-form-page proveido-form-page">
+      <div className="page-heading compact document-form-header">
         <div>
           <p className="eyebrow">GESTIÓN DOCUMENTAL</p>
           <h1>Nuevo Proveído</h1>
           <p className="muted">
-            Registra una instrucción vinculada a un expediente.
+            Registre un Proveído para el expediente.
           </p>
         </div>
       </div>
 
-      <div className="panel">
-
-  <div className="proveido-form-panel-header">
-    <div>
-      <h2>Datos del proveído</h2>
-      <p>
-        Registra la instrucción y el área responsable asociada al expediente.
-      </p>
-    </div>
-  </div>
-
-  <div className="proveido-form-grid">
-
-    <div className="form-group">
-      <label>Fecha</label>
-
-      <input
-        type="date"
-        value={fecha}
-        onChange={e => setFecha(e.target.value)}
-      />
-    </div>
-
-    <div className="form-group wide proveido-expediente-field">
-      <label>Expediente *</label>
-      <ExpedienteSelector
-        expedientes={expedientes}
-        value={expediente}
-        onChange={onExpedienteChange}
-        areaOptions={areaOptions}
-      />
-    </div>
-
-    <div className="form-group">
-      <label>Área destino *</label>
-
-      <select
-        value={areaDestino}
-        onChange={e => setAreaDestino(e.target.value)}
-      >
-        <option value="">Seleccione un área</option>
-
-        {Object.keys(AREA_RESPONSABLES).map(area => (
-          <option key={area} value={area}>
-            {area}
-          </option>
-        ))} 
-      </select>
-    </div>
-
-    <div className="form-group">
-      <label>Responsable</label>
-
-      <input
-        type="text"
-        value={responsable}
-        readOnly
-        placeholder="Se completará automáticamente"
-      />
-    </div>
-    
-    <div className="form-group wide">
-      <label>Documento adjunto (opcional)</label>
-
-      <input
-        type="file"
-        accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
-        onChange={e => {
-          const archivo = e.target.files?.[0] ?? null
-
-          if (archivo && archivo.size > 5 * 1024 * 1024) {
-            alert('El archivo no puede superar los 5 MB.')
-            e.target.value = ''
-            setArchivoSeleccionado(null)
-            return
-          }
-
-          setArchivoSeleccionado(archivo)
-        }}
-      />
-
-      {archivoSeleccionado && (
-        <div style={{ marginTop: '8px', fontSize: '12px' }}>
-          <span>Archivo seleccionado: {archivoSeleccionado.name}</span>
-
-          <button
-            type="button"
-            className="action-link"
-            onClick={() => setArchivoSeleccionado(null)}
-          >
-            Quitar archivo
-          </button>
+      <section className="panel document-form-card">
+        <div className="document-form-section-header">
+          <h2>Expediente relacionado</h2>
+          <p>Expediente al que se vincula.</p>
         </div>
-      )}
 
-      <small>
-        Puedes adjuntar un documento de hasta 5 MB.
-      </small>
-    </div>
+        <div className="document-form-grid proveido-form-grid">
+          <div className="form-group wide proveido-expediente-field document-form-field document-form-field-wide">
+            <ExpedienteSelector
+              expedientes={expedientes}
+              value={expediente}
+              onChange={onExpedienteChange}
+              areaOptions={areaOptions}
+            />
+          </div>
+        </div>
+      </section>
 
+      <section className="panel document-form-card proveido-form-card">
+        <div className="document-form-section-header">
+          <h2>Datos del Proveído</h2>
+          <p>Complete la información necesaria para registrar el Proveído.</p>
+        </div>
 
-    <div className="form-group wide proveido-instruccion-field">
-      <label>Instrucción *</label>
+        <div className="document-form-grid proveido-form-grid">
+          <div className="form-group document-form-field">
+            <label>Fecha</label>
+            <input
+              type="date"
+              value={fecha}
+              onChange={e => setFecha(e.target.value)}
+            />
+          </div>
 
-      <textarea
-        value={instruccion}
-        onChange={e => setInstruccion(e.target.value)}
-        placeholder="Escriba la instrucción que se debe realizar..."
-        rows={5}
-      />
+          <div className="form-group document-form-field">
+            <label>Área destino *</label>
+            <select
+              value={areaDestino}
+              onChange={e => setAreaDestino(e.target.value)}
+            >
+              <option value="">Seleccione un área</option>
+              {Object.keys(AREA_RESPONSABLES).map(area => (
+                <option key={area} value={area}>
+                  {area}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      <small>
-        Indique la acción o disposición que debe ejecutarse sobre el expediente.
-      </small>
-    </div>
+          <div className="form-group document-form-field">
+            <label>Responsable</label>
+            <input
+              type="text"
+              value={responsable}
+              readOnly
+              placeholder="Se completará automáticamente"
+            />
+          </div>
 
-  </div>
-        <div className="proveido-form-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+          <div className="form-group wide document-form-field document-form-field-wide">
+            <label>Instrucción *</label>
+            <textarea
+              value={instruccion}
+              onChange={e => setInstruccion(e.target.value)}
+              placeholder="Escriba la instrucción..."
+              rows={4}
+            />
+          </div>
+
+          <div className="form-group wide document-form-field document-form-field-wide document-form-file-field">
+            <label>Documento adjunto (opcional)</label>
+            <label className="document-form-file-button">
+              ▣ Seleccionar archivo
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                onChange={e => {
+                  const archivo = e.target.files?.[0] ?? null
+
+                  if (archivo && archivo.size > 5 * 1024 * 1024) {
+                    alert('El archivo no puede superar los 5 MB.')
+                    e.target.value = ''
+                    setArchivoSeleccionado(null)
+                    return
+                  }
+
+                  setArchivoSeleccionado(archivo)
+                }}
+              />
+            </label>
+            <small>
+              {archivoSeleccionado
+                ? `Seleccionado: ${archivoSeleccionado.name}`
+                : 'Máximo 5 MB.'}
+            </small>
+            {archivoSeleccionado && (
+              <button
+                type="button"
+                className="action-link"
+                onClick={() => setArchivoSeleccionado(null)}
+              >
+                Quitar archivo
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="proveido-form-actions document-form-actions">
           <button
             type="button"
             className="outline-button"
@@ -228,9 +218,7 @@ export default function NuevoProveidoView({
             {guardando ? 'Guardando...' : 'Guardar Proveído'}
           </button>
         </div>
-
-      </div>
-
-    </> 
+      </section>
+    </div>
   )
 }

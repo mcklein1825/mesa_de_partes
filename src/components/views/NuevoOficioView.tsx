@@ -1,9 +1,9 @@
 import { FormEvent, useState } from 'react'
 import { Expediente } from '../../types'
-import { AREA_RESPONSABLES } from '../../constants'
 
 type Props = {
   expediente: Expediente | null
+  responsable: string
   onCancelar: () => void
   onGuardar: (datos: NuevoOficioData) => Promise<void>
 }
@@ -24,6 +24,7 @@ export type NuevoOficioData = {
 
 export default function NuevoOficioView({
   expediente,
+  responsable,
   onCancelar,
   onGuardar
 }: Props) {
@@ -31,25 +32,10 @@ export default function NuevoOficioView({
     new Date().toISOString().split('T')[0]
   )
 
-  const [destinatario, setDestinatario] = useState('')
-
-  const [asuntoTipo, setAsuntoTipo] = useState('')
-
-  const [asuntoDetalle, setAsuntoDetalle] = useState(
-    expediente?.asunto || ''
-  )
-
-  // El área destino se selecciona al crear el Oficio.
-  // NO se obtiene del expediente.
+  const [asuntoDetalle, setAsuntoDetalle] = useState('')
   const [areaDestino, setAreaDestino] = useState('')
 
-  const [codigoOad, setCodigoOad] = useState('')
-  const [codigoOgesup, setCodigoOgesup] = useState('')
-
   const [guardando, setGuardando] = useState(false)
-
-  // El responsable se obtiene automáticamente según el área seleccionada.
- const responsable = AREA_RESPONSABLES[areaDestino] || ''
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -64,13 +50,13 @@ export default function NuevoOficioView({
       return
     }
 
-    if (!destinatario.trim()) {
-      alert('Ingrese el destinatario.')
+    if (!asuntoDetalle.trim()) {
+      alert('Ingrese el asunto del Oficio.')
       return
     }
 
-    if (!asuntoDetalle.trim()) {
-      alert('Ingrese el detalle del asunto.')
+    if (!responsable.trim()) {
+      alert('Ingrese el nombre de la persona responsable del documento.')
       return
     }
 
@@ -81,12 +67,12 @@ export default function NuevoOficioView({
         expedienteId: String(expediente.id),
         nroExpediente: String(expediente.nroExp),
         fecha,
-        destinatario: destinatario.trim(),
-        asuntoTipo: asuntoTipo.trim(),
+        destinatario: '',
+        asuntoTipo: '',
         asuntoDetalle: asuntoDetalle.trim(),
         responsable: responsable.trim(),
-        codigoOad: codigoOad.trim(),
-        codigoOgesup: codigoOgesup.trim(),
+        codigoOad: '',
+        codigoOgesup: '',
         anio: new Date(`${fecha}T00:00:00`).getFullYear(),
         areaDestino: areaDestino.trim()
       })
@@ -97,12 +83,12 @@ export default function NuevoOficioView({
 
   return (
     <>
-      <div className="page-heading compact">
+      <div className="page-heading compact document-form-header">
         <div>
           <p className="eyebrow">GESTIÓN DOCUMENTAL</p>
           <h1>Nuevo Oficio</h1>
           <p className="muted">
-            Registro de un oficio vinculado a un expediente.
+            Registre la fecha, el área de destino, el asunto y el responsable del Oficio.
           </p>
         </div>
 
@@ -121,12 +107,15 @@ export default function NuevoOficioView({
           Seleccione primero un expediente para registrar el oficio.
         </div>
       ) : (
-        <form onSubmit={handleSubmit}>
-          <div className="panel form-card">
-            <h2>Expediente</h2>
+        <form className="oficio-form document-form-layout" onSubmit={handleSubmit}>
+          <div className="panel form-card oficio-form-card document-form-card">
+            <div className="document-form-section-header">
+              <h2>Expediente relacionado</h2>
+              <p>El Oficio quedará vinculado a este expediente.</p>
+            </div>
 
-            <div className="form-grid">
-              <div className="form-group">
+            <div className="form-grid oficio-form-grid document-form-grid">
+              <div className="form-group document-form-field">
                 <label>N.° Expediente</label>
                 <input
                   type="text"
@@ -135,7 +124,7 @@ export default function NuevoOficioView({
                 />
               </div>
 
-              <div className="form-group">
+              <div className="form-group document-form-field">
                 <label>Fecha</label>
                 <input
                   type="date"
@@ -145,106 +134,52 @@ export default function NuevoOficioView({
                 />
               </div>
 
-              <div className="form-group">
-                <label>Área destino *</label>
-
-                <select
+              <div className="form-group document-form-field">
+                <label>Área de destino DRELM *</label>
+                <input
+                  type="text"
                   value={areaDestino}
-                  onChange={e => setAreaDestino(e.target.value)}
+                  onChange={event => setAreaDestino(event.target.value)}
+                  placeholder="Ej. DRELM - OAJ"
                   required
-                >
-                  <option value="">
-                    Seleccione un área
-                  </option>
-
-                  {Object.keys(AREA_RESPONSABLES).map(area => (
-                    <option
-                      key={area}
-                      value={area}
-                    >
-                      {area}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
-              <div className="form-group">
-                <label>Responsable</label>
-
+              <div className="form-group document-form-field">
+                <label>Responsable (quien elaboró el documento) *</label>
                 <input
                   type="text"
                   value={responsable}
                   readOnly
-                  placeholder="Se completará automáticamente"
+                  placeholder="Se completará con el usuario actual"
+                  required
                 />
               </div>
             </div>
           </div>
 
-          <div className="panel form-card">
-            <h2>Datos del Oficio</h2>
+          <div className="panel form-card oficio-form-card document-form-card">
+            <div className="document-form-section-header">
+              <h2>Datos del Oficio</h2>
+              <p>Complete el asunto correspondiente al documento.</p>
+            </div>
 
-            <div className="form-grid">
-              <div className="form-group">
-                <label>Destinatario *</label>
-
-                <input
-                  type="text"
-                  value={destinatario}
-                  onChange={e => setDestinatario(e.target.value)}
-                  placeholder="Nombre del destinatario"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Tipo de asunto</label>
-
-                <input
-                  type="text"
-                  value={asuntoTipo}
-                  onChange={e => setAsuntoTipo(e.target.value)}
-                  placeholder="Ej. Solicitud, Comunicación, Respuesta..."
-                />
-              </div>
-
-              <div className="form-group form-group-full">
-                <label>Detalle del asunto *</label>
+            <div className="form-grid oficio-form-grid document-form-grid">
+              <div className="form-group form-group-full document-form-field document-form-field-wide">
+                <label>Asunto *</label>
 
                 <textarea
                   value={asuntoDetalle}
                   onChange={e => setAsuntoDetalle(e.target.value)}
-                  placeholder="Detalle del asunto del oficio"
-                  rows={4}
+                  placeholder="Ej. Remito copia de legajo del docente"
+                  rows={3}
                   required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Código OAD</label>
-
-                <input
-                  type="text"
-                  value={codigoOad}
-                  onChange={e => setCodigoOad(e.target.value)}
-                  placeholder="Código OAD"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Código OGESUP</label>
-
-                <input
-                  type="text"
-                  value={codigoOgesup}
-                  onChange={e => setCodigoOgesup(e.target.value)}
-                  placeholder="Código OGESUP"
                 />
               </div>
             </div>
           </div>
 
-          <div className="form-actions">
+          <div className="form-actions oficio-form-actions document-form-actions">
             <button
               type="button"
               className="secondary-button"

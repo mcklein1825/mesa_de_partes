@@ -149,14 +149,14 @@ export default function TrackingModal({
                   key={`${entry.fechaHora}-${index}`}
                 >
                   <div className="timeline-marker" aria-hidden="true">
-                    {index + 1}
+                    {history.length - index}
                   </div>
 
                   <div className="timeline-card">
                     <div className="timeline-card-header">
                       <div className="timeline-step-group">
                         <span className="timeline-step">
-                          {esRegistroInicial ? 'INICIO DEL TRÁMITE' : `MOVIMIENTO ${index + 1}`}
+                          {esRegistroInicial ? 'INICIO DEL TRÁMITE' : `MOVIMIENTO ${history.length - index}`}
                         </span>
 
                         <strong>{accion}</strong>

@@ -1,0 +1,70 @@
+/* =====================================================
+   OFICIOS: DISTRIBUCIÓN COMPACTA
+   ===================================================== */
+.oficio-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.oficio-form .oficio-form-card {
+  margin: 0;
+  overflow: hidden;
+}
+
+.oficio-form-card h2 {
+  margin: 0;
+  padding: 18px 24px 12px;
+  color: #203642;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.oficio-form .oficio-form-grid {
+  gap: 18px 20px;
+  padding: 8px 24px 24px;
+}
+
+.oficio-form .form-group-full {
+  grid-column: 1 / -1;
+}
+
+.oficio-form .form-group-full textarea {
+  min-height: 96px;
+}
+
+.oficio-form .oficio-form-actions {
+  margin: 0;
+  padding-bottom: 8px;
+}
+
+.list-panel .oficios-table {
+  width: 100%;
+  min-width: 1250px;
+  table-layout: fixed;
+}
+
+.list-panel .oficios-table th:nth-child(1) { width: 8%; }  /* N.° REGISTRO */
+.list-panel .oficios-table th:nth-child(2) { width: 14%; } /* EXPEDIENTE */
+.list-panel .oficios-table th:nth-child(3) { width: 9%; }  /* FECHA */
+.list-panel .oficios-table th:nth-child(4) { width: 22%; } /* ASUNTO */
+.list-panel .oficios-table th:nth-child(5) { width: 14%; } /* DESTINATARIO */
+.list-panel .oficios-table th:nth-child(6) { width: 15%; } /* ÁREA DESTINO */
+.list-panel .oficios-table th:nth-child(7) { width: 12%; } /* RESPONSABLE */
+.list-panel .oficios-table th:nth-child(8) { width: 6%; }  /* ESTADO */
+
+@media (max-width: 700px) {
+  .oficio-form .oficio-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 8px 18px 20px;
+  }
+
+  .oficio-form-card h2 {
+    padding: 16px 18px 10px;
+  }
+
+  .oficio-form .oficio-form-actions {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}

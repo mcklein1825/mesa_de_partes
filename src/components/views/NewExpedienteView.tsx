@@ -31,74 +31,61 @@ export default function NewExpedienteView({
   const [showExtraFields, setShowExtraFields] = useState(false)
 
   return (
-    <div className="expediente-form-page">
-      <form className="form-layout" onSubmit={onSubmit}>
+    <div className="expediente-form-page document-form-page">
+      <div className="page-heading compact document-form-header">
+        <div>
+          <p className="eyebrow">GESTIÓN DOCUMENTAL</p>
+          <h1>Registro de Expediente</h1>
+          <p className="muted">
+            Complete los datos solicitados para registrar el expediente.
+          </p>
+        </div>
+      </div>
 
+      <form className="form-layout document-form-layout" onSubmit={onSubmit}>
         {expedienteParaDuplicar && (
-          <>
-            <div
-              style={{
-                marginBottom: '20px',
-                padding: '14px',
-                borderRadius: '8px',
-                border: '1px solid #c5d2d8',
-                background: '#f5f8fa'
-              }}
-            >
-              <strong>
-                Expediente seleccionado para duplicar
-              </strong>
-
-              <div style={{ marginTop: '8px' }}>
-                Expediente original:{' '}
-                <strong>
-                  {formatNroExp(
-                    String(expedienteParaDuplicar.nroExp)
-                  )}
-                </strong>
-              </div>
-
-              <div>
-                Remitente:{' '}
-                {expedienteParaDuplicar.remitenteNombre ||
-                  expedienteParaDuplicar.remitente ||
-                  'Sin nombre'}
-              </div>
-
-              <div>
-                Asunto:{' '}
-                {expedienteParaDuplicar.asunto ||
-                  'Sin asunto'}
-              </div>
-
-              <div
-                style={{
-                  marginTop: '10px',
-                  padding: '10px',
-                  borderRadius: '6px',
-                  background: '#ffffff'
-                }}
-              >
-                <strong>Nuevo expediente:</strong>{' '}
-                {formatNroExp(
-                  String(expedienteParaDuplicar.nroExp)
-                )}{' '}
-                *
-              </div>
-
-              <input
-                type="hidden"
-                name="duplicadoDesdeId"
-                value={expedienteParaDuplicar.id}
-              />
-
-              <input
-                type="hidden"
-                name="esDuplicado"
-                value="true"
-              />
+          <section className="panel document-form-card">
+            <div className="document-form-section-header">
+              <h2>Expediente relacionado</h2>
+              <p>Se registrará un nuevo expediente vinculado al original.</p>
             </div>
-          </>
+
+            <div className="document-form-info">
+              <div>
+                <strong>Expediente original</strong>
+                <p>{formatNroExp(String(expedienteParaDuplicar.nroExp))}</p>
+              </div>
+              <div>
+                <strong>Remitente</strong>
+                <p>
+                  {expedienteParaDuplicar.remitenteNombre ||
+                    expedienteParaDuplicar.remitente ||
+                    'Sin nombre'}
+                </p>
+              </div>
+              <div>
+                <strong>Asunto</strong>
+                <p>{expedienteParaDuplicar.asunto || 'Sin asunto'}</p>
+              </div>
+            </div>
+
+            <div className="document-form-duplicate-summary">
+              <strong>Nuevo expediente:</strong>{' '}
+              {formatNroExp(String(expedienteParaDuplicar.nroExp))} *
+            </div>
+
+            <input
+              type="hidden"
+              name="duplicadoDesdeId"
+              value={expedienteParaDuplicar.id}
+            />
+
+            <input
+              type="hidden"
+              name="esDuplicado"
+              value="true"
+            />
+          </section>
         )}
 
         {isSaving && (
@@ -107,28 +94,14 @@ export default function NewExpedienteView({
           </div>
         )}
 
-        <div className="page-heading compact">
-          <div>
-            <p className="eyebrow">GESTIÓN DOCUMENTAL</p>
-            <h1>Registro de Expediente</h1>
-            <p className="muted">
-              Complete los datos solicitados para registrar el expediente.
-            </p>
-          </div>
-        </div>
-
-        <section className="panel form-panel">
-          <div className="panel-header">
-            <div>
-              <h2>Datos del expediente</h2>
-              <p>
-                Complete los datos solicitados para registrar el expediente.
-              </p>
-            </div>
+        <section className="panel form-panel document-form-card">
+          <div className="document-form-section-header">
+            <h2>Datos del expediente</h2>
+            <p>Complete los datos principales del documento recibido.</p>
           </div>
 
-          <div className="form-grid">
-            <label>
+          <div className="form-grid document-form-grid">
+            <label className="document-form-field">
               Fecha de ingreso
               <input
                 name="fechaIngreso"
@@ -137,7 +110,7 @@ export default function NewExpedienteView({
                 defaultValue={todayInputValue()}
               />
             </label>
-            <label>
+            <label className="document-form-field">
               Fecha límite (opcional)
               <input
                 name="plazo"
@@ -146,7 +119,7 @@ export default function NewExpedienteView({
             </label>
 
 
-            <label className="wide">
+            <label className="wide document-form-field document-form-field-wide">
               Nombre / apellido o razón social
               <input
                 name="remitente"
@@ -160,7 +133,7 @@ export default function NewExpedienteView({
               />
             </label>
 
-            <label className="wide">
+            <label className="wide document-form-field document-form-field-wide">
               Asunto de la solicitud
               <input
                 name="asunto"
@@ -171,7 +144,7 @@ export default function NewExpedienteView({
               />
             </label>
 
-            <label className="wide">
+            <label className="wide document-form-field document-form-field-wide">
               Documentos
               <input
                 name="documentos"
@@ -182,7 +155,7 @@ export default function NewExpedienteView({
           </div>
         </section>
 
-        <div className="extra-fields-toggle">
+        <div className="extra-fields-toggle document-form-extra-toggle">
           <button
             type="button"
             className="extra-fields-button"
@@ -197,13 +170,14 @@ export default function NewExpedienteView({
         </div>
 
         {showExtraFields && (
-          <section className="panel form-panel">
-            <div className="section-strip">
-              ▣ Datos del administrado
+          <section className="panel form-panel document-form-card">
+            <div className="document-form-section-header">
+              <h2>Datos del administrado</h2>
+              <p>Información adicional de la persona o entidad remitente.</p>
             </div>
 
-            <div className="form-grid">
-              <label>
+            <div className="form-grid document-form-grid">
+              <label className="document-form-field">
                 Tipo de documento
                 <select name="tipoDocumento">
                   <option value="RUC">RUC</option>
@@ -212,7 +186,7 @@ export default function NewExpedienteView({
                 </select>
               </label>
 
-              <label>
+              <label className="document-form-field">
                 Número de documento
                 <div className="inline-field">
                   <input
@@ -229,7 +203,7 @@ export default function NewExpedienteView({
                 </div>
               </label>
 
-              <label>
+              <label className="document-form-field">
                 Representante (si aplica)
                 <input
                   name="representante"
@@ -237,7 +211,7 @@ export default function NewExpedienteView({
                 />
               </label>
 
-              <label>
+              <label className="document-form-field">
                 Cargo del representante
                 <input
                   name="cargoRepresentante"
@@ -245,7 +219,7 @@ export default function NewExpedienteView({
                 />
               </label>
 
-              <label className="wide">
+              <label className="wide document-form-field document-form-field-wide">
                 Contenido
                 <textarea
                   name="contenido"
@@ -254,7 +228,7 @@ export default function NewExpedienteView({
                 />
               </label>
 
-              <label className="wide">
+              <label className="wide document-form-field document-form-field-wide">
                 Dirección
                 <input
                   name="direccion"
@@ -262,7 +236,7 @@ export default function NewExpedienteView({
                 />
               </label>
 
-              <label>
+              <label className="document-form-field">
                 Correo electrónico
                 <input
                   name="correo"
@@ -271,7 +245,7 @@ export default function NewExpedienteView({
                 />
               </label>
 
-              <label>
+              <label className="document-form-field">
                 Celular
                 <input
                   name="celular"
@@ -279,7 +253,7 @@ export default function NewExpedienteView({
                 />
               </label>
 
-              <label>
+              <label className="document-form-field">
                 Folios
                 <input
                   name="folios"
@@ -290,7 +264,7 @@ export default function NewExpedienteView({
                 />
               </label>
 
-              <label>
+              <label className="document-form-field">
                 Anexos
                 <input
                   name="anexos"
@@ -301,7 +275,7 @@ export default function NewExpedienteView({
                 />
               </label>
 
-              <label>
+              <label className="document-form-field">
                 Prioridad
                 <select
                   name="prioridad"
@@ -320,13 +294,14 @@ export default function NewExpedienteView({
           </section>
         )}
 
-        <section className="panel form-panel">
-          <div className="section-strip">
-            ▣ Recepción y seguimiento
+        <section className="panel form-panel document-form-card">
+          <div className="document-form-section-header">
+            <h2>Recepción y seguimiento</h2>
+            <p>Indique por qué canal se recibió el expediente.</p>
           </div>
 
-          <div className="form-grid">
-            <label>
+          <div className="form-grid document-form-grid">
+            <label className="document-form-field">
               Recibido
 
               <select
@@ -357,18 +332,19 @@ export default function NewExpedienteView({
           </div>
         </section>
 
-        <section className="panel form-panel">
-          <div className="section-strip">
-            ▣ Archivos a Adjuntar
+        <section className="panel form-panel document-form-card">
+          <div className="document-form-section-header">
+            <h2>Archivos a adjuntar</h2>
+            <p>Adjunte el documento principal que acompaña el trámite.</p>
           </div>
 
-          <div className="form-grid attachment-grid">
-            <div>
+          <div className="form-grid attachment-grid document-form-grid">
+            <div className="document-form-field document-form-field-wide">
               <label>
                 Archivo
               </label>
 
-              <label className="file-button">
+              <label className="file-button document-form-file-button">
                 ▣ Seleccionar archivo
 
                 <input
@@ -392,7 +368,7 @@ export default function NewExpedienteView({
           </div>
         </section>
 
-        <div className="form-actions">
+        <div className="form-actions document-form-actions">
           <button
             type="button"
             className="legacy-light-button"

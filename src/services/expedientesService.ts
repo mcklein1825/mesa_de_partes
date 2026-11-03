@@ -13,7 +13,7 @@ export const fetchExpedientes = async (): Promise<Expediente[]> => {
       canal_recepcion, folios, anexos, direccion, correo, celular,
       representante, cargo_representante, usuario_registro,
       fecha_hora_recepcion, constancia_recepcion, es_duplicado,
-      fecha_sin_respuesta, duplicado_de_id
+      fecha_sin_respuesta, duplicado_de_id, historial
     `)
     .order('nro_exp', { ascending: false })
     .limit(2000)
@@ -57,7 +57,7 @@ export const fetchExpedientes = async (): Promise<Expediente[]> => {
       usuarioRegistro: item.usuario_registro || '',
       fechaHoraRecepcion: item.fecha_hora_recepcion || '',
       constanciaRecepcion: item.constancia_recepcion || '',
-      historial: []
+      historial: Array.isArray(item.historial) ? item.historial : []
     })
   })
 }

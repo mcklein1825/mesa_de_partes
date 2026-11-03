@@ -1,10 +1,8 @@
   import { useState, useEffect, useMemo, useRef, useCallback, FormEvent } from 'react'
   import { supabase } from './lib/supabaseClient'
-  import { fetchExpedientes, fetchHistorialExpediente } from './services/expedientesService'
-  import { fetchProveidos } from './services/proveidosService'
-  import { fetchMemos } from './services/memosService'
-  import { fetchOficios } from './services/oficiosService'
-  import UserSelectModal from './components/UserSelectModal'
+  import { fetchHistorialExpediente } from './services/expedientesService'
+  import useMesaPartesData from './features/mesaPartes/useMesaPartesData'
+  import LoginView from './components/views/LoginView'
   import OficiosView from './components/views/OficiosView'
   import ProveidosView from './components/views/ProveidosView'
   import NuevoOficioView from './components/views/NuevoOficioView'
@@ -29,6 +27,7 @@
     normalizeExpediente, formatDate, todayInputValue, addDays,
     readFileAsDataUrl, getAreaDestino, getRemitenteNombre, getDeadlineState
   } from './utils/expedienteHelpers'
+  import { analyzeExpedienteRisk } from './utils/expedienteRiskModel'
 
   import DashboardView from './components/views/DashboardView'
   import ExpedientesView from './components/views/ExpedientesView'
@@ -43,62 +42,11 @@
 
     const [currentUser, setCurrentUser] = useState<User | null>(null)
     const [view, setView] = useState<View>('nuevo')
-
-    useEffect(() => {
-      const usuarioGuardado =
-        localStorage.getItem('mesa-partes-user')
-
-      const sessionStart =
-        localStorage.getItem('mesa-partes-session-start')
-
-      if (!usuarioGuardado || !sessionStart) {
-        return
-      }
-
-      const inicio = Number(sessionStart)
-
-      if (!Number.isFinite(inicio)) {
-        localStorage.removeItem('mesa-partes-user')
-        localStorage.removeItem('mesa-partes-session-start')
-        return
-      }
-
-      const tiempoTranscurrido =
-        Date.now() - inicio
-
-      const duracionSesion =
-        30 * 60 * 1000
-
-      if (tiempoTranscurrido >= duracionSesion) {
-        localStorage.removeItem('mesa-partes-user')
-        localStorage.removeItem('mesa-partes-session-start')
-        return
-      }
-
-      try {
-        const usuario = JSON.parse(usuarioGuardado)
-
-        if (usuario?.id && usuario?.nombre) {
-          setCurrentUser(usuario)
-        } else {
-          localStorage.removeItem('mesa-partes-user')
-          localStorage.removeItem('mesa-partes-session-start')
-        }
-      } catch {
-        localStorage.removeItem('mesa-partes-user')
-        localStorage.removeItem('mesa-partes-session-start')
-      }
-    }, [])
-
-
     const [expedienteParaDuplicar, setExpedienteParaDuplicar] =
     useState<Expediente | null>(null)
-    const [expedientes, setExpedientes] = useState<Expediente[]>([])
-    const [expedientesPage, setExpedientesPage] = useState(1)
     const expedientesPageSize = 50
     const [memoExpediente, setMemoExpediente] = useState<Expediente | null>(null)
     const [oficioExpediente, setOficioExpediente] = useState<Expediente | null>(null)
-    const [loadingDb, setLoadingDb] = useState(true)
 
     const [query, setQuery] = useState('')
     const [areaFilter, setAreaFilter] = useState('Todas')
@@ -109,17 +57,11 @@
     const [toast, setToast] = useState('')
     const [isSaving, setIsSaving] = useState(false)
 
-    const [memos, setMemos] = useState<Memo[]>([])
-    const [oficios, setOficios] = useState<Oficio[]>([])
-    const [proveidos, setProveidos] = useState<Proveido[]>([])
     const [showOficioForm, setShowOficioForm] = useState(false)
     const [showOficioSelector, setShowOficioSelector] = useState(false)
     const [showProveidoForm, setShowProveidoForm] = useState(false)
     const [proveidoExpediente, setProveidoExpediente] = useState<Expediente | null>(null)
     const [showProveidoSelector, setShowProveidoSelector] = useState(false)
-    const [expedienteDocumentos, setExpedienteDocumentos] = useState<
-    { expedienteId: string; tipoDocumento: 'Memo' | 'Oficio' }[]
-  >([])
     const [memoNro, setMemoNro] = useState('')
     const [memoAsunto, setMemoAsunto] = useState('')
     const [memoFecha, setMemoFecha] = useState(todayInputValue())
@@ -142,17 +84,28 @@
       setToast(message)
       window.setTimeout(() => setToast(''), 3000)
     }, [])
+    const {
+      expedientes,
+      setExpedientes,
+      expedientesPage,
+      setExpedientesPage,
+      memos,
+      setMemos,
+      oficios,
+      setOficios,
+      proveidos,
+      setProveidos,
+      expedienteDocumentos,
+      loadingDb
+    } = useMesaPartesData(currentUser, notify)
+
     const sessionTimeoutRef = useRef<number | null>(null)
     const resetSessionTimeout = useCallback(() => {
       if (sessionTimeoutRef.current) window.clearTimeout(sessionTimeoutRef.current)
       sessionTimeoutRef.current = window.setTimeout(() => {
-  notify('Sesión expirada por inactividad')
-
-  localStorage.removeItem('mesa-partes-user')
-  localStorage.removeItem('mesa-partes-session-start')
-
-  setCurrentUser(null)
-}, 30 * 60 * 1000)
+        notify('Sesión expirada por inactividad')
+        void supabase.auth.signOut().then(() => setCurrentUser(null))
+      }, 30 * 60 * 1000)
     }, [notify])
 
     useEffect(() => {
@@ -165,60 +118,6 @@
         events.forEach(event => window.removeEventListener(event, resetSessionTimeout))
       }
     }, [currentUser, resetSessionTimeout])
-
-    useEffect(() => {
-      const cargarDeSupabase = async () => {
-        setLoadingDb(true)
-
-        try {
-          const expedientesData = await fetchExpedientes()
-          setExpedientes(expedientesData)
-          setExpedientesPage(1)
-        } catch (error) {
-          console.error('Supabase Error:', error)
-          notify('Error al cargar expedientes desde Supabase')
-          setLoadingDb(false)
-          return
-        }
-
-        try {
-          const proveidosData = await fetchProveidos()
-          setProveidos(proveidosData)
-        } catch (error) {
-          console.error('Error al cargar proveídos:', error)
-        }
-        try {
-          const memosData = await fetchMemos()
-          setMemos(memosData)
-        } catch (error) {
-          console.error('Error cargando memos:', error)
-        }
-        try {
-          const oficiosData = await fetchOficios()
-          setOficios(oficiosData)
-        } catch (error) {
-          console.error('Error cargando oficios:', error)
-        }
-        // Cargar el tipo de documento asignado a cada expediente
-        const { data: documentosData, error: documentosError } = await supabase
-          .from('expediente_documentos')
-          .select('expediente_id, tipo_documento')
-
-        if (documentosError) {
-          console.error('Error cargando tipos de documento:', documentosError)
-        } else if (documentosData) {
-          setExpedienteDocumentos(
-            documentosData.map((item: any) => ({
-              expedienteId: String(item.expediente_id),
-              tipoDocumento: item.tipo_documento as 'Memo' | 'Oficio'
-            }))
-          )
-        }
-
-        setLoadingDb(false)
-      }
-      cargarDeSupabase()
-    }, [notify])
 
     const userPermissions = currentUser ? ROLE_PERMISSIONS[currentUser.rol] : null
 
@@ -272,6 +171,11 @@
       const now = new Date()
       return now.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()
     }, [])
+
+    const expedienteRiskAnalysis = useMemo(
+      () => analyzeExpedienteRisk(expedientes, expedienteDocumentos),
+      [expedientes, expedienteDocumentos]
+    )
 
     const filteredExpedientes = useMemo(() => {
     const termino = query.trim().toLowerCase()
@@ -399,44 +303,7 @@
     return
   }
 
-  let nextNumber: number
 
-  if (esDuplicado && expedienteOriginal) {
-    nextNumber = Number(expedienteOriginal.nroExp)
-
-    if (!Number.isInteger(nextNumber)) {
-      notify('El número del expediente original no es válido')
-      setIsSaving(false)
-      return
-    }
-  } else {
-    const { data: numeroSiguiente, error: nextNumberError } =
-      await supabase.rpc('obtener_siguiente_nro_exp')
-
-    if (
-      nextNumberError ||
-      !Number.isInteger(numeroSiguiente)
-    ) {
-      console.error(
-        'Error obteniendo número de expediente:',
-        nextNumberError
-      )
-
-      notify(
-        'No se pudo obtener el número de expediente. Intente nuevamente.'
-      )
-
-      setIsSaving(false)
-      return
-    }
-
-    nextNumber = numeroSiguiente
-  }
-
-  const currentYear = new Date().getFullYear()
-
-  const nextId =
-    `EXP-${currentYear}-${String(nextNumber).padStart(5, '0')}`
 
   const fechaIngreso = String(
     data.get('fechaIngreso') || ''
@@ -453,25 +320,10 @@
   const fechaHoraRegistro = new Date().toISOString()
   const canalRecepcion = String(data.get('canalRecepcion') || 'Mesa de Partes')
 
-const historialInicial = [
-  {
-    fechaHora: fechaHoraRegistro,
-    fechaIngreso,
-    areaOrigen: 'Mesa de Partes',
-    areaDestino: canalRecepcion, // <-- AQUÍ SE GUARDA EL CANAL
-    accion: 'Expediente registrado',
-    observacion:
-      esDuplicado && expedienteOriginal
-        ? `Expediente creado como duplicado de EXP-2026-${String(
-            expedienteOriginal.nroExp
-          ).padStart(5, '0')}.`
-        : `Expediente recibido en Mesa de Partes vía ${canalRecepcion}.`, // <-- MENSAJE DINÁMICO
-    responsable: `${currentUser.nombre} - ${currentUser.area || ''}`
-  }
-]
+
       const newExpediente: Expediente = {
         id: '',
-        nroExp: String(nextNumber),
+        nroExp: '',
         esDuplicado,
         fechaIngreso: fechaFormateada,
         remitente,
@@ -503,50 +355,93 @@ const historialInicial = [
         celular: String(data.get('celular') || ''),
         usuarioRegistro: `${currentUser.nombre} - ${currentUser.area || ''}`,
 
-        constanciaRecepcion: `Cargo generado para ${nextId}`,
-        historial: historialInicial
+        constanciaRecepcion: '',
+        historial: []
       }
 
-      const { data: insertedData, error } = await supabase.from('mesa_partes_2026').insert({
-        nro_exp: newExpediente.nroExp, fecha_ingreso: fechaIngreso,
+      // 1. Armamos el JSON con los datos para la nueva RPC
+      const payloadDatos = {
+        fecha_ingreso: fechaIngreso,
         remitente_nombre: newExpediente.remitenteNombre,
-        asunto: newExpediente.asunto, contenido: newExpediente.contenido,
+        asunto: newExpediente.asunto,
+        contenido: newExpediente.contenido,
         plazo: newExpediente.plazo || null,
         prioridad: newExpediente.prioridad,
-        archivo: newExpediente.archivo, archivo_data: newExpediente.archivoData,
-        archivo_tipo: newExpediente.archivoTipo, archivo_tamano: newExpediente.archivoTamano,
+        archivo: newExpediente.archivo,
+        archivo_data: newExpediente.archivoData,
+        archivo_tipo: newExpediente.archivoTipo,
+        archivo_tamano: newExpediente.archivoTamano,
         documentos: newExpediente.documentos,
-        modalidad_recepcion: newExpediente.modalidadRecepcion, entregado_a: newExpediente.entregadoA,
+        modalidad_recepcion: newExpediente.modalidadRecepcion,
         canal_recepcion: newExpediente.canalRecepcion,
-        folios: newExpediente.folios, anexos: newExpediente.anexos, direccion: newExpediente.direccion,
-        correo: newExpediente.correo, celular: newExpediente.celular, representante: newExpediente.representante,
-        cargo_representante: newExpediente.cargoRepresentante, usuario_registro: newExpediente.usuarioRegistro,
-        fecha_hora_recepcion: newExpediente.fechaHoraRecepcion, constancia_recepcion: newExpediente.constanciaRecepcion,
-        historial: newExpediente.historial,
+        folios: newExpediente.folios,
+        anexos: newExpediente.anexos,
+        direccion: newExpediente.direccion,
+        correo: newExpediente.correo,
+        celular: newExpediente.celular,
+        representante: newExpediente.representante,
+        cargo_representante: newExpediente.cargoRepresentante,
         es_duplicado: esDuplicado,
-        duplicado_de_id: esDuplicado
-          ? Number(duplicadoDesdeId)
-          : null
-            }).select().single()
+        duplicado_de_id: esDuplicado ? Number(duplicadoDesdeId) : null
+      }
+
+      // 2. Llamamos a la RPC segura
+      const { data: insertedData, error } = await supabase.rpc(
+        'registrar_expediente',
+        { p_datos: payloadDatos }
+      )
 
       if (error) {
-        console.error('Error insertando expediente:', error)
+        console.error('Error registrando expediente:', error)
         notify(`No se pudo registrar el expediente: ${error.message}`)
+        setIsSaving(false)
+        return
+      }
+
+      if (!insertedData || typeof insertedData !== 'object') {
+        notify('La base de datos no devolvió el expediente registrado')
         setIsSaving(false)
         return
       }
 
       setIsSaving(false)
 
-  const expedienteInsertado = insertedData
-    ? normalizeExpediente({
+      // 3. Construimos el expediente en memoria con la respuesta de la BD
+      const expedienteInsertado = normalizeExpediente({
         ...newExpediente,
         id: String(insertedData.id),
-        nroExp: String(
-          insertedData.nro_exp || newExpediente.nroExp
-        )
+        nroExp: String(insertedData.nro_exp),
+        fechaIngreso: String(insertedData.fecha_ingreso || fechaIngreso),
+        remitente: String(insertedData.remitente_nombre || ''),
+        remitenteNombre: String(insertedData.remitente_nombre || ''),
+        asunto: String(insertedData.asunto || ''),
+        contenido: String(insertedData.contenido || ''),
+        area: String(insertedData.area || ''),
+        areaDestino: String(insertedData.area_destino || ''),
+        estado: insertedData.estado || 'Pendiente',
+        plazo: String(insertedData.plazo || ''),
+        prioridad: insertedData.prioridad || 'Normal',
+        archivo: String(insertedData.archivo || 'Sin adjunto'),
+        archivoData: String(insertedData.archivo_data || ''),
+        archivoTipo: String(insertedData.archivo_tipo || ''),
+        archivoTamano: Number(insertedData.archivo_tamano || 0),
+        documentos: String(insertedData.documentos || ''),
+        modalidadRecepcion: String(insertedData.modalidad_recepcion || ''),
+        entregadoA: String(insertedData.entregado_a || ''),
+        canalRecepcion: String(insertedData.canal_recepcion || ''),
+        folios: Number(insertedData.folios ?? 1),
+        anexos: Number(insertedData.anexos ?? 0),
+        direccion: String(insertedData.direccion || ''),
+        correo: String(insertedData.correo || ''),
+        celular: String(insertedData.celular || ''),
+        representante: String(insertedData.representante || ''),
+        cargoRepresentante: String(insertedData.cargo_representante || ''),
+        usuarioRegistro: String(insertedData.usuario_registro || ''),
+        fechaHoraRecepcion: String(insertedData.fecha_hora_recepcion || ''),
+        constanciaRecepcion: String(insertedData.constancia_recepcion || ''),
+        esDuplicado: Boolean(insertedData.es_duplicado),
+        historial: Array.isArray(insertedData.historial) ? insertedData.historial : []
       })
-    : newExpediente
 
   setExpedientes(prev => [
     expedienteInsertado,
@@ -561,7 +456,7 @@ const historialInicial = [
   setView('expedientes')
 
   notify(
-    `Expediente ${nextId} registrado correctamente`
+    `Expediente ${expedienteInsertado.nroExp} registrado correctamente`
   )
     }
     const adjuntarDocumento = async (
@@ -606,88 +501,56 @@ const historialInicial = [
 
       const archivoData = await readFileAsDataUrl(file)
 
-      const expediente = expedientes.find(
-        item => item.id === expedienteId
+      const { data, error } = await supabase.rpc(
+        'adjuntar_documento_expediente',
+        {
+          p_expediente_id: Number(expedienteId),
+          p_archivo: file.name,
+          p_archivo_data: archivoData,
+          p_archivo_tipo: file.type || 'application/octet-stream',
+          p_archivo_tamano: file.size
+        }
       )
 
-      if (!expediente) {
-        notify('No se encontró el expediente')
+      if (error) {
+        console.error('Error adjuntando documento:', error)
+        notify(`No se pudo adjuntar el documento: ${error.message}`)
         return
       }
 
-      const historialActual = Array.isArray(expediente.historial)
-        ? expediente.historial
-        : []
+      const expedienteActualizado = data?.expediente
 
-      const nuevoHistorial = [
-        ...historialActual,
-        {
-          fechaHora: new Date().toISOString(),
-          fechaIngreso: expediente.fechaIngreso || '',
-          areaOrigen: currentUser.area || 'Mesa de Partes',
-          areaDestino: getAreaDestino(expediente),
-          accion: 'Documento adjuntado',
-          observacion: `Se adjuntó posteriormente el documento "${file.name}".`,
-          responsable: `${currentUser.nombre} - ${currentUser.area || ''}`
-        }
-      ]
-
-      const { error } = await supabase
-        .from('mesa_partes_2026')
-        .update({
-          archivo: file.name,
-          archivo_data: archivoData,
-          archivo_tipo: file.type || 'application/octet-stream',
-          archivo_tamano: file.size,
-          historial: nuevoHistorial
-        })
-        .eq('id', expedienteId)
-
-      if (error) {
-        console.error(
-          'Error adjuntando documento:',
-          error
-        )
-
-        notify(
-          `No se pudo adjuntar el documento: ${error.message}`
-        )
-
+      if (!expedienteActualizado) {
+        notify('La base de datos no devolvió el expediente actualizado')
         return
       }
 
       setExpedientes(prev =>
         prev.map(item =>
-          item.id === expedienteId
+          item.id === String(expedienteActualizado.id)
             ? {
                 ...item,
-                archivo: file.name,
-                archivoData: archivoData,
-                archivoTipo: file.type || 'application/octet-stream',
-                archivoTamano: file.size,
-                historial: nuevoHistorial
+                archivo: expedienteActualizado.archivo,
+                archivoData: expedienteActualizado.archivo_data,
+                archivoTipo: expedienteActualizado.archivo_tipo,
+                archivoTamano: Number(expedienteActualizado.archivo_tamano || 0),
+                historial: Array.isArray(expedienteActualizado.historial)
+                  ? expedienteActualizado.historial
+                  : item.historial
               }
             : item
         )
       )
 
-      notify(
-        `Documento "${file.name}" adjuntado correctamente`
-      )
+      notify(`Documento "${file.name}" adjuntado correctamente`)
 
     } catch (error) {
-      console.error(
-        'Error inesperado al adjuntar documento:',
-        error
-      )
-
+      console.error('Error inesperado al adjuntar documento:', error)
       notify('Ocurrió un error al adjuntar el documento')
-
     } finally {
       setIsSaving(false)
     }
   }
-
     const registrarFechaExpediente = async (
   expedienteId: string,
   fecha: string
@@ -702,15 +565,23 @@ const historialInicial = [
     return
   }
 
+  const idNumerico = Number(expedienteId)
+
+  if (!Number.isSafeInteger(idNumerico) || idNumerico <= 0) {
+    notify('El ID del expediente no es válido')
+    return
+  }
+
   try {
     setIsSaving(true)
 
-    const { error } = await supabase
-      .from('mesa_partes_2026')
-      .update({
-        fecha_ingreso: fecha
-      })
-      .eq('id', Number(expedienteId))
+    const { data, error } = await supabase.rpc(
+      'registrar_fecha_expediente',
+      {
+        p_expediente_id: idNumerico,
+        p_fecha: fecha
+      }
+    )
 
     if (error) {
       console.error(
@@ -725,12 +596,20 @@ const historialInicial = [
       return
     }
 
+    if (!data) {
+      notify('La base de datos no devolvió los datos actualizados')
+      return
+    }
+
     setExpedientes(prev =>
       prev.map(item =>
-        item.id === expedienteId
+        item.id === String(data.id)
           ? {
               ...item,
-              fechaIngreso: fecha
+              fechaIngreso: String(data.fecha_ingreso || fecha),
+              historial: Array.isArray(data.historial)
+                ? data.historial
+                : item.historial
             }
           : item
       )
@@ -851,83 +730,57 @@ const historialInicial = [
         return
       }
 
-      if (data) {
-        const memoNuevo: Memo = {
-          id: String(data.id),
-          nroMemo: data.nro_memo || '',
-          expedienteId: String(data.expediente_id),
-          nroExpediente: data.nro_expediente || '',
-          fecha: data.fecha || '',
-          asunto: data.asunto || '',
-          registradoPor: data.registrado_por || '',
-          areaDestino: data.area_destino || '',
-          responsable: data.responsable || '',
-          estado: data.estado || 'Pendiente',
-          archivo: data.archivo || '',
-          archivoData: data.archivo_data || '',
-          archivoTipo: data.archivo_tipo || '',
-          archivoTamano: data.archivo_tamano || 0,
-          createdAt: data.created_at
-        }
-
-        setMemos(prev => [memoNuevo, ...prev])
-
-
-        // Supabase ya actualizó el área y el historial mediante registrar_memo.
-        // Consultamos los datos actuales para sincronizar la pantalla sin
-        // sobrescribir el historial con una copia antigua.
-        const {
-          data: expedienteActualizado,
-          error: expedienteError
-        } = await supabase
-          .from('mesa_partes_2026')
-          .select('area, area_destino, entregado_a, historial')
-          .eq('id', expedienteId)
-          .single()
-
-        if (expedienteError) {
-          console.error(
-            'El Memo se guardó, pero no se pudo refrescar el expediente:',
-            expedienteError
-          )
-          notify(
-            'El Memo se guardó, pero no se pudo actualizar la vista del expediente.'
-          )
-        } else if (expedienteActualizado) {
-          setExpedientes(prev =>
-            prev.map(item =>
-              item.id === memoExpediente.id
-                ? {
-                    ...item,
-                    area:
-                      expedienteActualizado.area ||
-                      memoAreaDestino.trim(),
-                    areaDestino:
-                      expedienteActualizado.area_destino ||
-                      memoAreaDestino.trim(),
-                    entregadoA:
-                      expedienteActualizado.entregado_a || '',
-                    historial: Array.isArray(
-                      expedienteActualizado.historial
-                    )
-                      ? expedienteActualizado.historial
-                      : item.historial
-                  }
-                : item
-            )
-          )
-        }
-
-
-        setMemoNro('')
-        setMemoFecha(todayInputValue())
-        setMemoAsunto('')
-        setMemoAreaDestino('')
-
-        setShowMemoForm(false)
-
-        notify(`Memo ${memoNuevo.nroMemo} registrado correctamente`)
+      if (!data) {
+        notify('La base de datos no devolvió el Memo registrado')
+        return
       }
+
+      const memoNuevo: Memo = {
+        id: String(data.id),
+        nroMemo: String(data.nro_memo || ''),
+        expedienteId: String(data.expediente_id),
+        nroExpediente: String(data.nro_expediente || ''),
+        fecha: String(data.fecha || ''),
+        asunto: String(data.asunto || ''),
+        registradoPor: String(data.registrado_por || ''),
+        areaDestino: String(data.area_destino || ''),
+        responsable: String(data.responsable || ''),
+        estado: data.estado || 'Pendiente',
+        archivo: String(data.archivo || ''),
+        archivoData: String(data.archivo_data || ''),
+        archivoTipo: String(data.archivo_tipo || ''),
+        archivoTamano: Number(data.archivo_tamano || 0),
+        createdAt: data.created_at
+      }
+
+      setMemos(prev => [memoNuevo, ...prev])
+
+      const expedienteActualizado = data.expediente
+
+      if (expedienteActualizado) {
+        setExpedientes(prev =>
+          prev.map(item =>
+            item.id === String(expedienteActualizado.id)
+              ? {
+                  ...item,
+                  area: expedienteActualizado.area || '',
+                  areaDestino: expedienteActualizado.area_destino || '',
+                  entregadoA: expedienteActualizado.entregado_a || '',
+                  historial: Array.isArray(expedienteActualizado.historial)
+                    ? expedienteActualizado.historial
+                    : item.historial
+                }
+              : item
+          )
+        )
+      }
+
+      setMemoNro('')
+      setMemoFecha(todayInputValue())
+      setMemoAsunto('')
+      setMemoAreaDestino('')
+      setShowMemoForm(false)
+      notify(`Memo ${memoNuevo.nroMemo} registrado correctamente`)
 
     } catch (error) {
       console.error('Error inesperado guardando Memo:', error)
@@ -938,134 +791,60 @@ const historialInicial = [
   }
   const updateMemoEstado = async (
     memoId: string,
-    nuevoEstado: Memo['estado']
+    nuevoEstado: Memo['estado'],
+    motivo?: string
   ) => {
-    console.log('UPDATE MEMO LLAMADO:', {
-      memoId,
-      nuevoEstado
-    })
-
     try {
-      // 1. Buscar el Memo
-      const memo = memos.find(
-        item => item.id === memoId
-      )
-
-      if (!memo) {
-        notify('Memo no encontrado')
-        return
-      }
-
-      // 2. Actualizar el estado del Memo en Supabase
-      const { error } = await supabase
-        .from('memos')
-        .update({
-          estado: nuevoEstado
-        })
-        .eq('id', Number(memoId))
+      const { data, error } = await supabase.rpc('cambiar_estado_expediente', {
+        p_memo_id: Number(memoId),
+        p_nuevo_estado: nuevoEstado,
+        p_motivo: motivo || null
+      })
 
       if (error) {
-        console.error(
-          'Error actualizando estado del Memo:',
-          error
-        )
-
-        notify(
-          `No se pudo actualizar el estado: ${error.message}`
-        )
-
+        console.error('Error actualizando estado:', error)
+        notify(`No se pudo actualizar el estado: ${error.message}`)
         return
       }
 
-      // 3. Actualizar el Memo en memoria
+      if (!data) {
+        notify('La base de datos no devolvió los datos actualizados')
+        return
+      }
+
       setMemos(prev =>
         prev.map(item =>
           item.id === memoId
-            ? {
-                ...item,
-                estado: nuevoEstado
-              }
+            ? { ...item, estado: nuevoEstado }
             : item
         )
       )
 
-      // 4. Obtener el expediente relacionado
-      const expedienteId = memo.expedienteId
-
-      const expediente = expedientes.find(
-        item => item.id === expedienteId
-      )
-
-      if (!expediente) {
-        notify(
-          'Memo actualizado, pero no se encontró su expediente relacionado'
+      const expedienteActualizado = data.expediente
+      if (expedienteActualizado) {
+        setExpedientes(prev =>
+          prev.map(item =>
+            String(item.id) === String(expedienteActualizado.id)
+              ? {
+                  ...item,
+                  estado: expedienteActualizado.estado,
+                  fechaSinRespuesta: expedienteActualizado.fecha_sin_respuesta || '',
+                  historial: Array.isArray(expedienteActualizado.historial)
+                    ? expedienteActualizado.historial
+                    : item.historial
+                }
+              : item
+          )
         )
-        return
       }
 
-      // 5. Determinar la fecha de Sin respuesta
-      const fechaSinRespuesta =
-        nuevoEstado === 'Sin respuesta'
-          ? expediente.fechaSinRespuesta ||
-            new Date().toISOString().split('T')[0]
-          : nuevoEstado === 'Atendido'
-            ? null
-            : expediente.fechaSinRespuesta || null
-
-      // 6. Actualizar el expediente relacionado
-      const { error: expedienteError } = await supabase
-        .from('mesa_partes_2026')
-        .update({
-          estado: nuevoEstado,
-          fecha_sin_respuesta: fechaSinRespuesta
-        })
-        .eq('id', Number(expedienteId))
-
-      if (expedienteError) {
-        console.error(
-          'Error actualizando estado del expediente:',
-          expedienteError
-        )
-
-        notify(
-          `Memo actualizado, pero no se pudo actualizar el expediente: ${expedienteError.message}`
-        )
-
-        return
-      }
-
-      // 7. Actualizar el expediente en memoria
-      setExpedientes(prev =>
-        prev.map(item =>
-          item.id === expedienteId
-            ? {
-                ...item,
-                estado: nuevoEstado,
-                fechaSinRespuesta:
-                  fechaSinRespuesta || ''
-              }
-            : item
-        )
-      )
-
-      notify(
-        `Memo y expediente actualizados a "${nuevoEstado}"`
-      )
-
+      notify(`Memo y expediente actualizados a "${nuevoEstado}"`)
     } catch (error) {
-      console.error(
-        'Error inesperado actualizando estado del Memo:',
-        error
-      )
-
-      notify(
-        'Ocurrió un error al actualizar el estado del Memo'
-      )
+      console.error('Error inesperado actualizando estado:', error)
+      notify('Ocurrió un error al actualizar el estado del Memo')
     }
   }
-
-
-    if (!currentUser) return <UserSelectModal onSelectUser={setCurrentUser} />
+    if (!currentUser) return <LoginView onSelectUser={setCurrentUser} />
 
     return (
       <div className="app-shell portal-shell">
@@ -1159,9 +938,8 @@ const historialInicial = [
                   <hr />
                   <button onClick={() => { notify('Configuración disponible en versión completa'); setShowProfile(false) }}>Configuración</button>
                   <button
-                    onClick={() => {
-                      localStorage.removeItem('mesa-partes-user')
-                      localStorage.removeItem('mesa-partes-session-start')
+                    onClick={async () => {
+                      await supabase.auth.signOut()
                       setCurrentUser(null)
                       setShowProfile(false)
                       notify('Sesión cerrada correctamente')
@@ -1194,6 +972,7 @@ const historialInicial = [
               }}
               currentDate={currentDate}
               currentUser={currentUser}
+              riskAnalysis={expedienteRiskAnalysis}
             />
           )}
            {view === 'expedientes' && (
@@ -1352,17 +1131,16 @@ const historialInicial = [
   {view === 'oficios' && showOficioForm && (
     <NuevoOficioView
       expediente={oficioExpediente}
+      responsable={currentUser?.nombre || ''}
       onCancelar={() => {
         setShowOficioForm(false)
         setOficioExpediente(null)
       }}
       onGuardar={async datos => {
         try {
-          const { data, error } = await supabase
-            .from('oficios')
-            .insert({
+          const { data, error } = await supabase.rpc('registrar_oficio', {
+            p_datos: {
               expediente_id: Number(datos.expedienteId),
-              nro_expediente: datos.nroExpediente,
               fecha: datos.fecha,
               destinatario: datos.destinatario,
               asunto_tipo: datos.asuntoTipo,
@@ -1370,58 +1148,63 @@ const historialInicial = [
               responsable: datos.responsable,
               codigo_oad: datos.codigoOad,
               codigo_ogesup: datos.codigoOgesup,
-              anio: datos.anio,
               area_destino: datos.areaDestino
-            })
-            .select()
-            .single()
+            }
+          })
 
           if (error) {
-            console.error('Error guardando oficio:', error)
-            alert(`No se pudo guardar el oficio: ${error.message}`)
+            console.error('Error guardando Oficio:', error)
+            notify(`No se pudo guardar el Oficio: ${error.message}`)
             return
           }
 
-          console.log('Oficio guardado:', data)
-
-          const { data: oficiosActualizados, error: errorOficios } = await supabase
-            .from('oficios')
-            .select('*')
-            .order('id', { ascending: false })
-
-          if (errorOficios) {
-            console.error('Error actualizando lista de oficios:', errorOficios)
-          } else if (oficiosActualizados) {
-            const oficiosNormalizados: Oficio[] = oficiosActualizados.map((item: any) => ({
-              id: String(item.id),
-              nRegistro: String(item.n_registro ?? ''),
-              expedienteId: String(item.expediente_id ?? ''),
-              nroExpediente: String(item.nro_expediente ?? ''),
-              fecha: item.fecha ?? '',
-              destinatario: item.destinatario ?? '',
-              asuntoTipo: item.asunto_tipo ?? '',
-              asuntoDetalle: item.asunto_detalle ?? '',
-              responsable: item.responsable ?? '',
-              codigoOad: item.codigo_oad ?? '',
-              codigoOgesup: item.codigo_ogesup ?? '',
-              anio: Number(item.anio ?? new Date().getFullYear()),
-              areaDestino: item.area_destino ?? '',
-              estado: item.estado ?? 'Enviado',
-              fechaRegistro: item.fecha_registro ?? '',
-              createdAt: item.created_at ?? ''
-            }))
-
-            setOficios(oficiosNormalizados)
+          if (!data || !data.expediente) {
+            notify('La base de datos no devolvió el Oficio y expediente actualizados.')
+            return
           }
+
+          const oficioNuevo: Oficio = {
+            id: String(data.id),
+            nRegistro: String(data.n_registro ?? ''),
+            expedienteId: String(data.expediente_id),
+            nroExpediente: String(data.nro_expediente ?? ''),
+            fecha: String(data.fecha ?? ''),
+            destinatario: String(data.destinatario ?? ''),
+            asuntoTipo: String(data.asunto_tipo ?? ''),
+            asuntoDetalle: String(data.asunto_detalle ?? ''),
+            responsable: String(data.responsable ?? ''),
+            codigoOad: String(data.codigo_oad ?? ''),
+            codigoOgesup: String(data.codigo_ogesup ?? ''),
+            anio: Number(data.anio),
+            areaDestino: String(data.area_destino ?? ''),
+            estado: data.estado ?? 'Enviado',
+            fechaRegistro: String(data.fecha_registro ?? ''),
+            createdAt: String(data.created_at ?? '')
+          }
+
+          setOficios(prev => [oficioNuevo, ...prev])
+
+          setExpedientes(prev =>
+            prev.map(item =>
+              item.id === String(data.expediente.id)
+                ? {
+                    ...item,
+                    historial: Array.isArray(data.expediente.historial)
+                      ? data.expediente.historial
+                      : item.historial
+                  }
+                : item
+            )
+          )
 
           setShowOficioForm(false)
           setOficioExpediente(null)
           setView('oficios')
 
-          alert('Oficio registrado correctamente.')
+          notify('Oficio registrado correctamente.')
         } catch (error) {
-          console.error('Error inesperado guardando oficio:', error)
-          alert('Ocurrió un error al guardar el oficio.')
+          console.error('Error inesperado guardando Oficio:', error)
+          notify('Ocurrió un error al guardar el Oficio.')
         }
       }}
     />
@@ -1505,30 +1288,17 @@ const historialInicial = [
           return
         }
 
-        // Actualizar el expediente en pantalla con los datos persistidos.
-        const {
-          data: expedienteActualizado,
-          error: errorExpediente
-        } = await supabase
-          .from('mesa_partes_2026')
-          .select('area_destino, estado, historial')
-          .eq('id', Number(datos.expedienteId))
-          .single()
+        // Actualizar el expediente usando la respuesta directa de la RPC
+        const expedienteActualizado = data.expediente
 
-        if (errorExpediente) {
-          console.error(
-            'El proveído se guardó, pero no se pudo refrescar el expediente:',
-            errorExpediente
-          )
-        } else if (expedienteActualizado) {
+        if (expedienteActualizado) {
           setExpedientes(prev =>
             prev.map(item =>
               String(item.id) === String(datos.expedienteId)
                 ? {
                     ...item,
                     area: expedienteActualizado.area_destino || item.area,
-                    areaDestino:
-                      expedienteActualizado.area_destino || item.areaDestino,
+                    areaDestino: expedienteActualizado.area_destino || item.areaDestino,
                     estado: expedienteActualizado.estado || item.estado,
                     historial: Array.isArray(expedienteActualizado.historial)
                       ? expedienteActualizado.historial
@@ -1577,7 +1347,13 @@ const historialInicial = [
                     expedienteParaDuplicar={expedienteParaDuplicar}
                   />
                 )}
-                {view === 'reportes' && <ReportsView expedientes={expedientes} notify={notify} />}
+                {view === 'reportes' && (
+                  <ReportsView
+                    expedientes={expedientes}
+                    riskAnalysis={expedienteRiskAnalysis}
+                    notify={notify}
+                  />
+                )}
               </>
             )}
           </div>
