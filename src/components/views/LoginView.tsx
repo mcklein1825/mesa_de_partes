@@ -158,7 +158,7 @@ export default function LoginView({ onSelectUser }: LoginViewProps) {
           </div>
 
           <div className="login-brand-footer">
-            <span>MESA DE PARTES VIRTUAL</span>
+            <span>SISTEMA DE GESTIÓN DOCUMENTAL · DIRECCIÓN GENERAL</span>
             <span>© {new Date().getFullYear()} IESTP Gilda Ballivián</span>
           </div>
           <div className="login-decoration login-decoration-one" />

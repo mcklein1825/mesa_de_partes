@@ -6,9 +6,9 @@ export const fetchProveidos = async (): Promise<Proveido[]> => {
   const { data, error } = await supabase
     .from('proveidos')
     .select(`
-      id, expediente_id, nro_expediente, fecha, area_destino,
-      responsable, instruccion, estado, archivo, archivo_data,
-      archivo_tipo, archivo_tamano, created_at
+      id, expediente_id, nro_expediente, fecha, area_destino, realizado_por,
+      responsable, instruccion, estado, archivo, archivo_data, archivo_tipo,
+      archivo_tamano, created_at
     `)
     .order('id', { ascending: false })
 
@@ -20,6 +20,7 @@ export const fetchProveidos = async (): Promise<Proveido[]> => {
     expedienteId: String(item.expediente_id),
     nroExpediente: String(item.nro_expediente),
     fecha: item.fecha,
+    realizadoPor: item.realizado_por || '',
     areaDestino: item.area_destino,
     responsable: item.responsable || '',
     instruccion: item.instruccion,

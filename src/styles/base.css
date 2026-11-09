@@ -321,11 +321,12 @@ button {
 
 .profile-popover b {
   font-size: 12px;
+  color: #243746;
 }
 
 .profile-popover span {
   font-size: 10px;
-  color: #87949c;
+  color: #52636c;
   margin-top: 3px;
 }
 
@@ -340,7 +341,15 @@ button {
   width: 100%;
   text-align: left;
   font-size: 11px;
+  font-weight: 600;
+  color: #334b59;
   padding: 7px 0;
+  border-radius: 5px;
+}
+
+.profile-popover button:hover {
+  color: #102c3e;
+  background: #eef4f6;
 }
 
 /* ========================================
@@ -603,7 +612,6 @@ tbody tr:last-child td {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
   max-width: 100%;
   padding: 4px 8px;
   border: 1px solid currentColor;
@@ -612,15 +620,6 @@ tbody tr:last-child td {
   font-weight: 600;
   line-height: 1.3;
   white-space: nowrap;
-}
-
-.status-badge i {
-  display: inline-block;
-  flex: 0 0 6px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
 }
 
 .status-badge.pendiente {
@@ -641,6 +640,45 @@ tbody tr:last-child td {
 .status-badge.archivado {
   background: #edf0f2;
   color: var(--archivado);
+}
+
+.status-badge.enviado,
+.status-badge.status-enviado {
+  color: #176f70;
+  background: #e5f6f4;
+  border-color: #9bd5d0;
+}
+
+.status-badge.recepcionado,
+.status-badge.status-recepcionado {
+  color: #245c9b;
+  background: #e8f1ff;
+  border-color: #a9c5eb;
+}
+
+.status-badge.anulado,
+.status-badge.status-anulado {
+  color: #8a5260;
+  background: #f7eaed;
+  border-color: #dfbdc5;
+}
+
+.status-badge.status-pendiente {
+  color: var(--pendiente);
+  background: #fff4d6;
+  border-color: #f2c27d;
+}
+
+.status-badge.status-atendido {
+  color: var(--atendido);
+  background: #e5f5e9;
+  border-color: #9ed5b0;
+}
+
+.status-badge.status-archivado {
+  color: var(--archivado);
+  background: #edf0f2;
+  border-color: #c8d0d5;
 }
 
 .dots {
@@ -975,6 +1013,58 @@ tbody tr:last-child td {
   margin-top: 21px;
 }
 
+.multiple-recipient-picker {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr auto;
+  gap: 12px;
+  align-items: end;
+  margin: 0 22px;
+}
+
+.multiple-recipient-picker label {
+  display: grid;
+  gap: 6px;
+  color: #526875;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.multiple-recipient-picker select {
+  min-height: 40px;
+  border: 1px solid var(--linea);
+  border-radius: 7px;
+  padding: 0 10px;
+  color: #172532;
+  background: #fff;
+}
+
+.selected-recipients {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 22px 0;
+}
+
+.selected-recipients span {
+  border-radius: 999px;
+  background: #e6f4f4;
+  color: #176f70;
+  padding: 7px 10px;
+  font-size: 11px;
+}
+
+.selected-recipients button {
+  margin-left: 5px;
+  color: #176f70;
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .multiple-recipient-picker {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ========================================
    REPORTES Y GRÁFICOS
    ======================================== */
@@ -1074,6 +1164,23 @@ tbody tr:last-child td {
   bottom: calc(100% + 8px);
   left: 0;
   width: min(240px, calc(100vw - 32px));
+  color: #243746;
+}
+
+.portal-shell .sidebar .profile-popover b {
+  color: #243746;
+}
+
+.portal-shell .sidebar .profile-popover span {
+  color: #52636c;
+}
+
+.portal-shell .sidebar .profile-popover button {
+  color: #334b59;
+}
+
+.portal-shell .sidebar .profile-popover button:hover {
+  color: #102c3e;
 }
 
 .portal-shell .sidebar .user-mini {

@@ -13,7 +13,7 @@ export const fetchExpedientes = async (): Promise<Expediente[]> => {
       canal_recepcion, folios, anexos, direccion, correo, celular,
       representante, cargo_representante, usuario_registro,
       fecha_hora_recepcion, constancia_recepcion, es_duplicado,
-      fecha_sin_respuesta, duplicado_de_id, historial
+      fecha_sin_respuesta, duplicado_de_id, historial, requiere_gestion
     `)
     .order('nro_exp', { ascending: false })
     .limit(2000)
@@ -29,6 +29,7 @@ export const fetchExpedientes = async (): Promise<Expediente[]> => {
       id: String(item.id || ''),
       nroExp: String(item.nro_exp || ''),
       esDuplicado: Boolean(item.es_duplicado),
+      requiereGestion: item.requiere_gestion !== false,
       fechaIngreso: item.fecha_ingreso || '',
       remitente: nombreCompleto,
       remitenteNombre: item.remitente_nombre || parts[0]?.trim() || nombreCompleto,

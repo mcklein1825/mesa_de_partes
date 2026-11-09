@@ -1,5 +1,5 @@
 export type Status = 'Pendiente' | 'Sin respuesta' | 'Atendido' | 'Archivado'
-export type View = 'inicio' | 'expedientes' | 'nuevo' | 'reportes' | 'memos' | 'oficios'| 'proveidos'
+export type View = 'inicio' | 'expedientes' | 'reportes' | 'memos' | 'memos-multiples' | 'oficios' | 'proveidos'
 export type Role = 'MesaPartes' | 'AreaOperativa' | 'Administrador' | 'Auditor'
 
 export type User = {
@@ -33,6 +33,7 @@ export type Memo = {
   fecha: string
   asunto: string
   registradoPor: string
+  realizadoPor: string
   areaDestino: string
   responsable: string
   estado: 'Pendiente' | 'Sin respuesta' | 'Atendido' | 'Archivado'
@@ -51,12 +52,17 @@ export type Oficio = {
   destinatario: string
   asuntoTipo: string
   asuntoDetalle: string
+  realizadoPor: string
   responsable: string
   codigoOad: string
   codigoOgesup: string
   anio: number
   areaDestino: string
   estado: 'Enviado' | 'Recepcionado' | 'Atendido' | 'Anulado'
+  archivo?: string
+  archivoData?: string
+  archivoTipo?: string
+  archivoTamano?: number
   fechaRegistro?: string
   createdAt?: string
 }
@@ -66,6 +72,7 @@ export type Proveido = {
   expedienteId: string
   nroExpediente: string
   fecha: string
+  realizadoPor: string
   areaDestino: string
   responsable: string
   instruccion: string
@@ -77,11 +84,41 @@ export type Proveido = {
   createdAt?: string
 }
 
+export type MemorandoMultipleCategoria =
+  | 'Área / Jefatura'
+  | 'Consejo Directivo'
+  | 'Comité'
+  | 'Grupo institucional'
+
+export type MemorandoMultipleMedio = 'Correo' | 'Presencial'
+export type MemorandoMultipleEstado = 'Pendiente' | 'Entregado' | 'Atendido'
+
+export type MemorandoMultipleDestinatario = {
+  id: string
+  categoria: MemorandoMultipleCategoria
+  nombre: string
+  medioEntrega: MemorandoMultipleMedio
+  estado: MemorandoMultipleEstado
+  observacion: string
+  fechaEntrega?: string
+}
+
+export type MemorandoMultiple = {
+  id: string
+  nroRegistro: string
+  fecha: string
+  asunto: string
+  realizadoPor: string
+  estado: MemorandoMultipleEstado
+  destinatarios: MemorandoMultipleDestinatario[]
+  createdAt?: string
+}
 
 export type Expediente = {
   id: string
   nroExp: string
   esDuplicado?: boolean
+  requiereGestion: boolean
   fechaIngreso?: string
   remitente: string
   asunto: string

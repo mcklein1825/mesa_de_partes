@@ -185,7 +185,11 @@ export default function DuplicateExpedienteModal({
                 >
                   <div className="duplicate-result-top">
                     <strong>
-                      {formatNroExp(String(item.nro_exp))}
+                      {formatNroExp(
+                        String(item.nro_exp),
+                        false,
+                        item.fecha_ingreso
+                      )}
                     </strong>
 
                     <span>
@@ -224,7 +228,11 @@ export default function DuplicateExpedienteModal({
                   <span>N.º de expediente</span>
 
                   <strong>
-                    {formatNroExp(String(seleccionado.nro_exp))}
+                    {formatNroExp(
+                      String(seleccionado.nro_exp),
+                      false,
+                      seleccionado.fecha_ingreso
+                    )}
                   </strong>
                 </div>
 
@@ -280,7 +288,9 @@ export default function DuplicateExpedienteModal({
 
                 <strong>
                   {formatNroExp(
-                    String(seleccionado.nro_exp)
+                    String(seleccionado.nro_exp),
+                    false,
+                    seleccionado.fecha_ingreso
                   )}{' '}
                   *
                 </strong>

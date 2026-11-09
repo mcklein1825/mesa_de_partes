@@ -75,7 +75,9 @@ export default function RiskInsightPanel({
                 {cases.map(item => (
                   <tr key={item.id}>
                     <td>
-                      <strong>{formatNroExp(item.nroExp)}</strong>
+                      <strong>
+                        {formatNroExp(item.nroExp, false, item.fechaIngreso)}
+                      </strong>
                       <span className="risk-subject" title={item.asunto}>{item.asunto}</span>
                     </td>
                     <td>

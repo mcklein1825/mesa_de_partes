@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Expediente, Status } from '../../types'
+import { Expediente, Memo, Oficio, Proveido, Status } from '../../types'
 import { formatNroExp, displayDate, getRemitenteNombre, getAreaDestino, getDeadlineState } from '../../utils/expedienteHelpers'
 import DocumentLink from '../common/DocumentLink'
 import StatusBadge from '../common/StatusBadge'
@@ -20,15 +20,26 @@ export default function ExpedientesView({
   setRemitenteFilter,
   statusFilter,
   setStatusFilter,
+  managementFilter,
+  setManagementFilter,
   onNew,
   onTracking,
   onDuplicate,
+  canRegister,
+  canDuplicate,
+  canEdit,
+  memos,
+  oficios,
+  proveidos,
   expedienteDocumentos,
   onAttachDocument,
   onRegisterDate,
 }: {
 
   items: Expediente[]
+  memos: Memo[]
+  oficios: Oficio[]
+  proveidos: Proveido[]
   total: number
   currentPage: number
   onPageChange: (page: number) => void
@@ -45,9 +56,14 @@ export default function ExpedientesView({
   setRemitenteFilter: (v: string) => void
   statusFilter: string
   setStatusFilter: (v: string) => void
+  managementFilter: string
+  setManagementFilter: (v: string) => void
   onNew: () => void
   onTracking: (id: string) => void
   onDuplicate: (expediente: Expediente) => void
+  canRegister: boolean
+  canDuplicate: boolean
+  canEdit: boolean
   onAttachDocument: (
     id: string,
     file: File
@@ -84,21 +100,27 @@ export default function ExpedientesView({
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button
-            className="primary-button"
-            onClick={onNew}
-          >
-            ＋ Nuevo expediente
-          </button>
+        {(canRegister || canDuplicate) && (
+          <div style={{ display: 'flex', gap: '10px' }}>
+            {canRegister && (
+              <button
+                className="primary-button"
+                onClick={onNew}
+              >
+                ＋ Nuevo expediente
+              </button>
+            )}
 
-          <button
-            className="primary-button"
-            onClick={() => setShowDuplicateModal(true)}
-          >
-            ⧉ Duplicar expediente
-          </button>
-        </div>
+            {canDuplicate && (
+              <button
+                className="primary-button"
+                onClick={() => setShowDuplicateModal(true)}
+              >
+                ⧉ Duplicar expediente
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <section className="panel list-panel">
@@ -110,7 +132,7 @@ export default function ExpedientesView({
               onChange={e => {
                 setQuery(e.target.value)
               }}
-              placeholder="Buscar por N.° de expediente o asunto..."
+              placeholder="N.° expediente, remitente, asunto, área o documento..."
             />
           </div>
           <input
@@ -125,7 +147,7 @@ export default function ExpedientesView({
           onChange={e => {
             setAreaFilter(e.target.value)
           }}>
-            <option>Todas las áreas</option>
+            <option value="Todas">Todas las áreas</option>
             {areaOptions.map(area => <option key={area}>{area}</option>)}
           </select>
 
@@ -133,7 +155,7 @@ export default function ExpedientesView({
            onChange={e => {
             setStatusFilter(e.target.value)
           }}>
-            <option>Todos los estados</option>
+            <option value="Todos">Todos los estados</option>
             <option>Vencidos</option>
             <option>Por vencer</option>
             <option>Pendiente</option>
@@ -141,6 +163,34 @@ export default function ExpedientesView({
             <option>Atendido</option>
             <option>Archivado</option>
           </select>
+          <select
+            value={managementFilter}
+            onChange={e => setManagementFilter(e.target.value)}
+            aria-label="Filtrar por tipo de gestión"
+          >
+            <option value="Todos">Todos los tipos</option>
+            <option value="gestion">Requiere gestión</option>
+            <option value="registro">Solo registro</option>
+          </select>
+          {(query ||
+            remitenteFilter ||
+            areaFilter !== 'Todas' ||
+            statusFilter !== 'Todos' ||
+            managementFilter !== 'Todos') && (
+            <button
+              type="button"
+              className="clear-filters-button"
+              onClick={() => {
+                setQuery('')
+                setRemitenteFilter('')
+                setAreaFilter('Todas')
+                setStatusFilter('Todos')
+                setManagementFilter('Todos')
+              }}
+            >
+              Limpiar filtros
+            </button>
+          )}
           <span className="result-count">{total} resultados</span>
         </div>
 
@@ -153,7 +203,6 @@ export default function ExpedientesView({
                 <th>FECHA LÍMITE</th>
                 <th>NOMBRE / APELLIDO</th>
                 <th>ASUNTO</th>
-                <th>UBICACIÓN ACTUAL</th>
                 <th>ESTADO</th>
                 <th>ACCIONES</th>
               </tr>
@@ -165,7 +214,7 @@ export default function ExpedientesView({
                   <tr key={item.id}>
                     <td>
                       <b className="exp-id">
-                        {formatNroExp(item.nroExp)}
+                        {formatNroExp(item.nroExp, false, item.fechaIngreso)}
                         {item.esDuplicado ? ' *' : ''}
                       </b>
                     </td>
@@ -219,7 +268,7 @@ export default function ExpedientesView({
                             </button>
                           </div>
                         </div>
-                      ) : (
+                      ) : canEdit ? (
                         <button
                           type="button"
                           title="Asignar fecha de ingreso"
@@ -243,7 +292,7 @@ export default function ExpedientesView({
                         >
                           Sin fecha
                         </button>
-                      )}
+                      ) : <span>Sin fecha</span>}
                     </td>
 
                     <td>
@@ -326,21 +375,23 @@ export default function ExpedientesView({
                       >
                         <DocumentLink
                           item={item}
-                          onAttach={file =>
-                            onAttachDocument(item.id, file)
-                          }
+                          onAttach={canRegister
+                            ? file => onAttachDocument(item.id, file)
+                            : undefined}
                         >
                           {item.asunto}
                         </DocumentLink>
                       </span>
                     </td>
                     <td>
-                      <span className="table-cell-group">
-                        {cell(getAreaDestino(item))}
-                        <small>Ubicación del trámite</small>
-                      </span>
+                      <StatusBadge
+                        status={
+                          !item.requiereGestion && item.estado === 'Pendiente'
+                            ? 'Solo registro'
+                            : item.estado
+                        }
+                      />
                     </td>
-                    <td><StatusBadge status={item.estado} /></td>
 
                     <td className="actions-cell">
 
@@ -399,6 +450,7 @@ export default function ExpedientesView({
           onDuplicate({
             id: String(expediente.id),
             nroExp: String(expediente.nro_exp),
+            requiereGestion: true,
             fechaIngreso: expediente.fecha_ingreso || '',
             remitente: expediente.remitente_nombre || '',
             remitenteNombre: expediente.remitente_nombre || '',

@@ -9,6 +9,7 @@ export type DocumentoExpediente = {
 export type ExpedienteRiskCase = {
   id: string
   nroExp: string
+  fechaIngreso?: string
   asunto: string
   area: string
   tipoDocumento: string
@@ -365,6 +366,7 @@ export const analyzeExpedienteRisk = (
     return [{
       id: expediente.id,
       nroExp: expediente.nroExp,
+      fechaIngreso: expediente.fechaIngreso,
       asunto: expediente.asunto,
       area,
       tipoDocumento: documentType,

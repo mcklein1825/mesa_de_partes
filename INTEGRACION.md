@@ -38,7 +38,7 @@ https://iestpgildaballivian.edu.pe/mesa-de-partes/
 Desde el frontend institucional solo se necesita un enlace normal:
 
 ```html
-<a href="/mesa-de-partes/">Mesa de Partes</a>
+<a href="/mesa-de-partes/">Gestión Documental</a>
 ```
 
 No es necesario instalar React, Vite ni Node.js en el servidor web. Solo se sirven `index.html` y `assets/`.

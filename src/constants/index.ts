@@ -34,6 +34,7 @@ export const areas = [
   'Unidad de Investigación',
   'Unidad de Formación Continua',
   'Área de Calidad',
+  'Mesa de Partes',
   'Electrónica Industrial',
   'Gestión Administrativa',
   'Contabilidad',
@@ -64,9 +65,11 @@ export const SUBAREAS_POR_AREA: Record<string, string[]> = {
 export const getSubareas = (area: string): string[] => {
   return SUBAREAS_POR_AREA[area] || []
 }
+
 export const AREA_RESPONSABLES: Record<string, string> = {
   'Unidad Académica': 'Ing. NÓSSER JURADO GUILLÉN',
   'Administración': 'CPC MARICELA OLIVARES MANDUJANO',
+  'Mesa de Partes': 'Pilar de la Cruz',
   'Secretaría Académica': 'Ing. AMADEO ANTONIO PAZSOLÁN',
   'Unidad de Bienestar del Estudiante': 'Mag. JOSÉ LUIS RAZO QUISPE',
   'Unidad de Investigación': 'Lic. LUIS RAMÍREZ CHUQUIHUANGA',
@@ -81,3 +84,60 @@ export const AREA_RESPONSABLES: Record<string, string> = {
   'Mecatrónica Automotriz': 'Mag. JIM PALOMARES ANSELMO',
   'Mecánica de Producción': 'Lic. RIGOBERTO HUARACHA CASAS'
 }
+
+export const AREA_COPIAS: Record<string, string> = {
+  Tesorería: 'Celio Verde Marcelino',
+  'Área de Personal': 'Julio García de la Chira',
+  Patrimonio: 'Willy Quintana',
+  Logística: 'Noa Wilfredo'
+}
+
+export const AREA_DESTINO_OPTIONS = Object.keys(AREA_RESPONSABLES).flatMap(
+  area => [
+    area,
+    ...getSubareas(area).map(subarea => `${area} / ${subarea}`)
+  ]
+)
+
+export const getAreaResponsable = (area: string): string => {
+  const normalize = (value: string) =>
+    value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase()
+  const areaBase = area.split(' / ')[0].trim()
+  const areaEncontrada = Object.keys(AREA_RESPONSABLES).find(
+    registrada => normalize(registrada) === normalize(areaBase)
+  )
+
+  return areaEncontrada ? AREA_RESPONSABLES[areaEncontrada] : ''
+}
+
+export const getAreaCopia = (area: string): string => {
+  const normalize = (value: string) =>
+    value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase()
+  const subarea = area.split(' / ')[1]?.trim()
+  if (!subarea) return ''
+
+  const subareaEncontrada = Object.keys(AREA_COPIAS).find(
+    registrada => normalize(registrada) === normalize(subarea)
+  )
+
+  return subareaEncontrada ? AREA_COPIAS[subareaEncontrada] : ''
+}
+
+export const MEMORANDOS_MULTIPLES_DESTINATARIOS: Array<{
+  categoria: 'Área / Jefatura' | 'Consejo Directivo' | 'Comité' | 'Grupo institucional'
+  nombre: string
+}> = [
+  ...AREA_DESTINO_OPTIONS.map(nombre => ({ categoria: 'Área / Jefatura' as const, nombre })),
+  { categoria: 'Consejo Directivo', nombre: 'Consejo Directivo' },
+  { categoria: 'Comité', nombre: 'Comité de Gestión' },
+  { categoria: 'Comité', nombre: 'Comité de Intervención frente al Hostigamiento Sexual' },
+  { categoria: 'Comité', nombre: 'Comité de Hostigamiento' },
+  { categoria: 'Comité', nombre: 'Comité de Evaluación' },
+  { categoria: 'Grupo institucional', nombre: 'Coordinadores de Electricidad y Electrónica' },
+  { categoria: 'Grupo institucional', nombre: 'Docentes firmantes' },
+  { categoria: 'Grupo institucional', nombre: 'Docentes de Contabilidad' },
+  { categoria: 'Grupo institucional', nombre: 'Todo el personal docente y administrativo' },
+  { categoria: 'Grupo institucional', nombre: 'Delegados' },
+  { categoria: 'Grupo institucional', nombre: 'Docentes nombrados y contratados' },
+  { categoria: 'Grupo institucional', nombre: 'Jefes' }
+]

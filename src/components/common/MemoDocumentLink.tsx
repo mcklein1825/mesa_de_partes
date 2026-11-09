@@ -3,10 +3,12 @@ import { useState, type ReactNode } from 'react'
 export default function MemoDocumentLink({
   archivoData,
   archivo,
+  documento = 'Memo',
   children
 }: {
   archivoData?: string
   archivo?: string
+  documento?: string
   children: ReactNode
 }) {
   const [cargando, setCargando] = useState(false)
@@ -89,12 +91,12 @@ export default function MemoDocumentLink({
 
     } catch (error) {
       console.error(
-        'Error al abrir archivo del Memo:',
+        `Error al abrir archivo del ${documento}:`,
         error
       )
 
       alert(
-        'No se pudo abrir el archivo del Memo.'
+        `No se pudo abrir el archivo del ${documento}.`
       )
     } finally {
       setCargando(false)
@@ -118,7 +120,7 @@ export default function MemoDocumentLink({
     className="document-link"
     onClick={abrirArchivo}
     disabled={cargando}
-    title={`Abrir ${archivo || 'documento del Memo'}`}
+    title={`Abrir ${archivo || `documento del ${documento}`}`}
     style={{
       display: 'inline-flex',
       alignItems: 'center',

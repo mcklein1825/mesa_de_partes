@@ -40,18 +40,19 @@
 
 .list-panel .oficios-table {
   width: 100%;
-  min-width: 1250px;
+  min-width: 1120px;
   table-layout: fixed;
 }
 
-.list-panel .oficios-table th:nth-child(1) { width: 8%; }  /* N.° REGISTRO */
-.list-panel .oficios-table th:nth-child(2) { width: 14%; } /* EXPEDIENTE */
-.list-panel .oficios-table th:nth-child(3) { width: 9%; }  /* FECHA */
-.list-panel .oficios-table th:nth-child(4) { width: 22%; } /* ASUNTO */
-.list-panel .oficios-table th:nth-child(5) { width: 14%; } /* DESTINATARIO */
-.list-panel .oficios-table th:nth-child(6) { width: 15%; } /* ÁREA DESTINO */
-.list-panel .oficios-table th:nth-child(7) { width: 12%; } /* RESPONSABLE */
-.list-panel .oficios-table th:nth-child(8) { width: 6%; }  /* ESTADO */
+.list-panel .oficios-table th:nth-child(1) { width: 7%; }
+.list-panel .oficios-table th:nth-child(2) { width: 12%; }
+.list-panel .oficios-table th:nth-child(3) { width: 8%; }
+.list-panel .oficios-table th:nth-child(4) { width: 19%; }
+.list-panel .oficios-table th:nth-child(5) { width: 12%; }
+.list-panel .oficios-table th:nth-child(6) { width: 13%; }
+.list-panel .oficios-table th:nth-child(7) { width: 11%; }
+.list-panel .oficios-table th:nth-child(8) { width: 10%; }
+.list-panel .oficios-table th:nth-child(9) { width: 8%; }
 
 @media (max-width: 700px) {
   .oficio-form .oficio-form-grid {

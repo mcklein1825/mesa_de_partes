@@ -4,7 +4,11 @@ import { Memo } from '../types'
 export const fetchMemos = async (): Promise<Memo[]> => {
   const { data, error } = await supabase
     .from('memos')
-    .select('*')
+    .select(`
+      id, nro_memo, expediente_id, nro_expediente, fecha, asunto,
+      registrado_por, area_destino, responsable, estado, archivo,
+      archivo_data, archivo_tipo, archivo_tamano, created_at
+    `)
     .order('id', { ascending: false })
 
   if (error) throw error
@@ -18,6 +22,7 @@ export const fetchMemos = async (): Promise<Memo[]> => {
     fecha: m.fecha || '',
     asunto: m.asunto || '',
     registradoPor: m.registrado_por || '',
+    realizadoPor: m.registrado_por || '',
     areaDestino: m.area_destino || '',
     responsable: m.responsable || '',
     estado: m.estado || 'Pendiente',
