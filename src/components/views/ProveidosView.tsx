@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Expediente, Proveido } from '../../types'
-import { displayDate } from '../../utils/expedienteHelpers'
+import { displayDate, formatNroExp } from '../../utils/expedienteHelpers'
+import { formatDocumentNumber } from '../../utils/documentHelpers'
+import { getAreaCopia } from '../../constants'
 import ExpedienteSelector from '../common/ExpedienteSelector'
 import MemoDocumentLink from '../common/MemoDocumentLink'
 import StatusBadge from '../common/StatusBadge'
@@ -10,6 +12,7 @@ type Props = {
   expedientes: Expediente[]
   areaOptions: string[]
   showSelector: boolean
+  canCreate: boolean
   onNuevoProveido: () => void
   onCloseSelector: () => void
   onSelectExpediente: (expediente: Expediente) => void
@@ -20,6 +23,7 @@ export default function ProveidosView({
   expedientes,
   areaOptions,
   showSelector,
+  canCreate,
   onNuevoProveido,
   onCloseSelector,
   onSelectExpediente
@@ -33,8 +37,20 @@ export default function ProveidosView({
     return proveidos.filter(proveido => {
       const coincideTexto =
         !texto ||
-        proveido.nroExpediente.toLowerCase().includes(texto) ||
+        formatDocumentNumber(proveido.id, proveido.createdAt)
+          .toLowerCase()
+          .includes(texto) ||
+        formatNroExp(
+          proveido.nroExpediente,
+          false,
+          expedientes.find(
+            expediente =>
+              String(expediente.id) === String(proveido.expedienteId)
+          )?.fechaIngreso
+        ).toLowerCase().includes(texto) ||
         proveido.areaDestino.toLowerCase().includes(texto) ||
+        getAreaCopia(proveido.areaDestino).toLowerCase().includes(texto) ||
+        proveido.realizadoPor.toLowerCase().includes(texto) ||
         proveido.responsable.toLowerCase().includes(texto) ||
         proveido.instruccion.toLowerCase().includes(texto)
 
@@ -125,15 +141,17 @@ export default function ProveidosView({
           </p>
         </div>
 
-        <button
-          type="button"
-          className="primary-button"
-          onClick={() => {
-            onNuevoProveido()
-          }}
-        >
-          ＋ Nuevo Proveído
-        </button>
+        {canCreate && (
+          <button
+            type="button"
+            className="primary-button"
+            onClick={() => {
+              onNuevoProveido()
+            }}
+          >
+            ＋ Nuevo Proveído
+          </button>
+        )}
       </div>
 
       <section className="panel list-panel proveidos-list">
@@ -166,9 +184,11 @@ export default function ProveidosView({
           <table className="data-table proveidos-table">
             <thead>
               <tr>
+                <th>N.º PROVEÍDO</th>
                 <th>N.° EXP</th>
                 <th>FECHA</th>
                 <th>ÁREA DESTINO</th>
+                <th>REALIZADO POR</th>
                 <th>RESPONSABLE</th>
                 <th>INSTRUCCIÓN</th>
                 <th>ESTADO</th>
@@ -181,7 +201,22 @@ export default function ProveidosView({
                 <tr key={proveido.id}>
                   <td>
                     <b className="exp-id">
-                      {proveido.nroExpediente || '—'}
+                      {formatDocumentNumber(proveido.id, proveido.createdAt)}
+                    </b>
+                  </td>
+                  <td>
+                    <b className="exp-id">
+                      {proveido.nroExpediente
+                        ? formatNroExp(
+                            proveido.nroExpediente,
+                            false,
+                            expedientes.find(
+                              expediente =>
+                                String(expediente.id) ===
+                                String(proveido.expedienteId)
+                            )?.fechaIngreso
+                          )
+                        : '—'}
                     </b>
                   </td>
 
@@ -203,6 +238,26 @@ export default function ProveidosView({
                       }}
                     >
                       {proveido.areaDestino || '—'}
+                    </span>
+                    {getAreaCopia(proveido.areaDestino) && (
+                      <small>
+                        Con copia a: {getAreaCopia(proveido.areaDestino)}
+                      </small>
+                    )}
+                  </td>
+
+                  <td>
+                    <span
+                      title={proveido.realizadoPor || 'No registrado'}
+                      style={{
+                        display: 'block',
+                        maxWidth: '150px',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}
+                    >
+                      {proveido.realizadoPor || 'No registrado'}
                     </span>
                   </td>
 
@@ -254,7 +309,7 @@ export default function ProveidosView({
 
               {resultados.length === 0 && (
                 <tr>
-                  <td colSpan={7}>
+                  <td colSpan={9}>
                     <div className="empty-state">
                       {busqueda
                         ? 'No se encontraron proveídos con esos criterios.'

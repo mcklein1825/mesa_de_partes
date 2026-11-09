@@ -36,7 +36,11 @@ export default function ExpedienteSelector({
         if (expedientesExcluidos.includes(String(item.id))) {
           return false
         }
-        const nroExp = formatNroExp(item.nroExp).toLowerCase()
+        const nroExp = formatNroExp(
+          item.nroExp,
+          false,
+          item.fechaIngreso
+        ).toLowerCase()
         const nroOriginal = item.nroExp.toLowerCase()
         const asunto = (item.asunto || '').toLowerCase()
         const remitente = getRemitenteNombre(item).toLowerCase()
@@ -48,7 +52,7 @@ export default function ExpedienteSelector({
           ? true
           : esNumero
             ? nroOriginal === texto ||
-              nroExp === `exp-2026-${texto.padStart(5, '0')}`
+              nroExp.startsWith(`${Number(texto)}-`)
             : nroExp.includes(texto) ||
               asunto.includes(texto)
 
@@ -86,7 +90,7 @@ export default function ExpedienteSelector({
 
     <div className="selected-expediente-header">
       <strong>
-        {formatNroExp(value.nroExp)}
+        {formatNroExp(value.nroExp, false, value.fechaIngreso)}
         {value.esDuplicado ? ' *' : ''}
       </strong>
 
@@ -204,7 +208,7 @@ export default function ExpedienteSelector({
                 >
                   <div className="selector-main" style={{ flex: 1, minWidth: 0, paddingRight: '10px' }}>
                     <strong style={{ display: 'block', fontSize: '12px', color: '#0f6b74' }}>
-                      {formatNroExp(item.nroExp)}
+                      {formatNroExp(item.nroExp, false, item.fechaIngreso)}
                       {item.esDuplicado ? ' *' : ''}
                     </strong>
                     <span

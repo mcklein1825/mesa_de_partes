@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import type { Expediente, Memo } from '../../types'
 import { AREAS_UNICAS } from '../../constants'
 import { supabase } from '../../lib/supabaseClient'
+import { formatNroExp } from '../../utils/expedienteHelpers'
+import { formatDocumentNumber } from '../../utils/documentHelpers'
+import { getAreaCopia } from '../../constants'
 
 /**
  * Keeps memo-list filters, pagination, and linked expediente documents together.
@@ -20,6 +23,13 @@ export default function useMemosList(
     Record<string, { archivoData: string; archivo: string }>
   >({})
   const pageSize = 20
+  const expedientesPorId = useMemo(
+    () =>
+      new Map(
+        expedientes.map(expediente => [String(expediente.id), expediente])
+      ),
+    [expedientes]
+  )
 
   const memoAreaOptions = useMemo(() => {
     const normalize = (value: string) =>
@@ -68,22 +78,31 @@ export default function useMemosList(
       let coincideBusqueda = true
 
       if (termino) {
-        const nroMemo = String(memo.nroMemo || '').trim().toLowerCase()
+        const nroMemo = formatDocumentNumber(
+          memo.nroMemo,
+          memo.createdAt
+        ).toLowerCase()
         const nroExpediente = String(memo.nroExpediente || '').trim().toLowerCase()
-        const nroExpedienteFormateado = nroExpediente.startsWith('exp-')
-          ? nroExpediente
-          : `exp-2026-${nroExpediente.padStart(5, '0')}`
+        const fechaExpediente = expedientesPorId.get(
+          String(memo.expedienteId)
+        )?.fechaIngreso
+        const nroExpedienteFormateado = formatNroExp(
+          nroExpediente,
+          false,
+          fechaExpediente
+        ).toLowerCase()
         const registradoPor = String(memo.registradoPor || '').trim().toLowerCase()
         const asunto = String(memo.asunto || '').trim().toLowerCase()
         const areaDestino = String(memo.areaDestino || '').trim().toLowerCase()
         const responsable = String(memo.responsable || '').trim().toLowerCase()
+        const copia = getAreaCopia(memo.areaDestino).toLowerCase()
 
         if (/^\d+$/.test(termino)) {
           coincideBusqueda =
             nroMemo === termino ||
+            nroMemo.startsWith(`${Number(termino)}-`) ||
             nroExpediente === termino ||
-            nroExpedienteFormateado === `exp-2026-${termino.padStart(5, '0')}` ||
-            nroExpedienteFormateado.endsWith(`-${termino.padStart(5, '0')}`)
+            nroExpedienteFormateado.startsWith(`${Number(termino)}-`)
         } else {
           coincideBusqueda =
             nroMemo.includes(termino) ||
@@ -91,7 +110,8 @@ export default function useMemosList(
             asunto.includes(termino) ||
             registradoPor.includes(termino) ||
             areaDestino.includes(termino) ||
-            responsable.includes(termino)
+            responsable.includes(termino) ||
+            copia.includes(termino)
         }
       }
 
@@ -101,7 +121,7 @@ export default function useMemosList(
         (estadoFilter === 'Todos' || memo.estado === estadoFilter)
       )
     })
-  }, [memos, query, areaFilter, estadoFilter])
+  }, [memos, query, areaFilter, estadoFilter, expedientesPorId])
 
   const pageCount = Math.max(1, Math.ceil(memosFiltrados.length / pageSize))
   const currentPage = Math.min(page, pageCount)
@@ -110,8 +130,12 @@ export default function useMemosList(
     currentPage * pageSize
   )
 
-  const formatExpediente = (nroExp: string) =>
-    nroExp.startsWith('EXP-') ? nroExp : `EXP-2026-${nroExp.padStart(5, '0')}`
+  const formatExpediente = (nroExp: string, expedienteId?: string) =>
+    formatNroExp(
+      nroExp,
+      false,
+      expedientesPorId.get(String(expedienteId))?.fechaIngreso
+    )
 
   useEffect(() => {
     const cargarDocumentosExpedientes = async () => {

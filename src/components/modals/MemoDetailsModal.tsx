@@ -1,4 +1,7 @@
 import type { Memo } from '../../types'
+import { formatNroExp } from '../../utils/expedienteHelpers'
+import { formatDocumentNumber } from '../../utils/documentHelpers'
+import { getAreaCopia } from '../../constants'
 
 /** Displays the selected memo without coupling its details to the list view. */
 export default function MemoDetailsModal({
@@ -16,7 +19,9 @@ export default function MemoDetailsModal({
         <div className="section-header">
           <div>
             <p className="eyebrow">GESTIÓN DOCUMENTAL</p>
-            <h2>Datos del Memo {memo.nroMemo}</h2>
+            <h2>
+              Datos del Memo {formatDocumentNumber(memo.nroMemo, memo.createdAt)}
+            </h2>
           </div>
           <button className="action-link" onClick={onClose}>
             ✕
@@ -26,24 +31,30 @@ export default function MemoDetailsModal({
         <div className="detail-grid">
           <div>
             <strong>N.º Memo</strong>
-            <p>{memo.nroMemo || '—'}</p>
+            <p>{formatDocumentNumber(memo.nroMemo, memo.createdAt) || '—'}</p>
           </div>
           <div>
             <strong>N.º Expediente</strong>
-            <p>{memo.nroExpediente || '—'}</p>
+            <p>{formatNroExp(memo.nroExpediente) || '—'}</p>
           </div>
           <div>
             <strong>Fecha</strong>
             <p>{memo.fecha || '—'}</p>
           </div>
           <div>
-            <strong>Registrado por</strong>
-            <p>{memo.registradoPor || '—'}</p>
+            <strong>Realizado por</strong>
+            <p>{memo.realizadoPor || 'No registrado'}</p>
           </div>
           <div>
             <strong>Área destino</strong>
             <p>{memo.areaDestino ? memo.areaDestino.split(' / ')[0] : '—'}</p>
           </div>
+          {getAreaCopia(memo.areaDestino) && (
+            <div>
+              <strong>Con copia a</strong>
+              <p>{getAreaCopia(memo.areaDestino)}</p>
+            </div>
+          )}
           {memo.areaDestino?.includes(' / ') && (
             <div>
               <strong>Subárea</strong>

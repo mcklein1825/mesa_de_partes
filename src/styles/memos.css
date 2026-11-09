@@ -133,18 +133,18 @@
 /* Tabla de Memos */
 .memos-table {
   width: 100%;
-  min-width: 1250px; /* Fuerza el ancho mínimo para que no se aplaste */
+  min-width: 1080px;
   table-layout: fixed;
 }
 
-.memos-table th:nth-child(1) { width: 6%; }  /* N. MEMO */
-.memos-table th:nth-child(2) { width: 14%; } /* N. EXPEDIENTE */
-.memos-table th:nth-child(3) { width: 9%; }  /* FECHA */
-.memos-table th:nth-child(4) { width: 24%; } /* ASUNTO */
-.memos-table th:nth-child(5) { width: 14%; } /* ÁREA DESTINO */
-.memos-table th:nth-child(6) { width: 14%; } /* RESPONSABLE */
-.memos-table th:nth-child(7) { width: 11%; } /* ESTADO */
-.memos-table th:nth-child(8) { width: 8%; }  /* MÁS DATOS */
+.memos-table th:nth-child(1) { width: 8%; }
+.memos-table th:nth-child(2) { width: 13%; }
+.memos-table th:nth-child(3) { width: 9%; }
+.memos-table th:nth-child(4) { width: 22%; }
+.memos-table th:nth-child(5) { width: 14%; }
+.memos-table th:nth-child(6) { width: 13%; }
+.memos-table th:nth-child(7) { width: 9%; }
+.memos-table th:nth-child(8) { width: 12%; }
 
 .memos-table td:nth-child(1),
 .memos-table td:nth-child(2),
@@ -160,6 +160,27 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.memo-heading-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.duplicate-result.selected {
+  border-color: #1aa9ad;
+  background: #effbfb;
+}
+
+@media (max-width: 700px) {
+  .memo-heading-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .memo-heading-actions button {
+    width: 100%;
+  }
 }
 /* ========================================
    SELECTOR DE EXPEDIENTES PARA MEMOS

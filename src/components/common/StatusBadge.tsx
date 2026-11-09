@@ -8,7 +8,6 @@ export default function StatusBadge({ status }: { status: string }) {
       className={`status-badge ${statusClass}`}
       role="status"
     >
-      <i aria-hidden="true" />
       {status}
     </span>
   )

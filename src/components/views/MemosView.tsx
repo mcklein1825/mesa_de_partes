@@ -1,18 +1,25 @@
   import { useEffect, useMemo, useState } from 'react'
   import { Expediente, Memo } from '../../types'
-  import { getSubareas } from '../../constants'
+  import { getAreaCopia, getSubareas } from '../../constants'
   import ExpedienteSelector from '../common/ExpedienteSelector'
   import MemoDocumentLink from '../common/MemoDocumentLink'
   import MemoDetailsModal from '../modals/MemoDetailsModal'
   import { displayDate } from '../../utils/expedienteHelpers'
+  import { formatDocumentNumber } from '../../utils/documentHelpers'
   import useMemosList from '../../features/mesaPartes/useMemosList'
+  import { getSupportedDocumentMimeType } from '../../utils/expedienteHelpers'
 
   export default function MemosView({
     expediente,
     expedientes,
     areaOptions,
     memos,
+    canCreate,
+    canAtender,
+    canArchivar,
+    memoParaDuplicar,
     onNewMemo,
+    onDuplicateMemo,
     showMemoForm,
     showMemoSelector,
     memoNro,
@@ -35,8 +42,13 @@
     expedientes: Expediente[]
     areaOptions: string[]
     memos: Memo[]
+    canCreate: boolean
+    canAtender: boolean
+    canArchivar: boolean
+    memoParaDuplicar: Memo | null
     onBack: () => void
     onNewMemo: () => void
+    onDuplicateMemo: (memo: Memo) => void
     showMemoForm: boolean
     showMemoSelector: boolean
     memoNro: string
@@ -60,6 +72,10 @@
   }) {
     const [memoArchivo, setMemoArchivo] = useState<File | null>(null)
     const [memoArchivoNombre, setMemoArchivoNombre] = useState('')
+    const [showDuplicateMemoModal, setShowDuplicateMemoModal] = useState(false)
+    const [memoDuplicadoBusqueda, setMemoDuplicadoBusqueda] = useState('')
+    const [memoSeleccionadoParaDuplicar, setMemoSeleccionadoParaDuplicar] =
+      useState<Memo | null>(null)
     const {
       query,
       setQuery,
@@ -87,6 +103,24 @@
     const [destinoAbierto, setDestinoAbierto] = useState(false)
     const [memoSubareaDestino, setMemoSubareaDestino] = useState('')
     const [memoAreaPrincipalDestino, setMemoAreaPrincipalDestino] = useState('')
+
+    useEffect(() => {
+      if (!showMemoForm) {
+        setMemoArchivo(null)
+        setMemoArchivoNombre('')
+        return
+      }
+
+      if (!memoParaDuplicar) {
+        return
+      }
+
+      const [areaPrincipal, subarea = ''] = memoParaDuplicar.areaDestino
+        .split(' / ')
+      setMemoAreaPrincipalDestino(areaPrincipal)
+      setMemoSubareaDestino(subarea)
+      setDestinoBusqueda(areaPrincipal)
+    }, [showMemoForm, memoParaDuplicar])
       /*
     * =========================================================
     * OPCIONES DE FILTROS
@@ -105,6 +139,26 @@
       .includes(termino)
   )
 }, [destinoBusqueda, destinoOptions])
+
+    const memosParaDuplicar = useMemo(() => {
+      const termino = memoDuplicadoBusqueda.trim().toLowerCase()
+
+      if (!termino) {
+        return memos
+      }
+
+      return memos.filter(memo =>
+        [
+          formatDocumentNumber(memo.nroMemo, memo.createdAt),
+          memo.nroExpediente,
+          memo.asunto,
+          memo.areaDestino,
+          memo.realizadoPor,
+          memo.responsable,
+          getAreaCopia(memo.areaDestino)
+        ].some(valor => String(valor || '').toLowerCase().includes(termino))
+      )
+    }, [memos, memoDuplicadoBusqueda])
     /*
     * =========================================================
     * FILTROS
@@ -154,7 +208,9 @@ if (showMemoForm && expediente) {
           <h1>Nuevo Memo</h1>
 
           <p className="muted">
-            Registrar un nuevo Memo relacionado con un expediente.
+            {memoParaDuplicar
+              ? `Copia de ${formatDocumentNumber(memoParaDuplicar.nroMemo, memoParaDuplicar.createdAt)}. El original se conservará y debe elegir otro expediente.`
+              : 'Registrar un nuevo Memo relacionado con un expediente.'}
           </p>
         </div>
 
@@ -251,7 +307,7 @@ if (showMemoForm && expediente) {
           </div>
 
           <div className="memo-form-field">
-            <label>Registrado por</label>
+            <label>Realizado por</label>
 
             <input
               type="text"
@@ -383,6 +439,11 @@ if (showMemoForm && expediente) {
               readOnly
               placeholder="Se completará automáticamente"
             />
+            {getAreaCopia(memoAreaDestino) && (
+              <small>
+                Con copia a: {getAreaCopia(memoAreaDestino)}
+              </small>
+            )}
           </div>
 
           <div className="memo-form-field">
@@ -416,6 +477,14 @@ if (showMemoForm && expediente) {
                     return
                   }
 
+                  if (!getSupportedDocumentMimeType(file)) {
+                    alert('Adjunte un archivo PDF, JPG, JPEG o PNG.')
+                    event.target.value = ''
+                    setMemoArchivo(null)
+                    setMemoArchivoNombre('')
+                    return
+                  }
+
                   if (file.size > 5 * 1024 * 1024) {
                     alert('El archivo no puede superar los 5 MB.')
                     event.target.value = ''
@@ -433,7 +502,9 @@ if (showMemoForm && expediente) {
             <small>
               {memoArchivoNombre
                 ? `Seleccionado: ${memoArchivoNombre}`
-                : 'Máximo 5 MB.'}
+                : memoParaDuplicar?.archivoData
+                  ? `Se conservará el archivo ${memoParaDuplicar.archivo || 'original'} si no selecciona otro. Máximo 5 MB.`
+                  : 'Seleccione un archivo. Máximo 5 MB.'}
             </small>
           </div>
 
@@ -479,6 +550,171 @@ if (showMemoForm && expediente) {
     return (
   <>
 
+    {showDuplicateMemoModal && (
+      <div
+        className="duplicate-modal-overlay"
+        onMouseDown={event => {
+          if (event.target === event.currentTarget) {
+            setShowDuplicateMemoModal(false)
+            setMemoSeleccionadoParaDuplicar(null)
+          }
+        }}
+      >
+        <div
+          className="duplicate-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="duplicate-memo-modal-title"
+        >
+          <div className="duplicate-modal-header">
+            <div>
+              <h2 id="duplicate-memo-modal-title">Duplicar Memo</h2>
+              <p>Busque y seleccione el Memo que desea duplicar.</p>
+            </div>
+            <button
+              type="button"
+              className="duplicate-modal-close"
+              onClick={() => {
+                setShowDuplicateMemoModal(false)
+                setMemoSeleccionadoParaDuplicar(null)
+              }}
+              aria-label="Cerrar"
+            >
+              ×
+            </button>
+          </div>
+
+          <div className="duplicate-modal-body">
+            <label className="duplicate-search-label">
+              Buscar Memo
+              <div className="duplicate-search-box">
+                <span>⌕</span>
+                <input
+                  type="text"
+                  value={memoDuplicadoBusqueda}
+                  onChange={event => {
+                    setMemoDuplicadoBusqueda(event.target.value)
+                    setMemoSeleccionadoParaDuplicar(null)
+                  }}
+                  placeholder="N.º de Memo, expediente o asunto"
+                  autoFocus
+                />
+              </div>
+            </label>
+
+            {memosParaDuplicar.length > 0 ? (
+              <div className="duplicate-results">
+                {memosParaDuplicar.map(memo => (
+                  <button
+                    key={memo.id}
+                    type="button"
+                    className={`duplicate-result${memoSeleccionadoParaDuplicar?.id === memo.id ? ' selected' : ''}`}
+                    onClick={() => setMemoSeleccionadoParaDuplicar(memo)}
+                  >
+                    <div className="duplicate-result-top">
+                      <strong>
+                        {formatDocumentNumber(memo.nroMemo, memo.createdAt) ||
+                          'Memo sin número'}
+                      </strong>
+                      <span>{memo.fecha || 'Sin fecha'}</span>
+                    </div>
+                    <div className="duplicate-result-subject">
+                      {memo.asunto || 'Sin asunto'}
+                    </div>
+                    <div className="duplicate-result-details">
+                      <span>
+                        Expediente: {formatExpediente(
+                          memo.nroExpediente,
+                          memo.expedienteId
+                        )}
+                      </span>
+                      <span>
+                        {memo.areaDestino || 'Sin área destino'}
+                        {getAreaCopia(memo.areaDestino) &&
+                          ` · Con copia a: ${getAreaCopia(memo.areaDestino)}`}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="duplicate-empty">
+                {memoDuplicadoBusqueda.trim()
+                  ? 'No se encontraron Memos con esos datos.'
+                  : 'No hay Memos disponibles para duplicar.'}
+              </div>
+            )}
+
+            {memoSeleccionadoParaDuplicar && (
+              <div className="duplicate-preview">
+                <div className="duplicate-preview-header">
+                  <strong>Memo que se duplicará</strong>
+                </div>
+                <div className="duplicate-preview-content">
+                  <div>
+                    <span>N.º de Memo original</span>
+                    <strong>
+                      {formatDocumentNumber(
+                        memoSeleccionadoParaDuplicar.nroMemo,
+                        memoSeleccionadoParaDuplicar.createdAt
+                      )}
+                    </strong>
+                  </div>
+                  <div>
+                    <span>Expediente original</span>
+                    <strong>
+                      {formatExpediente(
+                        memoSeleccionadoParaDuplicar.nroExpediente,
+                        memoSeleccionadoParaDuplicar.expedienteId
+                      )}
+                    </strong>
+                  </div>
+                  <div className="duplicate-preview-wide">
+                    <span>Asunto</span>
+                    <strong>
+                      {memoSeleccionadoParaDuplicar.asunto || 'Sin asunto'}
+                    </strong>
+                  </div>
+                </div>
+                <div className="duplicate-new-expediente">
+                  <span>Resultado</span>
+                  <strong>
+                    Se creará un nuevo Memo para otro expediente; el original se conservará.
+                  </strong>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="duplicate-modal-footer">
+            <button
+              type="button"
+              className="legacy-light-button"
+              onClick={() => {
+                setShowDuplicateMemoModal(false)
+                setMemoSeleccionadoParaDuplicar(null)
+              }}
+            >
+              Cancelar
+            </button>
+            {memoSeleccionadoParaDuplicar && (
+              <button
+                type="button"
+                className="primary-button"
+                onClick={() => {
+                  onDuplicateMemo(memoSeleccionadoParaDuplicar)
+                  setShowDuplicateMemoModal(false)
+                  setMemoSeleccionadoParaDuplicar(null)
+                }}
+              >
+                ⧉ Continuar con este Memo
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+
     {showMemoSelector && !expediente && (
       <div
         className="memo-modal-overlay"
@@ -504,12 +740,14 @@ if (showMemoForm && expediente) {
               </p>
 
               <h2 id="nuevo-memo-title">
-                Nuevo Memo
+                    {memoParaDuplicar ? 'Duplicar Memo' : 'Nuevo Memo'}
               </h2>
 
               <p>
-                Seleccione el expediente al que desea asociar el Memo.
-              </p>
+                    {memoParaDuplicar
+                      ? `Elija un expediente diferente para crear una copia de ${formatDocumentNumber(memoParaDuplicar.nroMemo, memoParaDuplicar.createdAt)}.`
+                      : 'Seleccione el expediente al que desea asociar el Memo.'}
+                  </p>
             </div>
 
             <button
@@ -528,13 +766,12 @@ if (showMemoForm && expediente) {
             <div className="section-header">
 
               <div>
-                <h3>
-                  Seleccionar expediente
-                </h3>
+                <h3>Seleccionar expediente disponible</h3>
 
                 <p>
-                  Busque el expediente por número, asunto,
-                  remitente o área.
+                  {memoParaDuplicar
+                    ? 'Los expedientes que ya tienen un Memo no aparecen en esta lista.'
+                    : 'Busque el expediente por número, asunto, remitente o área.'}
                 </p>
               </div>
 
@@ -589,12 +826,26 @@ if (showMemoForm && expediente) {
             </p>
           </div>
 
-          <button
-            className="primary-button"
-            onClick={onNewMemo}
-          >
-            ＋ Nuevo Memo
-          </button>
+          {canCreate && (
+            <div className="memo-heading-actions">
+              <button
+                className="primary-button"
+                onClick={onNewMemo}
+              >
+                ＋ Nuevo Memo
+              </button>
+              <button
+                className="primary-button"
+                onClick={() => {
+                  setMemoDuplicadoBusqueda('')
+                  setMemoSeleccionadoParaDuplicar(null)
+                  setShowDuplicateMemoModal(true)
+                }}
+              >
+                ⧉ Duplicar Memo
+              </button>
+            </div>
+          )}
 
         </div>
 
@@ -679,9 +930,10 @@ if (showMemoForm && expediente) {
                 <th>FECHA</th>
                 <th>ASUNTO</th>
                 <th>ÁREA DESTINO</th>
+                <th>REALIZADO POR</th>
                 <th>RESPONSABLE</th>
                 <th>ESTADO</th>
-                <th>MÁS DATOS</th>
+                <th>ACCIONES</th>
               </tr>
             </thead>
 
@@ -692,13 +944,13 @@ if (showMemoForm && expediente) {
 
       <td>
         <b className="exp-id">
-          {memo.nroMemo}
+          {formatDocumentNumber(memo.nroMemo, memo.createdAt)}
         </b>
       </td>
 
      <td>
   <b>
-    {formatExpediente(memo.nroExpediente)}
+    {formatExpediente(memo.nroExpediente, memo.expedienteId)}
   </b>
 
  {(() => {
@@ -768,6 +1020,28 @@ if (showMemoForm && expediente) {
         >
           {memo.areaDestino || '—'}
         </span>
+        {getAreaCopia(memo.areaDestino) && (
+          <small>
+            Con copia a: {getAreaCopia(memo.areaDestino)}
+          </small>
+        )}
+      </td>
+
+      <td>
+        <span
+          title={memo.realizadoPor || 'No registrado'}
+          style={{
+            display: 'block',
+            maxWidth: '150px',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            fontSize: '11px',
+            color: '#374151'
+          }}
+        >
+          {memo.realizadoPor || 'No registrado'}
+        </span>
       </td>
 
       {/* NUEVA COLUMNA RESPONSABLE */}
@@ -792,6 +1066,7 @@ if (showMemoForm && expediente) {
         <select
           className={`status-badge ${memo.estado.toLowerCase().replace(/\s+/g, '-')}`}
           value={memo.estado}
+          disabled={!canAtender}
           onChange={e => {
             const nuevoEstado =
               e.target.value as Memo['estado']
@@ -835,7 +1110,7 @@ if (showMemoForm && expediente) {
                 Atendido
               </option>
 
-              <option value="Archivado">
+              <option value="Archivado" disabled={!canArchivar}>
                 Archivado
               </option>
             </>
@@ -848,7 +1123,7 @@ if (showMemoForm && expediente) {
           )}
 
           {memo.estado === 'Archivado' && (
-            <option value="Archivado">
+            <option value="Archivado" disabled={!canArchivar}>
               Archivado
             </option>
           )}
@@ -859,10 +1134,7 @@ if (showMemoForm && expediente) {
       <td>
         <button
           className="tracking-button"
-          onClick={() => {
-            console.log('MEMO SELECCIONADO:', memo)
-            setSelectedMemo(memo)
-          }}
+          onClick={() => setSelectedMemo(memo)}
         >
           ◉ Ver más datos
         </button>

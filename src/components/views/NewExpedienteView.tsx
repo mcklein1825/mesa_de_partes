@@ -35,11 +35,19 @@ export default function NewExpedienteView({
       <div className="page-heading compact document-form-header">
         <div>
           <p className="eyebrow">GESTIÓN DOCUMENTAL</p>
-          <h1>Registro de Expediente</h1>
+          <h1 id="new-expediente-title">Registro de Expediente</h1>
           <p className="muted">
             Complete los datos solicitados para registrar el expediente.
           </p>
         </div>
+        <button
+          type="button"
+          className="secondary-button"
+          onClick={onCancel}
+          disabled={isSaving}
+        >
+          Cancelar
+        </button>
       </div>
 
       <form className="form-layout document-form-layout" onSubmit={onSubmit}>
@@ -53,7 +61,13 @@ export default function NewExpedienteView({
             <div className="document-form-info">
               <div>
                 <strong>Expediente original</strong>
-                <p>{formatNroExp(String(expedienteParaDuplicar.nroExp))}</p>
+                <p>
+                  {formatNroExp(
+                    String(expedienteParaDuplicar.nroExp),
+                    false,
+                    expedienteParaDuplicar.fechaIngreso
+                  )}
+                </p>
               </div>
               <div>
                 <strong>Remitente</strong>
@@ -71,7 +85,12 @@ export default function NewExpedienteView({
 
             <div className="document-form-duplicate-summary">
               <strong>Nuevo expediente:</strong>{' '}
-              {formatNroExp(String(expedienteParaDuplicar.nroExp))} *
+              {formatNroExp(
+                String(expedienteParaDuplicar.nroExp),
+                false,
+                expedienteParaDuplicar.fechaIngreso
+              )}{' '}
+              *
             </div>
 
             <input
@@ -99,6 +118,21 @@ export default function NewExpedienteView({
             <h2>Datos del expediente</h2>
             <p>Complete los datos principales del documento recibido.</p>
           </div>
+
+          <label className="workflow-toggle">
+            <input
+              name="requiereGestion"
+              type="checkbox"
+              value="true"
+              defaultChecked
+            />
+            <span className="workflow-toggle-copy">
+              <strong>Requiere seguimiento o gestión</strong>
+              <small>
+                Activado por defecto. Desactívelo si solo necesita registrar el documento.
+              </small>
+            </span>
+          </label>
 
           <div className="form-grid document-form-grid">
             <label className="document-form-field">
@@ -373,8 +407,9 @@ export default function NewExpedienteView({
             type="button"
             className="legacy-light-button"
             onClick={onCancel}
+            disabled={isSaving}
           >
-            ‹ Anterior
+            Cancelar
           </button>
 
           <button

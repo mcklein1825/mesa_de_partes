@@ -19,6 +19,58 @@
   max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
+  border: 1px solid #e1e8ed;
+  border-radius: 0 0 12px 12px;
+  scrollbar-width: thin;
+}
+
+.portal-shell .table-wrap > table:not(.risk-table) {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12px;
+}
+
+.portal-shell .table-wrap > table:not(.risk-table) thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 13px 12px;
+  border-top: 0;
+  border-bottom: 1px solid #dce5eb;
+  background: #f3f7f9;
+  color: #536b78;
+  font-size: 9px;
+  letter-spacing: 0.65px;
+}
+
+.portal-shell .table-wrap > table:not(.risk-table) tbody td {
+  padding: 13px 12px;
+  border-bottom: 1px solid #edf1f4;
+  color: #405461;
+  line-height: 1.45;
+  vertical-align: middle;
+}
+
+.portal-shell .table-wrap > table:not(.risk-table) tbody tr:nth-child(even) {
+  background: #fafcfd;
+}
+
+.portal-shell .table-wrap > table:not(.risk-table) tbody tr:hover {
+  background: #f0f8fa;
+}
+
+.portal-shell .table-wrap > table:not(.risk-table) tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.portal-shell .list-panel .data-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.portal-shell .list-panel .data-table .exp-id {
+  font-size: 11px;
+  letter-spacing: 0;
 }
 
 /* =====================================================
@@ -33,7 +85,7 @@
 /* Anchos de las columnas */
 .list-panel .expedientes-table th:nth-child(1),
 .list-panel .expedientes-table td:nth-child(1) {
-  width: 185px; /* Más espacio para EXP-2026-XXXXX * */
+  width: 135px; /* Espacio para número de expediente y año */
 }
 
 .list-panel .expedientes-table th:nth-child(2),
@@ -58,17 +110,12 @@
 
 .list-panel .expedientes-table th:nth-child(6),
 .list-panel .expedientes-table td:nth-child(6) {
-  width: 160px; /* Ubicación */
+  width: 130px; /* Estado */
 }
 
 .list-panel .expedientes-table th:nth-child(7),
 .list-panel .expedientes-table td:nth-child(7) {
-  width: 130px; /* Estado */
-}
-
-.list-panel .expedientes-table th:nth-child(8),
-.list-panel .expedientes-table td:nth-child(8) {
-  width: 150px; /* Acciones */
+  width: 165px; /* Acciones */
 }
 
 /* Evitar que los nombres largos ensanchen la tabla */
@@ -86,9 +133,8 @@
   overflow: hidden;
 }
 
-/* Limitar el contenido de Asunto y Ubicación */
-.list-panel .expedientes-table td:nth-child(5),
-.list-panel .expedientes-table td:nth-child(6) {
+/* Limitar el contenido del Asunto */
+.list-panel .expedientes-table td:nth-child(5) {
   overflow: hidden;
 }
 
@@ -107,6 +153,29 @@
   padding: 10px 8px;
 }
 
+.status-badge.solo-registro {
+  color: #596674;
+  background: #edf1f4;
+  border-color: #cbd3d9;
+}
+
+.clear-filters-button {
+  align-self: center;
+  padding: 8px 10px;
+  border: 1px solid #c9d8de;
+  border-radius: 7px;
+  background: #f5fafb;
+  color: #315b68;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.clear-filters-button:hover {
+  border-color: #74a8b7;
+  background: #eaf5f7;
+}
+
 
 /* =====================================================
    PROVEÍDOS: TABLA COMPACTA Y ANCHO ADAPTABLE
@@ -114,7 +183,7 @@
 
 .list-panel.proveidos-list .table-wrap > table.data-table.proveidos-table {
   width: 100%;
-  min-width: 1200px; /* Fuerza el ancho mínimo */
+  min-width: 1080px;
   table-layout: fixed;
 }
 
@@ -129,7 +198,7 @@
 /* Fecha */
 .list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(2),
 .list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(2) {
-  width: 11%;
+  width: 10%;
   min-width: 0;
   max-width: none;
 }
@@ -137,7 +206,7 @@
 /* Área destino */
 .list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(3),
 .list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(3) {
-  width: 16%;
+  width: 15%;
   min-width: 0;
   max-width: none;
 }
@@ -145,7 +214,7 @@
 /* Responsable */
 .list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(4),
 .list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(4) {
-  width: 23%;
+  width: 16%;
   min-width: 0;
   max-width: none;
 }
@@ -158,9 +227,17 @@
   max-width: none;
 }
 
-/* Documento */
+/* Estado */
 .list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(6),
 .list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(6) {
+  width: 9%;
+  min-width: 0;
+  max-width: none;
+}
+
+/* Documento */
+.list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(7),
+.list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(7) {
   width: 14%;
   min-width: 0;
   max-width: none;
@@ -199,6 +276,107 @@
   color: #64748b;
   font-size: 10px;
   letter-spacing: 0.7px;
+}
+
+.tracking-modal .tracking-documents {
+  margin: 20px 28px 4px;
+  border: 1px solid #dce6eb;
+  border-radius: 12px;
+  background: #fbfdfe;
+  overflow: hidden;
+}
+
+.tracking-modal .tracking-documents-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 15px 18px;
+  border-bottom: 1px solid #e4ebef;
+}
+
+.tracking-modal .tracking-documents-header .eyebrow {
+  margin: 0 0 4px;
+  color: #c65a48;
+  font-size: 9px;
+}
+
+.tracking-modal .tracking-documents-header h3 {
+  margin: 0;
+  color: #193140;
+  font-size: 15px;
+}
+
+.tracking-modal .tracking-documents-count {
+  flex: 0 0 auto;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #edf4f6;
+  color: #526b76;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.tracking-modal .tracking-document-list {
+  display: grid;
+}
+
+.tracking-modal .tracking-document-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  padding: 13px 18px;
+  border-bottom: 1px solid #e9eff2;
+}
+
+.tracking-modal .tracking-document-row:last-child {
+  border-bottom: 0;
+}
+
+.tracking-modal .tracking-document-row > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.tracking-modal .tracking-document-row > div strong {
+  color: #293f4a;
+  font-size: 12px;
+}
+
+.tracking-modal .tracking-document-row > div small {
+  color: #687d87;
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.tracking-modal .tracking-document-row .document-link,
+.tracking-modal .tracking-document-row .document-attach-button {
+  flex: 0 0 auto;
+}
+
+.tracking-modal .tracking-file-missing,
+.tracking-modal .tracking-file-available,
+.tracking-modal .tracking-file-unavailable {
+  flex: 0 0 auto;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.tracking-modal .tracking-file-missing {
+  color: #a44f35;
+}
+
+.tracking-modal .tracking-file-available {
+  color: #24744d;
+}
+
+.tracking-modal .tracking-file-unavailable {
+  color: #667780;
 }
 
 .tracking-modal .timeline {
@@ -419,6 +597,15 @@
   .tracking-modal .tracking-summary {
     grid-template-columns: 1fr;
     padding: 14px;
+  }
+
+  .tracking-modal .tracking-documents {
+    margin: 16px 14px 0;
+  }
+
+  .tracking-modal .tracking-document-row {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .tracking-modal .timeline {

@@ -2,6 +2,7 @@ import { Expediente, Proveido } from '../../types'
 import { formatNroExp, getRemitenteNombre, getAreaDestino, getDeadlineState, parseDate } from '../../utils/expedienteHelpers'
 import StatCard from '../common/StatCard'
 import StatusBadge from '../common/StatusBadge'
+import { getAreaCopia } from '../../constants'
 import RiskInsightPanel from '../common/RiskInsightPanel'
 import type { ExpedienteRiskAnalysis } from '../../utils/expedienteRiskModel'
 
@@ -9,6 +10,7 @@ export default function DashboardView({
   expedientes,
   proveidos,
   onNew,
+  canRegister,
   onViewAll,
   onFilterExp,
   currentDate,
@@ -18,6 +20,7 @@ export default function DashboardView({
   expedientes: Expediente[]
   proveidos: Proveido[]
   onNew: () => void
+  canRegister: boolean
   onViewAll: () => void
   onFilterExp?: (status: string) => void
   currentDate: string
@@ -88,9 +91,11 @@ const archived = expedientes.filter(
         <div>
           <p className="eyebrow">{currentDate}</p>
           <h1>Buenos días, {currentUser?.nombre || 'usuario'} </h1>
-          <p className="muted">Aquí tienes el resumen de tu mesa de partes.</p>
+          <p className="muted">Aquí tienes el resumen documental de Dirección General.</p>
         </div>
-        <button className="primary-button" onClick={onNew}>＋ Nuevo expediente</button>
+        {canRegister && (
+          <button className="primary-button" onClick={onNew}>＋ Nuevo expediente</button>
+        )}
       </div>
 
       <section className="stats-grid">
@@ -166,7 +171,9 @@ const archived = expedientes.filter(
                 {recentExpedientes.map(item => (
                   <tr key={item.id}>
                     <td>
-                      <b className="exp-id">{formatNroExp(item.nroExp)}</b>
+                      <b className="exp-id">
+                        {formatNroExp(item.nroExp, false, item.fechaIngreso)}
+                      </b>
                       <small>{item.fechaIngreso || 'Sin fecha'}</small>
                     </td>
                     <td>
@@ -215,7 +222,7 @@ const archived = expedientes.filter(
                       <span>{month}</span>
                     </div>
                     <div>
-                      <b>{formatNroExp(item.nroExp)}</b>
+                      <b>{formatNroExp(item.nroExp, false, item.fechaIngreso)}</b>
                       <p>{item.asunto}</p>
                       <small
                         className={
@@ -252,6 +259,7 @@ const archived = expedientes.filter(
                 <th>EXPEDIENTE</th>
                 <th>FECHA</th>
                 <th>ÁREA DESTINO</th>
+                <th>REALIZADO POR</th>
                 <th>RESPONSABLE</th>
                 <th>INSTRUCCIÓN</th>
                 <th>ESTADO</th>
@@ -263,7 +271,17 @@ const archived = expedientes.filter(
                 <tr key={proveido.id}>
                  <td>
                     <b className="exp-id">
-                      {proveido.nroExpediente || '—'}
+                      {proveido.nroExpediente
+                        ? formatNroExp(
+                            proveido.nroExpediente,
+                            false,
+                            expedientes.find(
+                              expediente =>
+                                String(expediente.id) ===
+                                String(proveido.expedienteId)
+                            )?.fechaIngreso
+                          )
+                        : '—'}
                     </b>
                   </td>
 
@@ -273,6 +291,15 @@ const archived = expedientes.filter(
 
                   <td>
                     {proveido.areaDestino || '—'}
+                    {getAreaCopia(proveido.areaDestino) && (
+                      <small>
+                        Con copia a: {getAreaCopia(proveido.areaDestino)}
+                      </small>
+                    )}
+                  </td>
+
+                  <td>
+                    {proveido.realizadoPor || 'No registrado'}
                   </td>
 
                   <td>
@@ -297,7 +324,7 @@ const archived = expedientes.filter(
 
               {proveidos.length === 0 && (
                 <tr>
-                  <td colSpan={6}>
+                  <td colSpan={7}>
                     <div
                       className="empty-state"
                       style={{ padding: '20px', textAlign: 'center' }}

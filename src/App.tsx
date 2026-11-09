@@ -1,4 +1,13 @@
-  import { useState, useEffect, useMemo, useRef, useCallback, FormEvent } from 'react'
+  import {
+    lazy,
+    Suspense,
+    useState,
+    useEffect,
+    useMemo,
+    useRef,
+    useCallback,
+    FormEvent
+  } from 'react'
   import { supabase } from './lib/supabaseClient'
   import { fetchHistorialExpediente } from './services/expedientesService'
   import useMesaPartesData from './features/mesaPartes/useMesaPartesData'
@@ -14,26 +23,29 @@
     FileText,
     Send,
     ClipboardList,
-    FilePlus2,
-    ChartNoAxesCombined
+    ChartNoAxesCombined,
+    Layers3
   } from 'lucide-react'
 
 // Tipos y Constantes
   import { User, View, Expediente, Memo, Oficio, Proveido, Status } from './types'
-  import { ROLE_PERMISSIONS, areas, AREA_RESPONSABLES } from './constants'
+  import { ROLE_PERMISSIONS, areas, getAreaResponsable } from './constants'
 
   // Utilidades
   import {
     normalizeExpediente, formatDate, todayInputValue, addDays,
-    readFileAsDataUrl, getAreaDestino, getRemitenteNombre, getDeadlineState
+    readFileAsDataUrl, getAreaDestino, getRemitenteNombre, getDeadlineState,
+    getSupportedDocumentMimeType, formatNroExp
   } from './utils/expedienteHelpers'
+  import { formatDocumentNumber } from './utils/documentHelpers'
   import { analyzeExpedienteRisk } from './utils/expedienteRiskModel'
 
   import DashboardView from './components/views/DashboardView'
   import ExpedientesView from './components/views/ExpedientesView'
   import MemosView from './components/views/MemosView'
+  import MemorandosMultiplesView from './components/views/MemorandosMultiplesView'
   import NewExpedienteView from './components/views/NewExpedienteView'
-  import ReportsView from './components/views/ReportsView'
+  const ReportsView = lazy(() => import('./components/views/ReportsView'))
 
   // Componentes Comunes y Modales
   import NavItem from './components/common/NavItem'
@@ -41,9 +53,10 @@
   export default function App() {
 
     const [currentUser, setCurrentUser] = useState<User | null>(null)
-    const [view, setView] = useState<View>('nuevo')
+    const [view, setView] = useState<View>('inicio')
     const [expedienteParaDuplicar, setExpedienteParaDuplicar] =
     useState<Expediente | null>(null)
+    const [showNewExpedienteForm, setShowNewExpedienteForm] = useState(false)
     const expedientesPageSize = 50
     const [memoExpediente, setMemoExpediente] = useState<Expediente | null>(null)
     const [oficioExpediente, setOficioExpediente] = useState<Expediente | null>(null)
@@ -52,6 +65,7 @@
     const [areaFilter, setAreaFilter] = useState('Todas')
     const [remitenteFilter, setRemitenteFilter] = useState('')
     const [statusFilter, setStatusFilter] = useState('Todos')
+    const [managementFilter, setManagementFilter] = useState('Todos')
     const [trackingId, setTrackingId] = useState<string | null>(null)
     const [showProfile, setShowProfile] = useState(false)
     const [toast, setToast] = useState('')
@@ -65,6 +79,7 @@
     const [memoNro, setMemoNro] = useState('')
     const [memoAsunto, setMemoAsunto] = useState('')
     const [memoFecha, setMemoFecha] = useState(todayInputValue())
+    const [memoParaDuplicar, setMemoParaDuplicar] = useState<Memo | null>(null)
     const [showMemoForm, setShowMemoForm] = useState(false)
     const [showMemoSelector, setShowMemoSelector] = useState(false)
     const [memoAreaDestino, setMemoAreaDestino] = useState('')
@@ -75,9 +90,7 @@
       return
     }
 
-    setMemoResponsable(
-      AREA_RESPONSABLES[memoAreaDestino] || ''
-    )
+    setMemoResponsable(getAreaResponsable(memoAreaDestino))
   }, [memoAreaDestino])
 
     const notify = useCallback((message: string) => {
@@ -95,6 +108,8 @@
       setOficios,
       proveidos,
       setProveidos,
+      memorandosMultiples,
+      setMemorandosMultiples,
       expedienteDocumentos,
       loadingDb
     } = useMesaPartesData(currentUser, notify)
@@ -120,6 +135,64 @@
     }, [currentUser, resetSessionTimeout])
 
     const userPermissions = currentUser ? ROLE_PERMISSIONS[currentUser.rol] : null
+    const canRegister = userPermissions?.puedeRegistrar === true
+    const canDerive = userPermissions?.puedeDerivar === true
+    const canAttend = userPermissions?.puedeAtender === true
+    const canArchive = userPermissions?.puedeArchivar === true
+    const canEdit = userPermissions?.puedeEditar === true
+    const canSeeReports = userPermissions?.puedeVerReportes === true
+
+    const visibleExpedientes = useMemo(() => {
+      if (userPermissions?.puedeVerTodos !== false) return expedientes
+
+      const areaActual = currentUser?.area
+        ?.normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim()
+        .toLowerCase()
+
+      if (!areaActual) return []
+
+      return expedientes.filter(item => {
+        const areasDelExpediente = [
+          getAreaDestino(item),
+          item.area,
+          item.entregadoA
+        ]
+
+        return areasDelExpediente.some(area =>
+          String(area || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim()
+            .toLowerCase() === areaActual
+        )
+      })
+    }, [currentUser?.area, expedientes, userPermissions?.puedeVerTodos])
+
+    const visibleExpedienteIds = useMemo(
+      () => new Set(visibleExpedientes.map(item => String(item.id))),
+      [visibleExpedientes]
+    )
+    const visibleMemos = useMemo(
+      () => memos.filter(item => visibleExpedienteIds.has(String(item.expedienteId))),
+      [memos, visibleExpedienteIds]
+    )
+    const visibleOficios = useMemo(
+      () => oficios.filter(item => visibleExpedienteIds.has(String(item.expedienteId))),
+      [oficios, visibleExpedienteIds]
+    )
+    const visibleProveidos = useMemo(
+      () => proveidos.filter(item => visibleExpedienteIds.has(String(item.expedienteId))),
+      [proveidos, visibleExpedienteIds]
+    )
+    const visibleExpedienteDocumentos = useMemo(
+      () =>
+        expedienteDocumentos.filter(item =>
+          visibleExpedienteIds.has(String(item.expedienteId))
+        ),
+      [expedienteDocumentos, visibleExpedienteIds]
+    )
 
     const areaOptions = useMemo(() => {
       // 1. Función para quitar tildes, mayúsculas y espacios (unifica "Secretaría" y "Secretaria")
@@ -144,7 +217,7 @@
       }
 
       // 4. Juntar áreas oficiales + áreas de la BD
-      const rawAreas = [...areas, ...expedientes.map(getAreaDestino).filter(Boolean)]
+      const rawAreas = [...areas, ...visibleExpedientes.map(getAreaDestino).filter(Boolean)]
 
       // 5. Procesar
       const cleaned = rawAreas
@@ -165,7 +238,7 @@
         )
 
       return cleaned.sort()
-    }, [expedientes])
+    }, [visibleExpedientes])
 
     const currentDate = useMemo(() => {
       const now = new Date()
@@ -173,74 +246,134 @@
     }, [])
 
     const expedienteRiskAnalysis = useMemo(
-      () => analyzeExpedienteRisk(expedientes, expedienteDocumentos),
-      [expedientes, expedienteDocumentos]
+      () =>
+        analyzeExpedienteRisk(
+          visibleExpedientes,
+          visibleExpedienteDocumentos
+        ),
+      [visibleExpedientes, visibleExpedienteDocumentos]
     )
 
     const filteredExpedientes = useMemo(() => {
-    const termino = query.trim().toLowerCase()
+    const normalizeSearch = (value: string) =>
+      value
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim()
 
-    return expedientes.filter(item => {
-      let matchesQuery = true
+    const termino = normalizeSearch(query)
 
-      if (termino) {
-        const nroExpediente = String(item.nroExp || '')
-          .trim()
-          .toLowerCase()
+    return visibleExpedientes.filter(item => {
+      const expedienteId = String(item.id)
+      const nroExpediente = String(item.nroExp || '')
+      const nroExpedienteFormateado = formatNroExp(
+        nroExpediente,
+        false,
+        item.fechaIngreso
+      )
+      const documentosRelacionados = [
+        ...visibleMemos
+          .filter(memo => String(memo.expedienteId) === expedienteId)
+          .flatMap(memo => [
+            formatDocumentNumber(memo.nroMemo, memo.createdAt),
+            memo.realizadoPor,
+            memo.responsable,
+            memo.asunto,
+            memo.archivo
+          ]),
+        ...visibleProveidos
+          .filter(proveido => String(proveido.expedienteId) === expedienteId)
+          .flatMap(proveido => [
+            formatDocumentNumber(proveido.id, proveido.createdAt),
+            proveido.nroExpediente,
+            proveido.realizadoPor,
+            proveido.responsable,
+            proveido.instruccion,
+            proveido.archivo
+          ]),
+        ...visibleOficios
+          .filter(oficio => String(oficio.expedienteId) === expedienteId)
+          .flatMap(oficio => [
+            formatDocumentNumber(oficio.nRegistro, oficio.createdAt),
+            oficio.realizadoPor,
+            oficio.responsable,
+            oficio.destinatario,
+            oficio.asuntoTipo,
+            oficio.asuntoDetalle
+          ])
+      ]
 
-        const nroExpedienteFormateado = nroExpediente.startsWith('exp-')
-          ? nroExpediente
-          : `exp-2026-${nroExpediente.padStart(5, '0')}`
-
-        const terminoEsNumero = /^\d+$/.test(termino)
-
-        if (terminoEsNumero) {
-          matchesQuery =
-            nroExpediente === termino ||
-            nroExpedienteFormateado ===
-              `exp-2026-${termino.padStart(5, '0')}` ||
-            nroExpedienteFormateado.endsWith(
-              `-${termino.padStart(5, '0')}`
-            )
-        } else {
-          matchesQuery =
-            nroExpedienteFormateado.includes(termino) ||
-            item.asunto.toLowerCase().includes(termino)
-        }
-      }
+      const searchableValues = [
+        nroExpediente,
+        nroExpedienteFormateado,
+        item.asunto,
+        getRemitenteNombre(item),
+        getAreaDestino(item),
+        item.area,
+        item.entregadoA,
+        item.documentos,
+        item.archivo,
+        item.usuarioRegistro,
+        item.canalRecepcion,
+        ...documentosRelacionados
+      ]
+      const matchesQuery =
+        !termino ||
+        searchableValues.some(value =>
+          normalizeSearch(String(value || '')).includes(termino)
+        )
 
       const matchesArea =
         areaFilter === 'Todas' ||
-        getAreaDestino(item) === areaFilter
+        normalizeSearch(getAreaDestino(item)) === normalizeSearch(areaFilter)
 
       const matchesRemitente =
-        getRemitenteNombre(item)
-          .toLowerCase()
-          .includes(remitenteFilter.trim().toLowerCase())
+        normalizeSearch(getRemitenteNombre(item)).includes(
+          normalizeSearch(remitenteFilter)
+        )
 
       const matchesStatus =
         statusFilter === 'Todos' ||
-        (statusFilter === 'Vencidos' && getDeadlineState(item).kind === 'vencido') ||
-        (statusFilter === 'Por vencer' && getDeadlineState(item).kind === 'por_vencer') ||
-        (statusFilter !== 'Vencidos' && statusFilter !== 'Por vencer' && item.estado === statusFilter)
+        (statusFilter === 'Vencidos' &&
+          item.requiereGestion &&
+          getDeadlineState(item).kind === 'vencido') ||
+        (statusFilter === 'Por vencer' &&
+          item.requiereGestion &&
+          getDeadlineState(item).kind === 'por_vencer') ||
+        (statusFilter === 'Pendiente' &&
+          item.requiereGestion &&
+          item.estado === statusFilter) ||
+        (!['Todos', 'Vencidos', 'Por vencer', 'Pendiente'].includes(statusFilter) &&
+          item.estado === statusFilter)
+
+      const matchesManagement =
+        managementFilter === 'Todos' ||
+        (managementFilter === 'gestion' && item.requiereGestion) ||
+        (managementFilter === 'registro' && !item.requiereGestion)
 
       return (
         matchesQuery &&
         matchesArea &&
         matchesRemitente &&
-        matchesStatus
+        matchesStatus &&
+        matchesManagement
       )
     })
   }, [
-    expedientes,
+    visibleExpedientes,
+    visibleMemos,
+    visibleOficios,
+    visibleProveidos,
     query,
     areaFilter,
     remitenteFilter,
-    statusFilter
+    statusFilter,
+    managementFilter
   ])
   useEffect(() => {
     setExpedientesPage(1)
-  }, [query, areaFilter, remitenteFilter, statusFilter])
+  }, [query, areaFilter, remitenteFilter, statusFilter, managementFilter])
 
     const addExpediente = async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault()
@@ -263,6 +396,7 @@
 
   const esDuplicado =
     String(data.get('esDuplicado') || '').toLowerCase() === 'true'
+  const requiereGestion = data.get('requiereGestion') === 'true'
 
   if (
     archivoSeleccionado &&
@@ -325,6 +459,7 @@
         id: '',
         nroExp: '',
         esDuplicado,
+        requiereGestion,
         fechaIngreso: fechaFormateada,
         remitente,
         remitenteNombre: remitente,
@@ -382,7 +517,8 @@
         representante: newExpediente.representante,
         cargo_representante: newExpediente.cargoRepresentante,
         es_duplicado: esDuplicado,
-        duplicado_de_id: esDuplicado ? Number(duplicadoDesdeId) : null
+        duplicado_de_id: esDuplicado ? Number(duplicadoDesdeId) : null,
+        requiere_gestion: requiereGestion
       }
 
       // 2. Llamamos a la RPC segura
@@ -404,6 +540,18 @@
         return
       }
 
+      const { error: clasificacionError } = await supabase
+        .from('mesa_partes_2026')
+        .update({ requiere_gestion: requiereGestion })
+        .eq('id', insertedData.id)
+
+      if (clasificacionError) {
+        console.error(
+          'El expediente se registró, pero no se pudo guardar su clasificación:',
+          clasificacionError
+        )
+      }
+
       setIsSaving(false)
 
       // 3. Construimos el expediente en memoria con la respuesta de la BD
@@ -411,6 +559,10 @@
         ...newExpediente,
         id: String(insertedData.id),
         nroExp: String(insertedData.nro_exp),
+        requiereGestion:
+          clasificacionError
+            ? insertedData.requiere_gestion !== false
+            : requiereGestion,
         fechaIngreso: String(insertedData.fecha_ingreso || fechaIngreso),
         remitente: String(insertedData.remitente_nombre || ''),
         remitenteNombre: String(insertedData.remitente_nombre || ''),
@@ -452,11 +604,14 @@
 
   // Limpiar el modo duplicado
   setExpedienteParaDuplicar(null)
+  setShowNewExpedienteForm(false)
 
   setView('expedientes')
 
   notify(
-    `Expediente ${expedienteInsertado.nroExp} registrado correctamente`
+    clasificacionError
+      ? `Expediente ${expedienteInsertado.nroExp} registrado, pero su clasificación no se guardó. Verifique la migración y los permisos de Supabase.`
+      : `Expediente ${expedienteInsertado.nroExp} registrado correctamente`
   )
     }
     const adjuntarDocumento = async (
@@ -470,6 +625,11 @@
 
     if (!userPermissions?.puedeRegistrar) {
       notify('No tiene permisos para adjuntar documentos')
+      return
+    }
+
+    if (!visibleExpedienteIds.has(String(expedienteId))) {
+      notify('No tiene acceso a este expediente')
       return
     }
 
@@ -560,6 +720,16 @@
     return
   }
 
+  if (!userPermissions?.puedeEditar) {
+    notify('No tiene permisos para modificar la fecha del expediente')
+    return
+  }
+
+  if (!visibleExpedienteIds.has(String(expedienteId))) {
+    notify('No tiene acceso a este expediente')
+    return
+  }
+
   if (!fecha) {
     notify('Seleccione una fecha')
     return
@@ -628,7 +798,12 @@
   }
 }
     const openDocumentType = (id: string, tipo: string) => {
-    const expediente = expedientes.find(item => item.id === id)
+     if (!userPermissions?.puedeDerivar) {
+     notify('No tiene permisos para emitir documentos desde expedientes')
+     return
+     }
+
+    const expediente = visibleExpedientes.find(item => item.id === id)
 
     if (!expediente) {
       notify('Expediente no encontrado')
@@ -636,6 +811,7 @@
     }
 
     if (tipo === 'Memo') {
+      setMemoParaDuplicar(null)
       setMemoExpediente(expediente)
       setMemoNro('')
       setMemoFecha(todayInputValue())
@@ -658,21 +834,56 @@
   }
 
   const openNewMemo = () => {
+    if (!userPermissions?.puedeDerivar) {
+      notify('No tiene permisos para registrar Memos')
+      return
+    }
+
     setMemoNro('')
     setMemoFecha(todayInputValue())
-    setMemoAsunto(memoExpediente?.asunto || '')
+    setMemoAsunto('')
     setMemoAreaDestino('')
-
+    setMemoParaDuplicar(null)
     setMemoExpediente(null)
     setShowMemoSelector(true)
     setShowMemoForm(false)
   }
 
-    const cancelNewMemo = () => setShowMemoForm(false)
+  const openDuplicateMemo = (memo: Memo) => {
+    if (!userPermissions?.puedeDerivar) {
+      notify('No tiene permisos para duplicar Memos')
+      return
+    }
+
+    setMemoParaDuplicar(memo)
+    setMemoNro('')
+    setMemoFecha(todayInputValue())
+    setMemoAsunto(memo.asunto)
+    setMemoAreaDestino(memo.areaDestino)
+    setMemoExpediente(null)
+    setShowMemoSelector(true)
+    setShowMemoForm(false)
+  }
+
+  const cancelNewMemo = () => {
+    setShowMemoForm(false)
+    setMemoParaDuplicar(null)
+    setMemoExpediente(null)
+  }
 
     const saveNewMemo = async (archivo: File | null) => {
+    if (!currentUser || !userPermissions?.puedeDerivar) {
+      notify('No tiene permisos para registrar Memos')
+      return
+    }
+
     if (!memoExpediente) {
       notify('No se seleccionó ningún expediente')
+      return
+    }
+
+    if (!visibleExpedienteIds.has(String(memoExpediente.id))) {
+      notify('No tiene acceso al expediente seleccionado')
       return
     }
 
@@ -685,13 +896,24 @@
       notify('Seleccione el área destino')
       return
     }
-    if (!archivo) {
+    if (!archivo && !memoParaDuplicar?.archivoData) {
     notify('Seleccione el archivo del Memo')
     return
     }
 
-    if (archivo.size > 5 * 1024 * 1024) {
+    if (archivo && archivo.size > 5 * 1024 * 1024) {
       notify('El archivo no puede superar los 5 MB')
+      return
+    }
+    if (archivo && !getSupportedDocumentMimeType(archivo)) {
+      notify('Adjunte un archivo PDF, JPG, JPEG o PNG')
+      return
+    }
+    if (
+      !archivo &&
+      (memoParaDuplicar?.archivoTamano || 0) > 5 * 1024 * 1024
+    ) {
+      notify('El archivo original supera los 5 MB; seleccione un archivo válido')
       return
     }
       const expedienteId = Number(memoExpediente.id)
@@ -704,11 +926,15 @@
     setIsSaving(true)
 
     try {
-      const nroExpediente = memoExpediente.nroExp.startsWith('EXP-')
-        ? memoExpediente.nroExp
-        : `EXP-2026-${memoExpediente.nroExp.padStart(5, '0')}`
+      const nroExpediente = formatNroExp(
+        memoExpediente.nroExp,
+        false,
+        memoExpediente.fechaIngreso
+      )
 
-      const archivoData = await readFileAsDataUrl(archivo)
+      const archivoData = archivo
+        ? await readFileAsDataUrl(archivo)
+        : memoParaDuplicar?.archivoData || ''
 
       const { data, error } = await supabase.rpc('registrar_memo', {
       p_expediente_id: expedienteId,
@@ -718,10 +944,10 @@
       p_registrado_por: currentUser?.nombre || '',
       p_area_destino: memoAreaDestino.trim(),
       p_responsable: memoResponsable.trim(),
-      p_archivo: archivo.name,
+      p_archivo: archivo?.name || memoParaDuplicar?.archivo || '',
       p_archivo_data: archivoData,
-      p_archivo_tipo: archivo.type,
-      p_archivo_tamano: archivo.size
+      p_archivo_tipo: archivo?.type || memoParaDuplicar?.archivoTipo || '',
+      p_archivo_tamano: archivo?.size ?? memoParaDuplicar?.archivoTamano ?? 0
     })
 
       if (error) {
@@ -743,6 +969,7 @@
         fecha: String(data.fecha || ''),
         asunto: String(data.asunto || ''),
         registradoPor: String(data.registrado_por || ''),
+        realizadoPor: String(data.registrado_por || ''),
         areaDestino: String(data.area_destino || ''),
         responsable: String(data.responsable || ''),
         estado: data.estado || 'Pendiente',
@@ -779,8 +1006,11 @@
       setMemoFecha(todayInputValue())
       setMemoAsunto('')
       setMemoAreaDestino('')
+      setMemoParaDuplicar(null)
       setShowMemoForm(false)
-      notify(`Memo ${memoNuevo.nroMemo} registrado correctamente`)
+      notify(
+        `Memo ${formatDocumentNumber(memoNuevo.nroMemo, memoNuevo.createdAt)} registrado correctamente`
+      )
 
     } catch (error) {
       console.error('Error inesperado guardando Memo:', error)
@@ -794,6 +1024,21 @@
     nuevoEstado: Memo['estado'],
     motivo?: string
   ) => {
+    if (!currentUser || !userPermissions?.puedeAtender) {
+      notify('No tiene permisos para actualizar el estado del Memo')
+      return
+    }
+
+    if (!visibleMemos.some(memo => memo.id === memoId)) {
+      notify('No tiene acceso a este Memo')
+      return
+    }
+
+    if (nuevoEstado === 'Archivado' && !userPermissions.puedeArchivar) {
+      notify('No tiene permisos para archivar documentos')
+      return
+    }
+
     try {
       const { data, error } = await supabase.rpc('cambiar_estado_expediente', {
         p_memo_id: Number(memoId),
@@ -850,8 +1095,8 @@
       <div className="app-shell portal-shell">
         <aside className="sidebar">
           <div className="brand">
-            <div className="brand-mark">MP</div>
-            <div><strong>Mesa de Partes</strong><span>Gestión documental</span></div>
+            <div className="brand-mark">DG</div>
+            <div><strong>Dirección General</strong><span>Gestión documental</span></div>
           </div>
           <div className="menu-label">MENÚ PRINCIPAL</div>
           <nav className="nav-menu">
@@ -867,7 +1112,7 @@
       label="Expedientes"
       active={view === 'expedientes'}
       onClick={() => setView('expedientes')}
-      count={expedientes.filter(item => item.estado === 'Pendiente').length}
+      count={visibleExpedientes.filter(item => item.estado === 'Pendiente').length}
     />
     <NavItem
     icon={<ChartNoAxesCombined size={18} strokeWidth={1.8} />}
@@ -879,8 +1124,15 @@
       setShowMemoSelector(false)
       setView('memos')
     }}
-    count={memos.length}
+    count={visibleMemos.length}
   />
+    <NavItem
+      icon={<Layers3 size={18} strokeWidth={1.8} />}
+      label="Memos múltiples"
+      active={view === 'memos-multiples'}
+      onClick={() => setView('memos-multiples')}
+      count={memorandosMultiples.length}
+    />
     <NavItem
     icon={<Send size={18} strokeWidth={1.8} />}
     label="Oficios"
@@ -888,7 +1140,7 @@
     onClick={() => {
       setView('oficios')
     }}
-    count={oficios.length}
+    count={visibleOficios.length}
   />
       <NavItem
       icon={<ClipboardList size={18} strokeWidth={1.8} />}
@@ -897,21 +1149,16 @@
       onClick={() => {
         setView('proveidos')
       }}
-      count={proveidos.length}
+      count={visibleProveidos.length}
     />
-    <NavItem
-      icon={<FilePlus2 size={18} strokeWidth={1.8} />}
-      label="Nuevo expediente"
-      active={view === 'nuevo'}
-      onClick={() => setView('nuevo')}
-    />
-
+    {canSeeReports && (
     <NavItem
       icon={<ChartNoAxesCombined size={18} strokeWidth={1.8} />}
       label="Reportes"
       active={view === 'reportes'}
       onClick={() => setView('reportes')}
     />
+    )}
   </nav>
           <div className="sidebar-footer">
             <div className="secure-note">
@@ -927,13 +1174,13 @@
                 onClick={() => setShowProfile(!showProfile)}
               >
                 <div className="avatar">{currentUser.nombre.split(' ').map(n => n[0]).slice(0, 2).join('')}</div>
-                <div><b>{currentUser.nombre}</b><small>{currentUser.rol === 'MesaPartes' ? 'Mesa de Partes' : currentUser.rol}</small></div>
+                <div><b>{currentUser.nombre}</b><small>{currentUser.rol === 'MesaPartes' ? 'Gestión documental' : currentUser.rol}</small></div>
                 <span>⋮</span>
               </button>
               {showProfile && (
                 <div className="profile-popover">
                   <b>{currentUser.nombre}</b>
-                  <span>Rol: {currentUser.rol === 'MesaPartes' ? 'Mesa de Partes' : currentUser.rol}</span>
+                  <span>Rol: {currentUser.rol === 'MesaPartes' ? 'Gestión documental' : currentUser.rol}</span>
                   <span>Área: {currentUser.area || 'N/A'}</span>
                   <hr />
                   <button onClick={() => { notify('Configuración disponible en versión completa'); setShowProfile(false) }}>Configuración</button>
@@ -961,9 +1208,17 @@
               <>
           {view === 'inicio' && (
             <DashboardView
-              expedientes={expedientes}
-              proveidos={proveidos}
-              onNew={() => setView('nuevo')}
+              expedientes={visibleExpedientes}
+              proveidos={visibleProveidos}
+              canRegister={canRegister}
+              onNew={() => {
+                if (!canRegister) {
+                  notify('No tiene permisos para registrar expedientes')
+                  return
+                }
+                setView('expedientes')
+                setShowNewExpedienteForm(true)
+              }}
               onViewAll={() => setView('expedientes')}
               onFilterExp={(status) => {
                 setStatusFilter(status)
@@ -973,6 +1228,14 @@
               currentDate={currentDate}
               currentUser={currentUser}
               riskAnalysis={expedienteRiskAnalysis}
+            />
+          )}
+          {view === 'memos-multiples' && (
+            <MemorandosMultiplesView
+              memorandos={memorandosMultiples}
+              canCreate={canRegister}
+              onCreated={memo => setMemorandosMultiples(prev => [memo, ...prev])}
+              notify={notify}
             />
           )}
            {view === 'expedientes' && (
@@ -994,10 +1257,33 @@
                     setRemitenteFilter={setRemitenteFilter}
                     statusFilter={statusFilter}
                     setStatusFilter={setStatusFilter}
-                    onNew={() => setView('nuevo')}
-                    expedienteDocumentos={expedienteDocumentos}
+                    managementFilter={managementFilter}
+                    setManagementFilter={setManagementFilter}
+                    memos={visibleMemos}
+                    oficios={visibleOficios}
+                    proveidos={visibleProveidos}
+                    canRegister={canRegister}
+                    canDuplicate={canRegister && userPermissions?.puedeVerTodos === true}
+                    canEdit={canEdit}
+                    onNew={() => {
+                      setExpedienteParaDuplicar(null)
+                      setShowNewExpedienteForm(true)
+                    }}
+                    expedienteDocumentos={visibleExpedienteDocumentos}
                     onTracking={async (id) => {
-                      const historialGuardado = await fetchHistorialExpediente(id)
+                      if (!visibleExpedienteIds.has(String(id))) {
+                        notify('No tiene acceso a este expediente')
+                        return
+                      }
+
+                      let historialGuardado: Awaited<ReturnType<typeof fetchHistorialExpediente>> = []
+
+                      try {
+                        historialGuardado = await fetchHistorialExpediente(id)
+                      } catch (error) {
+                        console.error('Error cargando el seguimiento del expediente:', error)
+                        notify('No se pudo actualizar el seguimiento; se mostrará el historial disponible')
+                      }
 
                       setExpedientes(prev =>
                         prev.map(expediente => {
@@ -1035,10 +1321,10 @@
                               expediente.fechaIngreso ||
                               '',
                             fechaIngreso: expediente.fechaIngreso || '',
-                            areaOrigen: currentUser.area || 'Mesa de Partes',
-                            areaDestino: 'Mesa de Partes',
+                            areaOrigen: currentUser.area || 'Dirección General',
+                            areaDestino: 'Dirección General',
                             accion: 'Expediente registrado',
-                            observacion: 'Expediente recibido y registrado en Mesa de Partes.',
+                            observacion: 'Expediente recibido y registrado por Dirección General.',
                             responsable: expediente.usuarioRegistro || 'Responsable no registrado'
                           }
 
@@ -1056,16 +1342,20 @@
                     onRegisterDate={registrarFechaExpediente}
                     onDuplicate={expediente => {
                       setExpedienteParaDuplicar(expediente)
-                      setView('nuevo')
+                      setShowNewExpedienteForm(true)
                     }}
                   />
                 )}
           {view === 'memos' && (
               <MemosView
                 expediente={memoExpediente}
-                expedientes={expedientes}
+                memoParaDuplicar={memoParaDuplicar}
+                expedientes={visibleExpedientes}
                 areaOptions={areaOptions}
-                memos={memos}
+                memos={visibleMemos}
+                canCreate={canDerive}
+                canAtender={canAttend}
+                canArchivar={canArchive}
                 showMemoSelector={showMemoSelector}
                 onUpdateMemoEstado={updateMemoEstado}
                 onBack={() => {
@@ -1075,8 +1365,10 @@
         setView('expedientes')
       }}
       onNewMemo={openNewMemo}
+      onDuplicateMemo={openDuplicateMemo}
       onCloseMemoSelector={() => {
         setShowMemoSelector(false)
+        setMemoParaDuplicar(null)
       }}
       showMemoForm={showMemoForm}
       memoNro={memoNro}
@@ -1092,14 +1384,29 @@
       onSaveMemo={saveNewMemo}
       onCancelMemo={cancelNewMemo}
       onSelectExpediente={(expediente) => {
+        if (
+          expediente &&
+          !visibleExpedienteIds.has(String(expediente.id))
+        ) {
+          notify('No tiene acceso a este expediente')
+          return
+        }
+
         setMemoExpediente(expediente)
 
         if (expediente) {
           setMemoNro('')
           setMemoFecha(todayInputValue())
-
-          setMemoAsunto(expediente.asunto || '')
-          setMemoAreaDestino('')
+          setMemoAsunto(
+            memoParaDuplicar
+              ? memoParaDuplicar.asunto
+              : expediente.asunto || ''
+          )
+          setMemoAreaDestino(
+            memoParaDuplicar
+              ? memoParaDuplicar.areaDestino
+              : ''
+          )
 
           setShowMemoSelector(false)
           setShowMemoForm(true)
@@ -1112,16 +1419,26 @@
   )}
   {view === 'oficios' && !showOficioForm && (
     <OficiosView
-      oficios={oficios}
+      oficios={visibleOficios}
       oficioExpediente={oficioExpediente}
-      expedientes={expedientes}
+      expedientes={visibleExpedientes}
       areaOptions={areaOptions}
       showSelector={showOficioSelector}
+      canCreate={canDerive}
       onCloseSelector={() => setShowOficioSelector(false)}
       onNuevoOficio={() => {
+        if (!canDerive) {
+          notify('No tiene permisos para registrar Oficios')
+          return
+        }
         setShowOficioSelector(true)
       }}
       onSelectExpediente={(exp) => {
+        if (!visibleExpedienteIds.has(String(exp.id))) {
+          notify('No tiene acceso a este expediente')
+          return
+        }
+
         setOficioExpediente(exp)
         setShowOficioSelector(false)
         setShowOficioForm(true)
@@ -1131,13 +1448,28 @@
   {view === 'oficios' && showOficioForm && (
     <NuevoOficioView
       expediente={oficioExpediente}
-      responsable={currentUser?.nombre || ''}
       onCancelar={() => {
         setShowOficioForm(false)
         setOficioExpediente(null)
       }}
       onGuardar={async datos => {
+        if (!canDerive) {
+          notify('No tiene permisos para registrar Oficios')
+          return
+        }
+        if (!visibleExpedienteIds.has(String(datos.expedienteId))) {
+          notify('No tiene acceso al expediente seleccionado')
+          return
+        }
+
         try {
+          const archivoMimeType = datos.archivo
+            ? getSupportedDocumentMimeType(datos.archivo)
+            : null
+          const archivoData = datos.archivo
+            ? await readFileAsDataUrl(datos.archivo)
+            : null
+
           const { data, error } = await supabase.rpc('registrar_oficio', {
             p_datos: {
               expediente_id: Number(datos.expedienteId),
@@ -1148,7 +1480,11 @@
               responsable: datos.responsable,
               codigo_oad: datos.codigoOad,
               codigo_ogesup: datos.codigoOgesup,
-              area_destino: datos.areaDestino
+              area_destino: datos.areaDestino,
+              archivo: datos.archivo?.name ?? null,
+              archivo_data: archivoData,
+              archivo_tipo: archivoMimeType,
+              archivo_tamano: datos.archivo?.size ?? null
             }
           })
 
@@ -1172,12 +1508,17 @@
             destinatario: String(data.destinatario ?? ''),
             asuntoTipo: String(data.asunto_tipo ?? ''),
             asuntoDetalle: String(data.asunto_detalle ?? ''),
+            realizadoPor: String(data.realizado_por ?? ''),
             responsable: String(data.responsable ?? ''),
             codigoOad: String(data.codigo_oad ?? ''),
             codigoOgesup: String(data.codigo_ogesup ?? ''),
             anio: Number(data.anio),
             areaDestino: String(data.area_destino ?? ''),
             estado: data.estado ?? 'Enviado',
+            archivo: String(data.archivo ?? ''),
+            archivoData: String(data.archivo_data ?? ''),
+            archivoTipo: String(data.archivo_tipo ?? ''),
+            archivoTamano: Number(data.archivo_tamano ?? 0),
             fechaRegistro: String(data.fecha_registro ?? ''),
             createdAt: String(data.created_at ?? '')
           }
@@ -1201,7 +1542,9 @@
           setOficioExpediente(null)
           setView('oficios')
 
-          notify('Oficio registrado correctamente.')
+          notify(
+            `Oficio ${formatDocumentNumber(oficioNuevo.nRegistro, oficioNuevo.createdAt)} registrado correctamente.`
+          )
         } catch (error) {
           console.error('Error inesperado guardando Oficio:', error)
           notify('Ocurrió un error al guardar el Oficio.')
@@ -1211,17 +1554,27 @@
   )}
   {view === 'proveidos' && !showProveidoForm && (
   <ProveidosView
-  proveidos={proveidos}
-  expedientes={expedientes}
+  proveidos={visibleProveidos}
+  expedientes={visibleExpedientes}
   areaOptions={areaOptions}
   showSelector={showProveidoSelector}
+  canCreate={canDerive}
   onCloseSelector={() => {
     setShowProveidoSelector(false)
   }}
   onNuevoProveido={() => {
+    if (!canDerive) {
+      notify('No tiene permisos para registrar Proveídos')
+      return
+    }
     setShowProveidoSelector(true)
   }}
   onSelectExpediente={expediente => {
+    if (!visibleExpedienteIds.has(String(expediente.id))) {
+      notify('No tiene acceso a este expediente')
+      return
+    }
+
     setProveidoExpediente(expediente)
     setShowProveidoSelector(false)
     setShowProveidoForm(true)
@@ -1232,7 +1585,7 @@
   {view === 'proveidos' && showProveidoForm && (
     <NuevoProveidoView
       expediente={proveidoExpediente}
-      expedientes={expedientes}
+      expedientes={visibleExpedientes}
       areaOptions={areaOptions}
       onExpedienteChange={setProveidoExpediente}
       onCancelar={() => {
@@ -1241,6 +1594,15 @@
       }}
 
       onGuardar={async datos => {
+        if (!canDerive) {
+          notify('No tiene permisos para registrar Proveídos')
+          return
+        }
+        if (!visibleExpedienteIds.has(String(datos.expedienteId))) {
+          notify('No tiene acceso al expediente seleccionado')
+          return
+        }
+
         let archivoData: string | null = null
 
         // Leer el archivo antes de guardar el proveído.
@@ -1262,7 +1624,13 @@
           'registrar_proveido_con_adjunto',
           {
             p_expediente_id: Number(datos.expedienteId),
-            p_nro_expediente: datos.nroExpediente,
+            p_nro_expediente: formatNroExp(
+              datos.nroExpediente,
+              false,
+              visibleExpedientes.find(
+                item => String(item.id) === String(datos.expedienteId)
+              )?.fechaIngreso
+            ),
             p_fecha: datos.fecha,
             p_area_destino: datos.areaDestino,
             p_responsable: datos.responsable,
@@ -1316,6 +1684,7 @@
             expedienteId: String(data.expediente_id),
             nroExpediente: data.nro_expediente,
             fecha: data.fecha,
+            realizadoPor: String(data.realizado_por || ''),
             areaDestino: data.area_destino,
             responsable: data.responsable || '',
             instruccion: data.instruccion,
@@ -1331,38 +1700,65 @@
 
         setShowProveidoForm(false)
         setProveidoExpediente(null)
+        notify(
+          `Proveído ${formatDocumentNumber(String(data.id), String(data.created_at ?? ''))} registrado correctamente.`
+        )
       }}
 
     />
   )}
 
-                {view === 'nuevo' && (
-                  <NewExpedienteView
-                    onSubmit={addExpediente}
-                    onCancel={() => {
-                      setExpedienteParaDuplicar(null)
-                      setView('inicio')
-                    }}
-                    isSaving={isSaving}
-                    expedienteParaDuplicar={expedienteParaDuplicar}
-                  />
-                )}
-                {view === 'reportes' && (
-                  <ReportsView
-                    expedientes={expedientes}
-                    riskAnalysis={expedienteRiskAnalysis}
-                    notify={notify}
-                  />
+                {view === 'reportes' && canSeeReports && (
+                  <Suspense
+                    fallback={
+                      <section className="panel empty-state">
+                        Cargando reportes...
+                      </section>
+                    }
+                  >
+                    <ReportsView
+                      expedientes={visibleExpedientes}
+                      riskAnalysis={expedienteRiskAnalysis}
+                      notify={notify}
+                    />
+                  </Suspense>
                 )}
               </>
             )}
           </div>
         </main>
 
+        {showNewExpedienteForm && (
+          <div className="new-expediente-modal-overlay">
+            <div
+              className="new-expediente-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="new-expediente-title"
+            >
+              <NewExpedienteView
+                onSubmit={addExpediente}
+                onCancel={() => {
+                  setShowNewExpedienteForm(false)
+                  setExpedienteParaDuplicar(null)
+                }}
+                isSaving={isSaving}
+                expedienteParaDuplicar={expedienteParaDuplicar}
+              />
+            </div>
+          </div>
+        )}
+
         {toast && <div className="toast"><span>✓</span>{toast}</div>}
         {trackingId && (
           <TrackingModal
-            item={expedientes.find(item => item.id === trackingId)}
+            item={visibleExpedientes.find(item => item.id === trackingId)}
+            memos={visibleMemos}
+            oficios={visibleOficios}
+            proveidos={visibleProveidos}
+            onAttachDocument={file =>
+              adjuntarDocumento(trackingId, file)
+            }
             onClose={() => setTrackingId(null)}
           />
         )}

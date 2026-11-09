@@ -1,30 +1,76 @@
 import { Expediente, HistoryEntry } from '../types'
 import { AREA_RESPONSABLES } from '../constants'
 
+export const getSupportedDocumentMimeType = (file: File): string | null => {
+  const extension = file.name.split('.').pop()?.toLowerCase()
+  const mimeTypes: Record<string, string> = {
+    pdf: 'application/pdf',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png'
+  }
+  const expectedMimeType = extension ? mimeTypes[extension] : undefined
+
+  if (!expectedMimeType || (file.type && file.type !== expectedMimeType)) {
+    return null
+  }
+
+  return expectedMimeType
+}
+
 export const getRemitenteNombre = (item: Expediente) =>
   item.remitenteNombre || ''
 
 export const getAreaDestino = (item: Expediente) =>
   item.areaDestino || item.entregadoA || item.area || 'Pendiente de asignación'
 
-export const formatNroExp = (nroExp: string, esDuplicado = false) =>
-  `EXP-2026-${String(nroExp).padStart(5, '0')}${esDuplicado ? ' *' : ''}`
+export const formatNroExp = (
+  nroExp: string,
+  esDuplicado = false,
+  fechaExpediente?: string
+) => {
+  const valor = String(nroExp || '').trim()
+  if (!valor) return ''
+
+  const coincidenciasAnio = [...valor.matchAll(/(?:19|20)\d{2}/g)]
+  const anioFinal = valor.match(/(?:^|[-\s])((?:19|20)\d{2})$/)
+  let secuencia: string
+
+  if (anioFinal) {
+    const antesDelAnio = valor.slice(0, anioFinal.index).match(/(\d+)\D*$/)
+    secuencia = antesDelAnio?.[1] || ''
+  } else {
+    secuencia = valor.match(/(\d+)\s*$/)?.[1] || ''
+  }
+
+  const fechaParseada = fechaExpediente ? parseDate(fechaExpediente) : null
+  const anio = fechaParseada
+    ? fechaParseada.getFullYear()
+    : anioFinal?.[1] ||
+      coincidenciasAnio[coincidenciasAnio.length - 1]?.[0] ||
+      new Date().getFullYear()
+  const numero = secuencia.replace(/^0+(?=\d)/, '') || '0'
+
+  return `${numero}-${anio}${esDuplicado ? ' *' : ''}`
+}
 
 export const createInitialHistory = (item: Expediente): HistoryEntry[] => [
   {
     fechaHora: item.fechaIngreso || 'Fecha pendiente',
     fechaIngreso: item.fechaIngreso || 'Fecha pendiente',
-    areaOrigen: 'Mesa de Partes',
+    areaOrigen: 'Dirección General',
     areaDestino: getAreaDestino(item),
-    accion: 'Pendiente',
-    observacion: 'Expediente recibido y pendiente de asignación.',
+    accion: item.requiereGestion ? 'Pendiente' : 'Solo registro',
+    observacion: item.requiereGestion
+      ? 'Expediente recibido y pendiente de asignación.'
+      : 'Expediente registrado sin requerir seguimiento o gestión.',
     responsable: item.usuarioRegistro || 'Responsable no registrado'
   },
   ...(item.estado !== 'Pendiente' ? [{
     fechaHora: item.fechaHoraRecepcion || item.fechaIngreso || 'Fecha pendiente',
     fechaSalida: item.fechaHoraRecepcion || item.fechaIngreso || 'Fecha pendiente',
     fechaIngreso: item.fechaHoraRecepcion || item.fechaIngreso || 'Fecha pendiente',
-    areaOrigen: item.usuarioRegistro?.split(' - ')[1]?.trim() || 'Mesa de Partes',
+    areaOrigen: item.usuarioRegistro?.split(' - ')[1]?.trim() || 'Dirección General',
     areaDestino: getAreaDestino(item),
     accion: 'Derivado para atención',
     observacion: 'Expediente enviado al área responsable para su revisión.',
@@ -34,7 +80,7 @@ export const createInitialHistory = (item: Expediente): HistoryEntry[] => [
     fechaHora: item.fechaHoraRecepcion || item.fechaIngreso || 'Fecha pendiente',
     fechaSalida: item.fechaHoraRecepcion || item.fechaIngreso || 'Fecha pendiente',
     areaOrigen: getAreaDestino(item),
-    areaDestino: 'Mesa de Partes',
+    areaDestino: 'Dirección General',
     accion: item.estado === 'Archivado' ? 'Archivado' : 'Atendido',
     observacion: item.estado === 'Archivado' ? 'Expediente archivado luego de su atención.' : 'La oficina responsable registró la atención del expediente.',
     responsable: item.usuarioRegistro || 'Responsable no registrado'
@@ -44,6 +90,7 @@ export const createInitialHistory = (item: Expediente): HistoryEntry[] => [
 export const normalizeExpediente = (item: Expediente): Expediente => {
   return {
     ...item,
+    requiereGestion: item.requiereGestion !== false,
     remitenteNombre: item.remitenteNombre || '',
     areaDestino: item.areaDestino || item.entregadoA || item.area || '',
     historial: item.historial?.length ? item.historial : createInitialHistory(item)
@@ -203,7 +250,7 @@ export const calculateAverageResolutionTime = (expedientes: Expediente[]): numbe
 export const exportReportToCSV = (expedientes: Expediente[]) => {
   const headers = ['Nro. Expediente', 'Fecha', 'Remitente', 'Asunto', 'Área', 'Estado', 'Prioridad', 'Plazo']
   const rows = expedientes.map(e => [
-    formatNroExp(e.nroExp), e.fechaIngreso || '', getRemitenteNombre(e),
+    formatNroExp(e.nroExp, false, e.fechaIngreso), e.fechaIngreso || '', getRemitenteNombre(e),
     `"${e.asunto.replace(/"/g, '""')}"`, getAreaDestino(e), e.estado, e.prioridad, e.plazo
   ])
   const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n')

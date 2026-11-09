@@ -1,7 +1,10 @@
 import { useMemo, useState } from 'react'
 import { Expediente, Oficio } from '../../types'
 import { formatNroExp, displayDate } from '../../utils/expedienteHelpers'
+import { formatDocumentNumber } from '../../utils/documentHelpers'
+import { getAreaCopia } from '../../constants'
 import ExpedienteSelector from '../common/ExpedienteSelector'
+import MemoDocumentLink from '../common/MemoDocumentLink'
 
 type Props = {
   oficios: Oficio[]
@@ -9,6 +12,7 @@ type Props = {
   expedientes: Expediente[]
   areaOptions: string[]
   showSelector: boolean
+  canCreate: boolean
   onCloseSelector: () => void
   onNuevoOficio: () => void
   onSelectExpediente: (exp: Expediente) => void
@@ -20,6 +24,7 @@ export default function OficiosView({
   expedientes,
   areaOptions,
   showSelector,
+  canCreate,
   onCloseSelector,
   onNuevoOficio,
   onSelectExpediente
@@ -34,10 +39,22 @@ export default function OficiosView({
     return oficios.filter(oficio => {
       const coincideTexto =
         !texto ||
-        oficio.nRegistro.toLowerCase().includes(texto) ||
-        oficio.nroExpediente.toLowerCase().includes(texto) ||
+        formatDocumentNumber(oficio.nRegistro, oficio.createdAt)
+          .toLowerCase()
+          .includes(texto) ||
+        formatNroExp(
+          oficio.nroExpediente,
+          false,
+          expedientes.find(
+            expediente =>
+              String(expediente.id) === String(oficio.expedienteId)
+          )?.fechaIngreso
+        ).toLowerCase().includes(texto) ||
         oficio.asuntoDetalle.toLowerCase().includes(texto) ||
         oficio.destinatario.toLowerCase().includes(texto) ||
+        oficio.realizadoPor.toLowerCase().includes(texto) ||
+        oficio.responsable.toLowerCase().includes(texto) ||
+        getAreaCopia(oficio.areaDestino).toLowerCase().includes(texto) ||
         oficio.areaDestino.toLowerCase().includes(texto)
 
       const coincideEstado =
@@ -126,13 +143,15 @@ export default function OficiosView({
           </p>
         </div>
 
-        <button
-          type="button"
-          className="primary-button"
-          onClick={onNuevoOficio}
-        >
-          ＋ Nuevo Oficio
-        </button>
+        {canCreate && (
+          <button
+            type="button"
+            className="primary-button"
+            onClick={onNuevoOficio}
+          >
+            ＋ Nuevo Oficio
+          </button>
+        )}
       </div>
 
       <section className="panel list-panel">
@@ -184,7 +203,9 @@ export default function OficiosView({
                 <th>ASUNTO</th>
                 <th>DESTINATARIO</th>
                 <th>ÁREA DESTINO</th>
+                <th>REALIZADO POR</th>
                 <th>RESPONSABLE</th>
+                <th>ADJUNTO</th>
                 <th>ESTADO</th>
               </tr>
             </thead>
@@ -193,13 +214,23 @@ export default function OficiosView({
               {resultados.map(oficio => (
                 <tr key={oficio.id}>
                   <td>
-                    <b className="exp-id">{oficio.nRegistro}</b>
+                    <b className="exp-id">
+                      {formatDocumentNumber(oficio.nRegistro, oficio.createdAt)}
+                    </b>
                   </td>
 
                   <td>
                     <b className="exp-id">
                       {oficio.nroExpediente
-                        ? formatNroExp(oficio.nroExpediente)
+                        ? formatNroExp(
+                            oficio.nroExpediente,
+                            false,
+                            expedientes.find(
+                              expediente =>
+                                String(expediente.id) ===
+                                String(oficio.expedienteId)
+                            )?.fechaIngreso
+                          )
                         : 'Sin expediente'}
                     </b>
                   </td>
@@ -255,6 +286,26 @@ export default function OficiosView({
                     >
                       {oficio.areaDestino || '-'}
                     </span>
+                    {getAreaCopia(oficio.areaDestino) && (
+                      <small>
+                        Con copia a: {getAreaCopia(oficio.areaDestino)}
+                      </small>
+                    )}
+                  </td>
+
+                  <td>
+                    <span
+                      title={oficio.realizadoPor || 'No registrado'}
+                      style={{
+                        display: 'block',
+                        maxWidth: '150px',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}
+                    >
+                      {oficio.realizadoPor || 'No registrado'}
+                    </span>
                   </td>
 
                   <td>
@@ -273,6 +324,16 @@ export default function OficiosView({
                   </td>
 
                   <td>
+                    <MemoDocumentLink
+                      archivoData={oficio.archivoData}
+                      archivo={oficio.archivo}
+                      documento="Oficio"
+                    >
+                      {oficio.archivo || 'Sin adjunto'}
+                    </MemoDocumentLink>
+                  </td>
+
+                  <td>
                     <span
                       className={`status-badge status-${oficio.estado
                         .toLowerCase()
@@ -286,7 +347,7 @@ export default function OficiosView({
 
               {resultados.length === 0 && (
                 <tr>
-                  <td colSpan={8}>
+                  <td colSpan={10}>
                     <div className="empty-state">
                       {busqueda || estadoFiltro !== 'Todos'
                         ? 'No se encontraron oficios con esos criterios.'

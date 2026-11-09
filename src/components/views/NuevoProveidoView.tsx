@@ -1,6 +1,10 @@
 import { useRef, useState } from 'react'
 import { Expediente } from '../../types'
-import { AREA_RESPONSABLES } from '../../constants'
+import {
+  AREA_DESTINO_OPTIONS,
+  getAreaCopia,
+  getAreaResponsable
+} from '../../constants'
 import ExpedienteSelector from '../common/ExpedienteSelector'
 type Props = {
   expediente: Expediente | null
@@ -31,7 +35,7 @@ export default function NuevoProveidoView({
     new Date().toISOString().split('T')[0]
   )
   const [areaDestino, setAreaDestino] = useState('')
-  const responsable = AREA_RESPONSABLES[areaDestino] || ''
+  const responsable = getAreaResponsable(areaDestino)
   const [instruccion, setInstruccion] = useState('')
   const [archivoSeleccionado, setArchivoSeleccionado] =
   useState<File | null>(null)
@@ -133,7 +137,7 @@ export default function NuevoProveidoView({
               onChange={e => setAreaDestino(e.target.value)}
             >
               <option value="">Seleccione un área</option>
-              {Object.keys(AREA_RESPONSABLES).map(area => (
+              {AREA_DESTINO_OPTIONS.map(area => (
                 <option key={area} value={area}>
                   {area}
                 </option>
@@ -147,8 +151,19 @@ export default function NuevoProveidoView({
               type="text"
               value={responsable}
               readOnly
-              placeholder="Se completará automáticamente"
+              placeholder="Jefe del área seleccionada"
             />
+            {areaDestino.startsWith('Administración / ') && (
+              <small>
+                El Responsable es la jefatura de Administración; la subárea
+                queda identificada como destino para la copia correspondiente.
+              </small>
+            )}
+            {getAreaCopia(areaDestino) && (
+              <small>
+                Con copia a: {getAreaCopia(areaDestino)}
+              </small>
+            )}
           </div>
 
           <div className="form-group wide document-form-field document-form-field-wide">

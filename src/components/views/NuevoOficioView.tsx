@@ -1,9 +1,14 @@
 import { FormEvent, useState } from 'react'
 import { Expediente } from '../../types'
+import {
+  AREA_DESTINO_OPTIONS,
+  getAreaCopia,
+  getAreaResponsable
+} from '../../constants'
+import { getSupportedDocumentMimeType } from '../../utils/expedienteHelpers'
 
 type Props = {
   expediente: Expediente | null
-  responsable: string
   onCancelar: () => void
   onGuardar: (datos: NuevoOficioData) => Promise<void>
 }
@@ -20,11 +25,11 @@ export type NuevoOficioData = {
   codigoOgesup: string
   anio: number
   areaDestino: string
+  archivo: File | null
 }
 
 export default function NuevoOficioView({
   expediente,
-  responsable,
   onCancelar,
   onGuardar
 }: Props) {
@@ -33,7 +38,10 @@ export default function NuevoOficioView({
   )
 
   const [asuntoDetalle, setAsuntoDetalle] = useState('')
+  const [destinatario, setDestinatario] = useState('')
   const [areaDestino, setAreaDestino] = useState('')
+  const responsable = getAreaResponsable(areaDestino)
+  const [archivo, setArchivo] = useState<File | null>(null)
 
   const [guardando, setGuardando] = useState(false)
 
@@ -55,8 +63,18 @@ export default function NuevoOficioView({
       return
     }
 
-    if (!responsable.trim()) {
-      alert('Ingrese el nombre de la persona responsable del documento.')
+    if (!destinatario.trim()) {
+      alert('Ingrese el destinatario del Oficio.')
+      return
+    }
+
+    if (archivo && !getSupportedDocumentMimeType(archivo)) {
+      alert('Adjunte un archivo PDF, JPG, JPEG o PNG.')
+      return
+    }
+
+    if (archivo && archivo.size > 5 * 1024 * 1024) {
+      alert('El archivo no puede superar los 5 MB.')
       return
     }
 
@@ -67,14 +85,15 @@ export default function NuevoOficioView({
         expedienteId: String(expediente.id),
         nroExpediente: String(expediente.nroExp),
         fecha,
-        destinatario: '',
+        destinatario: destinatario.trim(),
         asuntoTipo: '',
         asuntoDetalle: asuntoDetalle.trim(),
         responsable: responsable.trim(),
         codigoOad: '',
         codigoOgesup: '',
         anio: new Date(`${fecha}T00:00:00`).getFullYear(),
-        areaDestino: areaDestino.trim()
+        areaDestino: areaDestino.trim(),
+        archivo
       })
     } finally {
       setGuardando(false)
@@ -140,20 +159,37 @@ export default function NuevoOficioView({
                   type="text"
                   value={areaDestino}
                   onChange={event => setAreaDestino(event.target.value)}
+                  list="oficio-areas-con-responsable"
                   placeholder="Ej. DRELM - OAJ"
                   required
                 />
+                <datalist id="oficio-areas-con-responsable">
+                  {AREA_DESTINO_OPTIONS.map(area => (
+                    <option key={area} value={area} />
+                  ))}
+                </datalist>
               </div>
 
               <div className="form-group document-form-field">
-                <label>Responsable (quien elaboró el documento) *</label>
+                <label>Responsable</label>
                 <input
                   type="text"
                   value={responsable}
                   readOnly
-                  placeholder="Se completará con el usuario actual"
-                  required
+                  placeholder="Se completa según el área seleccionada"
                 />
+                <small>
+                  {responsable
+                    ? areaDestino.startsWith('Administración / ')
+                      ? 'Responsable: jefatura de Administración. La subárea se conserva como destino para indicar la copia correspondiente.'
+                      : 'Jefe del área destinataria.'
+                    : 'El destino no tiene un jefe asignado en el catálogo.'}
+                </small>
+                {getAreaCopia(areaDestino) && (
+                  <small>
+                    Con copia a: {getAreaCopia(areaDestino)}
+                  </small>
+                )}
               </div>
             </div>
           </div>
@@ -165,6 +201,18 @@ export default function NuevoOficioView({
             </div>
 
             <div className="form-grid oficio-form-grid document-form-grid">
+              <div className="form-group document-form-field">
+                <label htmlFor="oficio-destinatario">Destinatario *</label>
+                <input
+                  id="oficio-destinatario"
+                  type="text"
+                  value={destinatario}
+                  onChange={event => setDestinatario(event.target.value)}
+                  placeholder="Nombre o entidad destinataria"
+                  required
+                />
+              </div>
+
               <div className="form-group form-group-full document-form-field document-form-field-wide">
                 <label>Asunto *</label>
 
@@ -175,6 +223,56 @@ export default function NuevoOficioView({
                   rows={3}
                   required
                 />
+              </div>
+
+              <div className="form-group document-form-field">
+                <label htmlFor="oficio-archivo">Adjunto (opcional)</label>
+                <label className="document-form-file-button" htmlFor="oficio-archivo">
+                  ▣ Seleccionar archivo
+                  <input
+                    id="oficio-archivo"
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                    onChange={event => {
+                      const file = event.target.files?.[0] || null
+                      if (!file) {
+                        setArchivo(null)
+                        return
+                      }
+
+                      if (!getSupportedDocumentMimeType(file)) {
+                        alert('Adjunte un archivo PDF, JPG, JPEG o PNG.')
+                        event.target.value = ''
+                        setArchivo(null)
+                        return
+                      }
+
+                      if (file.size > 5 * 1024 * 1024) {
+                        alert('El archivo no puede superar los 5 MB.')
+                        event.target.value = ''
+                        setArchivo(null)
+                        return
+                      }
+
+                      setArchivo(file)
+                    }}
+                  />
+                </label>
+                <small>
+                  {archivo
+                    ? `Seleccionado: ${archivo.name}`
+                    : 'PDF o imagen JPG/PNG. Máximo 5 MB.'}
+                </small>
+                {archivo && (
+                  <button
+                    type="button"
+                    className="action-link"
+                    onClick={() => setArchivo(null)}
+                    disabled={guardando}
+                  >
+                    Quitar archivo
+                  </button>
+                )}
               </div>
             </div>
           </div>
