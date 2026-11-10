@@ -56,6 +56,7 @@
   import NavItem from './components/common/NavItem'
   import Logo from './components/common/Logo'
   import Modal from './components/common/Modal'
+  import LoadingSkeleton from './components/common/LoadingSkeleton'
   import TrackingModal from './components/modals/TrackingModal'
 
   const viewFromHash = (hash: string): View => {
@@ -1296,7 +1297,7 @@
         <main className="main-content">
           <div className="page">
             {loadingDb ? (
-              <div className="empty-state">Cargando expedientes desde Supabase...</div>
+              <LoadingSkeleton />
             ) : (
               <>
           {view === 'inicio' && (
