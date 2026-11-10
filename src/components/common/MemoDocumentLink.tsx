@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { useToast } from './ToastProvider'
 
 export default function MemoDocumentLink({
   archivoData,
@@ -11,6 +12,7 @@ export default function MemoDocumentLink({
   documento?: string
   children: ReactNode
 }) {
+  const { toast } = useToast()
   const [cargando, setCargando] = useState(false)
 
   const abrirArchivo = () => {
@@ -77,9 +79,7 @@ export default function MemoDocumentLink({
       if (!nuevaVentana) {
         URL.revokeObjectURL(url)
 
-        alert(
-          'El navegador bloqueó la ventana emergente. Permita las ventanas emergentes para este sitio.'
-        )
+        toast('El navegador bloqueó la ventana emergente. Permita las ventanas emergentes para este sitio.', 'warning')
 
         return
       }
@@ -95,9 +95,7 @@ export default function MemoDocumentLink({
         error
       )
 
-      alert(
-        `No se pudo abrir el archivo del ${documento}.`
-      )
+      toast(`No se pudo abrir el archivo del ${documento}.`, 'error')
     } finally {
       setCargando(false)
     }

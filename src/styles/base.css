@@ -1062,6 +1062,47 @@ tbody tr:last-child td {
   flex: 0 0 auto;
 }
 
+.toast-stack {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 3000;
+  display: grid;
+  gap: 10px;
+  width: min(380px, calc(100vw - 32px));
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 15px;
+  border: 1px solid var(--linea);
+  border-left: 4px solid var(--turquesa);
+  border-radius: var(--radius-md);
+  background: var(--color-018);
+  box-shadow: var(--shadow-panel);
+  color: var(--color-011);
+  font-size: 14px;
+}
+
+.toast-error {
+  border-left-color: var(--sin-respuesta);
+}
+
+.toast-warning {
+  border-left-color: var(--pendiente);
+}
+
+.toast-success {
+  border-left-color: var(--atendido);
+}
+
+.toast button {
+  margin-left: auto;
+  color: var(--color-031);
+}
+
 .status-badge.pendiente {
   background: var(--color-074);
   color: var(--pendiente);

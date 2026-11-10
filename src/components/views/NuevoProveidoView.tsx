@@ -6,6 +6,7 @@ import {
   getAreaResponsable
 } from '../../constants'
 import ExpedienteSelector from '../common/ExpedienteSelector'
+import { useToast } from '../common/ToastProvider'
 type Props = {
   expediente: Expediente | null
   expedientes: Expediente[]
@@ -31,6 +32,7 @@ export default function NuevoProveidoView({
   onCancelar,
   onGuardar
 }: Props) {
+  const { toast } = useToast()
   const [fecha, setFecha] = useState(
     new Date().toISOString().split('T')[0]
   )
@@ -47,17 +49,17 @@ export default function NuevoProveidoView({
     if (guardandoRef.current) return
 
     if (!expediente) {
-      alert('Debe seleccionar un expediente.')
+      toast('Debe seleccionar un expediente.', 'warning')
       return
     }
 
     if (!areaDestino) {
-      alert('Debe seleccionar un área destino.')
+      toast('Debe seleccionar un área destino.', 'warning')
       return
     }
 
     if (!instruccion.trim()) {
-      alert('Debe ingresar la instrucción del proveído.')
+      toast('Debe ingresar la instrucción del proveído.', 'warning')
       return
     }
 
@@ -76,7 +78,7 @@ export default function NuevoProveidoView({
       })
     } catch (error) {
       console.error('Error al guardar el proveído:', error)
-      alert('Ocurrió un error al guardar el proveído.')
+      toast('Ocurrió un error al guardar el proveído.', 'error')
     } finally {
       guardandoRef.current = false
       setGuardando(false)
@@ -187,7 +189,7 @@ export default function NuevoProveidoView({
                   const archivo = e.target.files?.[0] ?? null
 
                   if (archivo && archivo.size > 5 * 1024 * 1024) {
-                    alert('El archivo no puede superar los 5 MB.')
+                    toast('El archivo no puede superar los 5 MB.', 'warning')
                     e.target.value = ''
                     setArchivoSeleccionado(null)
                     return

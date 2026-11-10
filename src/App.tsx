@@ -1614,7 +1614,7 @@
               'Error leyendo el archivo del proveído:',
               errorLectura
             )
-            alert('No se pudo leer el archivo seleccionado.')
+            notify('No se pudo leer el archivo seleccionado.')
             return
           }
         }
@@ -1647,12 +1647,12 @@
 
         if (error) {
           console.error('Error al guardar proveído:', error)
-          alert(`No se pudo guardar el proveído: ${error.message}`)
+          notify(`No se pudo guardar el proveído: ${error.message}`)
           return
         }
 
         if (!data) {
-          alert('Supabase no devolvió los datos del proveído registrado.')
+          notify('Supabase no devolvió los datos del proveído registrado.')
           return
         }
 

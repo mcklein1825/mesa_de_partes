@@ -6,6 +6,7 @@ import {
 } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import { Expediente, Proveido } from '../../types'
+import { useToast } from './ToastProvider'
 
 export default function DocumentLink({
   item,
@@ -16,6 +17,7 @@ export default function DocumentLink({
   children?: ReactNode
   onAttach?: (file: File) => Promise<void>
 }) {
+  const { toast } = useToast()
   const [cargando, setCargando] = useState(false)
   const inputRef = useRef<HTMLInputElement | null>(null)
 
@@ -35,9 +37,7 @@ export default function DocumentLink({
     const nuevaVentana = window.open('', '_blank')
 
     if (!nuevaVentana) {
-      alert(
-        'El navegador bloqueó la ventana emergente. Permita las ventanas emergentes para este sitio.'
-      )
+      toast('El navegador bloqueó la ventana emergente. Permita las ventanas emergentes para este sitio.', 'warning')
       return
     }
 
@@ -55,11 +55,7 @@ export default function DocumentLink({
       if (error || !data?.archivo_data) {
         nuevaVentana.close()
 
-        alert(
-          error
-            ? 'No se pudo cargar el archivo.'
-            : 'Este expediente no tiene el archivo almacenado.'
-        )
+        toast(error ? 'No se pudo cargar el archivo.' : 'Este expediente no tiene el archivo almacenado.', 'error')
 
         return
       }
@@ -112,9 +108,7 @@ export default function DocumentLink({
         error
       )
 
-      alert(
-        'Ocurrió un error al abrir el archivo.'
-      )
+      toast('Ocurrió un error al abrir el archivo.', 'error')
 
     } finally {
       setCargando(false)
@@ -248,4 +242,3 @@ return (
   </span>
 )
 }
-

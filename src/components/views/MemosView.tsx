@@ -8,6 +8,7 @@
   import { formatDocumentNumber } from '../../utils/documentHelpers'
   import useMemosList from '../../features/mesaPartes/useMemosList'
   import { getSupportedDocumentMimeType } from '../../utils/expedienteHelpers'
+  import { useToast } from '../common/ToastProvider'
 
   export default function MemosView({
     expediente,
@@ -70,6 +71,7 @@
     nuevoEstado: Memo['estado']
   ) => void
   }) {
+    const { toast } = useToast()
     const [memoArchivo, setMemoArchivo] = useState<File | null>(null)
     const [memoArchivoNombre, setMemoArchivoNombre] = useState('')
     const [showDuplicateMemoModal, setShowDuplicateMemoModal] = useState(false)
@@ -478,7 +480,7 @@ if (showMemoForm && expediente) {
                   }
 
                   if (!getSupportedDocumentMimeType(file)) {
-                    alert('Adjunte un archivo PDF, JPG, JPEG o PNG.')
+                    toast('Adjunte un archivo PDF, JPG, JPEG o PNG.', 'warning')
                     event.target.value = ''
                     setMemoArchivo(null)
                     setMemoArchivoNombre('')
@@ -486,7 +488,7 @@ if (showMemoForm && expediente) {
                   }
 
                   if (file.size > 5 * 1024 * 1024) {
-                    alert('El archivo no puede superar los 5 MB.')
+                    toast('El archivo no puede superar los 5 MB.', 'warning')
                     event.target.value = ''
                     setMemoArchivo(null)
                     setMemoArchivoNombre('')
