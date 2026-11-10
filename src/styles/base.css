@@ -452,6 +452,16 @@ button {
   color: inherit;
 }
 
+.button-spinner {
+  animation: button-spin 0.9s linear infinite;
+}
+
+@keyframes button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 :focus-visible {
   outline: 2px solid var(--turquesa);
   outline-offset: 3px;
@@ -559,6 +569,10 @@ button {
 
   .skeleton-line,
   .skeleton-row {
+    animation: none;
+  }
+
+  .button-spinner {
     animation: none;
   }
 }

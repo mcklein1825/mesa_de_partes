@@ -1,5 +1,5 @@
 import { FormEvent, useState } from 'react'
-import { FileUp } from 'lucide-react'
+import { FileUp, LoaderCircle } from 'lucide-react'
 import { Expediente } from '../../types'
 import {
   AREA_DESTINO_OPTIONS,
@@ -295,7 +295,11 @@ export default function NuevoOficioView({
               className="primary-button"
               disabled={guardando}
             >
-              {guardando ? 'Guardando...' : 'Guardar Oficio'}
+              {guardando ? (
+                <><LoaderCircle className="button-spinner" size={16} aria-hidden="true" /> Guardando...</>
+              ) : (
+                'Guardar Oficio'
+              )}
             </button>
           </div>
         </form>

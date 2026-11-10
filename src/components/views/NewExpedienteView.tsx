@@ -1,6 +1,6 @@
 import { useState, FormEvent } from 'react'
 import { todayInputValue, formatNroExp } from '../../utils/expedienteHelpers'
-import { Check, FileUp, Search } from 'lucide-react'
+import { Check, FileUp, LoaderCircle, Search } from 'lucide-react'
 
 type ExpedienteParaDuplicar = {
   id: string
@@ -418,7 +418,11 @@ export default function NewExpedienteView({
             className="legacy-blue-button"
             disabled={isSaving}
           >
-            <><Check size={16} aria-hidden="true" /> Enviar</>
+            {isSaving ? (
+              <><LoaderCircle className="button-spinner" size={16} aria-hidden="true" /> Guardando...</>
+            ) : (
+              <><Check size={16} aria-hidden="true" /> Enviar</>
+            )}
           </button>
 
           <button

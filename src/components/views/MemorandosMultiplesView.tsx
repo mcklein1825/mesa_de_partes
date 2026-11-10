@@ -6,7 +6,7 @@ import type {
   MemorandoMultipleMedio
 } from '../../types'
 import { createMemorandoMultiple } from '../../services/memorandosMultiplesService'
-import { Search } from 'lucide-react'
+import { LoaderCircle, Search } from 'lucide-react'
 
 const categorias: Array<MemorandoMultipleCategoria | 'Todas'> = [
   'Todas',
@@ -142,7 +142,13 @@ export default function MemorandosMultiplesView({
             </div>}
             <div className="form-actions">
               <button className="legacy-light-button" type="button" onClick={() => setShowForm(false)}>Cancelar</button>
-              <button className="primary-button" type="submit" disabled={guardando}>{guardando ? 'Guardando...' : 'Registrar memorando'}</button>
+              <button className="primary-button" type="submit" disabled={guardando}>
+                {guardando ? (
+                  <><LoaderCircle className="button-spinner" size={16} aria-hidden="true" /> Guardando...</>
+                ) : (
+                  'Registrar memorando'
+                )}
+              </button>
             </div>
           </form>
         </section>

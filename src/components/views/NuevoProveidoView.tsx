@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { FileUp } from 'lucide-react'
+import { FileUp, LoaderCircle } from 'lucide-react'
 import { Expediente } from '../../types'
 import {
   AREA_DESTINO_OPTIONS,
@@ -233,7 +233,11 @@ export default function NuevoProveidoView({
             onClick={guardar}
             disabled={guardando}
           >
-            {guardando ? 'Guardando...' : 'Guardar Proveído'}
+            {guardando ? (
+              <><LoaderCircle className="button-spinner" size={16} aria-hidden="true" /> Guardando...</>
+            ) : (
+              'Guardar Proveído'
+            )}
           </button>
         </div>
       </section>
