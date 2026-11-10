@@ -131,7 +131,13 @@ export default function MemorandosMultiplesView({
             </div>
             {seleccionados.length > 0 && <div className="selected-recipients">
               {seleccionados.map(item => <span key={item.nombre}>{item.nombre} · {item.medioEntrega}
-                <button type="button" onClick={() => setSeleccionados(prev => prev.filter(destinatario => destinatario.nombre !== item.nombre))}>×</button>
+                <button
+                  type="button"
+                  aria-label={`Quitar destinatario ${item.nombre}`}
+                  onClick={() => setSeleccionados(prev => prev.filter(destinatario => destinatario.nombre !== item.nombre))}
+                >
+                  ×
+                </button>
               </span>)}
             </div>}
             <div className="form-actions">
