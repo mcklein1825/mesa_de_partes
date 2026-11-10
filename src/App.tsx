@@ -10,7 +10,7 @@
   } from 'react'
   import { supabase } from './lib/supabaseClient'
   import { fetchHistorialExpediente } from './services/expedientesService'
-  import useMesaPartesData from './features/mesaPartes/useMesaPartesData'
+  import useDireccionGeneralData from './features/direccionGeneral/useDireccionGeneralData'
   import LoginView from './components/views/LoginView'
   import OficiosView from './components/views/OficiosView'
   import ProveidosView from './components/views/ProveidosView'
@@ -183,7 +183,7 @@
       setMemorandosMultiples,
       expedienteDocumentos,
       loadingDb
-    } = useMesaPartesData(currentUser, notify)
+    } = useDireccionGeneralData(currentUser, notify)
 
     const sessionTimeoutRef = useRef<number | null>(null)
     const resetSessionTimeout = useCallback(() => {
@@ -567,7 +567,7 @@
 
 
   const fechaHoraRegistro = new Date().toISOString()
-  const canalRecepcion = String(data.get('canalRecepcion') || 'Mesa de Partes')
+  const canalRecepcion = String(data.get('canalRecepcion') || 'Dirección General')
 
 
       const newExpediente: Expediente = {
@@ -1311,13 +1311,13 @@
                 onClick={() => setShowProfile(!showProfile)}
               >
                 <div className="avatar">{currentUser.nombre.split(' ').map(n => n[0]).slice(0, 2).join('')}</div>
-                <div><b>{currentUser.nombre}</b><small>{currentUser.rol === 'MesaPartes' ? 'Gestión documental' : currentUser.rol}</small></div>
+                <div><b>{currentUser.nombre}</b><small>{currentUser.rol === 'DireccionGeneral' ? 'Dirección General' : currentUser.rol}</small></div>
                 <MoreVertical size={18} aria-hidden="true" />
               </button>
               {showProfile && (
                 <div className="profile-popover">
                   <b>{currentUser.nombre}</b>
-                  <span>Rol: {currentUser.rol === 'MesaPartes' ? 'Gestión documental' : currentUser.rol}</span>
+                  <span>Rol: {currentUser.rol === 'DireccionGeneral' ? 'Dirección General' : currentUser.rol}</span>
                   <span>Área: {currentUser.area || 'N/A'}</span>
                   <hr />
                   <button onClick={() => { notify('Configuración disponible en versión completa'); setShowProfile(false) }}>Configuración</button>
@@ -1370,6 +1370,7 @@
           {view === 'memos-multiples' && (
             <MemorandosMultiplesView
               memorandos={memorandosMultiples}
+              expedientes={visibleExpedientes}
               canCreate={canRegister}
               onCreated={memo => setMemorandosMultiples(prev => [memo, ...prev])}
               notify={notify}

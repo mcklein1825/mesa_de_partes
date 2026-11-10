@@ -142,6 +142,11 @@ BEGIN
       USING ERRCODE = '42501';
   END IF;
 
+  IF v_perfil.rol NOT IN ('DireccionGeneral', 'Administrador') THEN
+    RAISE EXCEPTION 'El perfil no tiene permiso para registrar proveídos'
+      USING ERRCODE = '42501';
+  END IF;
+
   SELECT *
   INTO v_expediente
   FROM public.mesa_partes_2026
@@ -396,6 +401,11 @@ BEGIN
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'El usuario no tiene un perfil activo'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF v_perfil.rol NOT IN ('DireccionGeneral', 'Administrador') THEN
+    RAISE EXCEPTION 'El perfil no tiene permiso para registrar proveídos'
       USING ERRCODE = '42501';
   END IF;
 

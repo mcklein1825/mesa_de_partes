@@ -1,5 +1,7 @@
 create table if not exists public.memorandos_multiples (
   id uuid primary key default gen_random_uuid(),
+  expediente_id bigint references public.mesa_partes_2026(id),
+  nro_expediente text not null default '',
   nro_registro integer not null,
   fecha date not null default current_date,
   asunto text not null,
@@ -9,6 +11,10 @@ create table if not exists public.memorandos_multiples (
   created_by uuid references auth.users(id),
   created_at timestamptz not null default now()
 );
+
+alter table public.memorandos_multiples
+  add column if not exists expediente_id bigint references public.mesa_partes_2026(id),
+  add column if not exists nro_expediente text not null default '';
 
 create table if not exists public.memorandos_multiples_destinatarios (
   id uuid primary key default gen_random_uuid(),
@@ -27,6 +33,8 @@ create table if not exists public.memorandos_multiples_destinatarios (
 
 create index if not exists memorandos_multiples_fecha_idx
   on public.memorandos_multiples (fecha desc);
+create index if not exists memorandos_multiples_expediente_idx
+  on public.memorandos_multiples (expediente_id);
 create index if not exists memorandos_multiples_destinatarios_memo_idx
   on public.memorandos_multiples_destinatarios (memorando_id);
 create index if not exists memorandos_multiples_destinatarios_categoria_idx
@@ -49,7 +57,11 @@ create policy memorandos_multiples_destinatarios_select_authenticated
   on public.memorandos_multiples_destinatarios for select to authenticated
   using (true);
 
+drop function if exists public.registrar_memorando_multiple(date, text, jsonb);
+
 create or replace function public.registrar_memorando_multiple(
+  p_expediente_id bigint,
+  p_nro_expediente text,
   p_fecha date,
   p_asunto text,
   p_destinatarios jsonb
@@ -58,7 +70,7 @@ returns jsonb
 language plpgsql
 security definer
 set search_path = public
-as $$
+as $memorando$
 declare
   v_id uuid;
   v_registro integer;
@@ -67,6 +79,17 @@ declare
 begin
   if auth.uid() is null then
     raise exception 'Sesión no autenticada';
+  end if;
+
+  if p_expediente_id is null or nullif(trim(p_nro_expediente), '') is null then
+    raise exception 'El expediente relacionado es obligatorio';
+  end if;
+
+  if not exists (
+    select 1 from public.mesa_partes_2026
+    where id = p_expediente_id
+  ) then
+    raise exception 'El expediente relacionado no existe';
   end if;
 
   perform pg_advisory_xact_lock(hashtext('memorandos_multiples_' || v_anio::text));
@@ -101,10 +124,10 @@ begin
    limit 1;
 
   insert into public.memorandos_multiples (
-    nro_registro, fecha, asunto, realizado_por, created_by
+    expediente_id, nro_expediente, nro_registro, fecha, asunto, realizado_por, created_by
   )
   values (
-    v_registro, p_fecha, trim(p_asunto), v_realizado_por, auth.uid()
+    p_expediente_id, trim(p_nro_expediente), v_registro, p_fecha, trim(p_asunto), v_realizado_por, auth.uid()
   )
   returning id into v_id;
 
@@ -120,6 +143,8 @@ begin
 
   return jsonb_build_object(
     'id', v_id,
+    'expediente_id', p_expediente_id,
+    'nro_expediente', trim(p_nro_expediente),
     'nro_registro', v_registro,
     'fecha', p_fecha,
     'asunto', trim(p_asunto),
@@ -133,9 +158,9 @@ begin
     )
   );
 end;
-$$;
+$memorando$;
 
-revoke all on function public.registrar_memorando_multiple(date, text, jsonb)
+revoke all on function public.registrar_memorando_multiple(bigint, text, date, text, jsonb)
   from public, anon;
-grant execute on function public.registrar_memorando_multiple(date, text, jsonb)
+grant execute on function public.registrar_memorando_multiple(bigint, text, date, text, jsonb)
   to authenticated;

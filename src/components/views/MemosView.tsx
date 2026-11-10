@@ -6,7 +6,7 @@
   import MemoDetailsModal from '../modals/MemoDetailsModal'
   import { displayDate } from '../../utils/expedienteHelpers'
   import { formatDocumentNumber } from '../../utils/documentHelpers'
-  import useMemosList from '../../features/mesaPartes/useMemosList'
+  import useMemosList from '../../features/direccionGeneral/useMemosList'
   import { getSupportedDocumentMimeType } from '../../utils/expedienteHelpers'
   import { useToast } from '../common/ToastProvider'
   import Modal from '../common/Modal'

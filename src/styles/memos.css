@@ -198,6 +198,10 @@
   border: 0;
 }
 
+.multiple-memo-modal .expediente-selector .toolbar {
+  grid-template-columns: minmax(280px, 1.6fr) minmax(220px, 1fr) minmax(180px, 1fr);
+}
+
 .expediente-selector .search-box,
 .expediente-selector .filter-input,
 .expediente-selector .toolbar select {
@@ -481,6 +485,10 @@
   border-radius: 8px;
   background: var(--color-214);
   box-shadow: 0 2px 6px rgba(36, 79, 92, 0.06);
+}
+
+.multiple-memo-modal .selected-expediente {
+  margin-top: 0;
 }
 
 .selected-expediente-info {

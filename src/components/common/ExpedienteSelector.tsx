@@ -47,15 +47,20 @@ export default function ExpedienteSelector({
         const remitente = getRemitenteNombre(item).toLowerCase()
         const area = getAreaDestino(item)
 
-        const esNumero = /^\d+$/.test(texto)
+        const terminoNormalizado = texto.replace(/\s+/g, '').replace(/[–—]/g, '-')
+        const nroOriginalNormalizado = nroOriginal.replace(/\s+/g, '').replace(/[–—]/g, '-')
+        const nroExpNormalizado = nroExp.replace(/\s+/g, '').replace(/[–—]/g, '-')
+        const esNumero = /^\d+$/.test(terminoNormalizado)
 
         const coincideBusqueda = !texto
           ? true
           : esNumero
-            ? nroOriginal === texto ||
-              nroExp.startsWith(`${Number(texto)}-`)
-            : nroExp.includes(texto) ||
-              asunto.includes(texto)
+            ? nroOriginalNormalizado === terminoNormalizado ||
+              nroExpNormalizado.startsWith(`${Number(terminoNormalizado)}-`) ||
+              String(item.id) === terminoNormalizado
+            : nroExpNormalizado.includes(terminoNormalizado) ||
+              nroOriginalNormalizado.includes(terminoNormalizado) ||
+              asunto.includes(terminoNormalizado)
 
         const coincideRemitente =
           !remitenteTexto ||

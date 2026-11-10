@@ -19,6 +19,8 @@ type RawRecipient = {
 
 type RawMemo = {
   id: string
+  expediente_id: number | string
+  nro_expediente?: string | null
   nro_registro: number
   fecha: string
   asunto: string
@@ -40,6 +42,8 @@ const mapRecipient = (item: RawRecipient): MemorandoMultipleDestinatario => ({
 
 const mapMemo = (item: RawMemo): MemorandoMultiple => ({
   id: String(item.id),
+  expedienteId: item.expediente_id == null ? '' : String(item.expediente_id),
+  nroExpediente: String(item.nro_expediente || ''),
   nroRegistro: `${item.nro_registro}-${new Date(item.fecha).getFullYear()}`,
   fecha: item.fecha,
   asunto: item.asunto,
@@ -53,7 +57,7 @@ export const fetchMemorandosMultiples = async (): Promise<MemorandoMultiple[]> =
   const { data, error } = await supabase
     .from('memorandos_multiples')
     .select(`
-      id, nro_registro, fecha, asunto, realizado_por, estado, created_at,
+      id, expediente_id, nro_expediente, nro_registro, fecha, asunto, realizado_por, estado, created_at,
       memorandos_multiples_destinatarios (
         id, categoria, nombre, medio_entrega, estado, observacion, fecha_entrega
       )
@@ -65,6 +69,8 @@ export const fetchMemorandosMultiples = async (): Promise<MemorandoMultiple[]> =
 }
 
 export type NewMemorandoMultiple = {
+  expedienteId: string
+  nroExpediente: string
   fecha: string
   asunto: string
   destinatarios: Array<{
@@ -78,6 +84,8 @@ export const createMemorandoMultiple = async (
   input: NewMemorandoMultiple
 ): Promise<MemorandoMultiple> => {
   const { data, error } = await supabase.rpc('registrar_memorando_multiple', {
+    p_expediente_id: Number(input.expedienteId),
+    p_nro_expediente: input.nroExpediente,
     p_fecha: input.fecha,
     p_asunto: input.asunto,
     p_destinatarios: input.destinatarios.map(item => ({

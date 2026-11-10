@@ -13,10 +13,10 @@ export type ExpedienteDocumento = {
 }
 
 /**
- * Owns the initial read of the mesa-partes data after an authenticated user enters.
+ * Owns the initial read of Dirección General data after an authenticated user enters.
  * The returned setters let feature workflows keep local tables in sync with Supabase.
  */
-export default function useMesaPartesData(
+export default function useDireccionGeneralData(
   currentUser: User | null,
   notify: (message: string) => void
 ) {

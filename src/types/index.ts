@@ -1,6 +1,6 @@
 export type Status = 'Pendiente' | 'Sin respuesta' | 'Atendido' | 'Archivado'
 export type View = 'inicio' | 'expedientes' | 'reportes' | 'memos' | 'memos-multiples' | 'oficios' | 'proveidos'
-export type Role = 'MesaPartes' | 'AreaOperativa' | 'Administrador' | 'Auditor'
+export type Role = 'DireccionGeneral' | 'AreaOperativa' | 'Administrador' | 'Auditor'
 
 export type User = {
   id: string
@@ -105,6 +105,8 @@ export type MemorandoMultipleDestinatario = {
 
 export type MemorandoMultiple = {
   id: string
+  expedienteId: string
+  nroExpediente: string
   nroRegistro: string
   fecha: string
   asunto: string
