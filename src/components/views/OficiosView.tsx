@@ -6,6 +6,7 @@ import { getAreaCopia } from '../../constants'
 import ExpedienteSelector from '../common/ExpedienteSelector'
 import MemoDocumentLink from '../common/MemoDocumentLink'
 import StatusBadge from '../common/StatusBadge'
+import Modal from '../common/Modal'
 
 type Props = {
   oficios: Oficio[]
@@ -74,20 +75,12 @@ export default function OficiosView({
     <>
       {/* MODAL DE SELECCIÓN DE EXPEDIENTE (Igual al de Memos) */}
       {showSelector && (
-        <div
-          className="memo-modal-overlay"
-          onMouseDown={event => {
-            if (event.target === event.currentTarget) {
-              onCloseSelector()
-            }
-          }}
+        <Modal
+          titleId="nuevo-oficio-title"
+          onClose={onCloseSelector}
+          className="memo-modal"
+          overlayClassName="memo-modal-overlay"
         >
-          <div
-            className="memo-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="nuevo-oficio-title"
-          >
             <div className="memo-modal-header">
               <div>
                 <p className="eyebrow">GESTIÓN DOCUMENTAL</p>
@@ -131,8 +124,7 @@ export default function OficiosView({
                 Cancelar
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       <div className="page-heading compact">
