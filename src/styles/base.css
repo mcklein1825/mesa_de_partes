@@ -521,6 +521,20 @@ button {
   place-items: center;
 }
 
+.institution-logo-image {
+  display: block;
+  width: 58px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  object-position: center;
+}
+
+.institution-logo-compact .institution-logo-image {
+  width: 48px;
+  height: 42px;
+}
+
 .institution-logo-copy strong,
 .institution-logo-copy small {
   display: block;

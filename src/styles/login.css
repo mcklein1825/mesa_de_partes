@@ -78,6 +78,17 @@
   background: var(--color-181);
 }
 
+.login-brand-top .institution-logo-image {
+  width: 62px;
+  height: 54px;
+  border: 1px solid var(--color-180);
+}
+
+.login-mobile-brand .institution-logo-image {
+  width: 32px;
+  height: 28px;
+}
+
 .login-brand-top span,
 .login-brand-top strong {
   display: block;
