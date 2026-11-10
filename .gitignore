@@ -8,3 +8,4 @@ dist/
 *.backup
 # Variables de entorno locales
 .env.local
+.env

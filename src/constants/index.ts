@@ -9,7 +9,7 @@ export const ROLE_PERMISSIONS: Record<Role, {
   puedeVerReportes: boolean
   puedeVerTodos: boolean
 }> = {
-   MesaPartes: { puedeRegistrar: true, puedeDerivar: true, puedeAtender: false, puedeArchivar: false, puedeEditar: true, puedeVerReportes: true, puedeVerTodos: true },
+  DireccionGeneral: { puedeRegistrar: true, puedeDerivar: true, puedeAtender: true, puedeArchivar: true, puedeEditar: true, puedeVerReportes: true, puedeVerTodos: true },
   AreaOperativa: { puedeRegistrar: true, puedeDerivar: false, puedeAtender: true, puedeArchivar: false, puedeEditar: false, puedeVerReportes: false, puedeVerTodos: false },
   Administrador: { puedeRegistrar: true, puedeDerivar: true, puedeAtender: true, puedeArchivar: true, puedeEditar: true, puedeVerReportes: true, puedeVerTodos: true },
   Auditor: { puedeRegistrar: true, puedeDerivar: false, puedeAtender: false, puedeArchivar: false, puedeEditar: false, puedeVerReportes: true, puedeVerTodos: true }
@@ -34,7 +34,7 @@ export const areas = [
   'Unidad de Investigación',
   'Unidad de Formación Continua',
   'Área de Calidad',
-  'Mesa de Partes',
+  'Dirección General',
   'Electrónica Industrial',
   'Gestión Administrativa',
   'Contabilidad',
@@ -69,7 +69,7 @@ export const getSubareas = (area: string): string[] => {
 export const AREA_RESPONSABLES: Record<string, string> = {
   'Unidad Académica': 'Ing. NÓSSER JURADO GUILLÉN',
   'Administración': 'CPC MARICELA OLIVARES MANDUJANO',
-  'Mesa de Partes': 'Pilar de la Cruz',
+  'Dirección General': 'Pilar de la Cruz',
   'Secretaría Académica': 'Ing. AMADEO ANTONIO PAZSOLÁN',
   'Unidad de Bienestar del Estudiante': 'Mag. JOSÉ LUIS RAZO QUISPE',
   'Unidad de Investigación': 'Lic. LUIS RAMÍREZ CHUQUIHUANGA',

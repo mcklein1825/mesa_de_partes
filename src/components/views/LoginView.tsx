@@ -19,7 +19,7 @@ interface LoginViewProps {
 }
 
 const isRole = (value: string): value is Role =>
-  ['MesaPartes', 'AreaOperativa', 'Administrador', 'Auditor'].includes(value)
+  ['DireccionGeneral', 'AreaOperativa', 'Administrador', 'Auditor'].includes(value)
 
 export default function LoginView({ onSelectUser }: LoginViewProps) {
   const [session, setSession] = useState<Session | null>(null)

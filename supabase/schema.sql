@@ -23,20 +23,6 @@ for each row execute function public.set_updated_at();
 alter table public.expedientes enable row level security;
 
 drop policy if exists "expedientes_select_anon" on public.expedientes;
-create policy "expedientes_select_anon"
-on public.expedientes for select
-to anon
-using (true);
-
 drop policy if exists "expedientes_insert_anon" on public.expedientes;
-create policy "expedientes_insert_anon"
-on public.expedientes for insert
-to anon
-with check (true);
-
 drop policy if exists "expedientes_update_anon" on public.expedientes;
-create policy "expedientes_update_anon"
-on public.expedientes for update
-to anon
-using (true)
-with check (true);
+revoke all on table public.expedientes from anon;

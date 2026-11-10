@@ -7,6 +7,9 @@ import type {
 } from '../../types'
 import { createMemorandoMultiple } from '../../services/memorandosMultiplesService'
 import { LoaderCircle, Search } from 'lucide-react'
+import Modal from '../common/Modal'
+import ExpedienteSelector from '../common/ExpedienteSelector'
+import type { Expediente } from '../../types'
 
 const categorias: Array<MemorandoMultipleCategoria | 'Todas'> = [
   'Todas',
@@ -18,16 +21,19 @@ const categorias: Array<MemorandoMultipleCategoria | 'Todas'> = [
 
 export default function MemorandosMultiplesView({
   memorandos,
+  expedientes,
   canCreate,
   onCreated,
   notify
 }: {
   memorandos: MemorandoMultiple[]
+  expedientes: Expediente[]
   canCreate: boolean
   onCreated: (memo: MemorandoMultiple) => void
   notify: (message: string) => void
 }) {
   const [showForm, setShowForm] = useState(false)
+  const [expediente, setExpediente] = useState<Expediente | null>(null)
   const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10))
   const [asunto, setAsunto] = useState('')
   const [categoria, setCategoria] = useState<MemorandoMultipleCategoria>('Área / Jefatura')
@@ -44,10 +50,9 @@ export default function MemorandosMultiplesView({
 
   const opciones = useMemo(
     () => MEMORANDOS_MULTIPLES_DESTINATARIOS.filter(item =>
-      item.categoria === categoria &&
-      (!busqueda || item.nombre.toLowerCase().includes(busqueda.toLowerCase()))
+    item.categoria === categoria
     ),
-    [categoria, busqueda]
+    [categoria]
   )
 
   const agregarDestinatario = () => {
@@ -58,20 +63,23 @@ export default function MemorandosMultiplesView({
 
   const guardar = async (event: FormEvent) => {
     event.preventDefault()
-    if (!asunto.trim() || seleccionados.length === 0) {
-      notify('Ingrese el asunto y seleccione al menos un destinatario')
+    if (!expediente || !asunto.trim() || seleccionados.length === 0) {
+      notify('Seleccione un expediente, ingrese el asunto y agregue al menos un destinatario')
       return
     }
 
     setGuardando(true)
     try {
       const creado = await createMemorandoMultiple({
+        expedienteId: expediente?.id || '',
+        nroExpediente: expediente?.nroExp || '',
         fecha,
         asunto: asunto.trim(),
         destinatarios: seleccionados
       })
       onCreated(creado)
       setAsunto('')
+      setExpediente(null)
       setSeleccionados([])
       setShowForm(false)
       notify('Memorando múltiple registrado correctamente')
@@ -87,7 +95,10 @@ export default function MemorandosMultiplesView({
     const texto = busqueda.toLowerCase()
     return (
       (filtro === 'Todas' || item.destinatarios.some(destinatario => destinatario.categoria === filtro)) &&
-      (!texto || item.asunto.toLowerCase().includes(texto) || item.nroRegistro.toLowerCase().includes(texto))
+      (!texto ||
+        item.asunto.toLowerCase().includes(texto) ||
+        item.nroRegistro.toLowerCase().includes(texto) ||
+        item.nroExpediente.toLowerCase().includes(texto))
     )
   })
 
@@ -107,11 +118,23 @@ export default function MemorandosMultiplesView({
       </div>
 
       {showForm && (
-        <section className="panel multiple-memo-form">
+        <Modal
+          titleId="nuevo-memorando-multiple-title"
+          onClose={() => setShowForm(false)}
+          className="memo-modal multiple-memo-modal"
+          overlayClassName="memo-modal-overlay"
+        >
+        <section className="multiple-memo-form">
           <div className="panel-header">
-            <div><h2>Registrar memorando múltiple</h2><p>Agregue cada destinatario y su medio de entrega.</p></div>
+            <div><h2 id="nuevo-memorando-multiple-title">Registrar memorando múltiple</h2><p>Relacione el documento con un expediente y agregue cada destinatario.</p></div>
           </div>
           <form onSubmit={guardar}>
+            <ExpedienteSelector
+              expedientes={expedientes}
+              value={expediente}
+              onChange={setExpediente}
+              areaOptions={[]}
+            />
             <div className="form-grid">
               <label>Fecha<input type="date" value={fecha} onChange={event => setFecha(event.target.value)} required /></label>
               <label className="wide">Asunto<input value={asunto} onChange={event => setAsunto(event.target.value)} required /></label>
@@ -152,6 +175,7 @@ export default function MemorandosMultiplesView({
             </div>
           </form>
         </section>
+        </Modal>
       )}
 
       <section className="panel list-panel">
@@ -165,9 +189,10 @@ export default function MemorandosMultiplesView({
         <div className="table-wrap">
           <table className="data-table memorandos-multiples-table">
             <caption className="sr-only">Listado de memorandos múltiples</caption>
-            <thead><tr><th scope="col">N.° REGISTRO</th><th scope="col">FECHA</th><th scope="col">ASUNTO</th><th scope="col">DESTINATARIOS</th><th scope="col">MEDIOS</th><th scope="col">REALIZADO POR</th></tr></thead>
+            <thead><tr><th scope="col">N.° REGISTRO</th><th scope="col">EXPEDIENTE</th><th scope="col">FECHA</th><th scope="col">ASUNTO</th><th scope="col">DESTINATARIOS</th><th scope="col">MEDIOS</th><th scope="col">REALIZADO POR</th></tr></thead>
             <tbody>{visibles.map(item => <tr key={item.id}>
               <td data-label="N.° REGISTRO"><b className="exp-id">{item.nroRegistro}</b></td>
+              <td data-label="EXPEDIENTE"><b className="exp-id">{item.nroExpediente}</b></td>
               <td data-label="FECHA">{new Date(`${item.fecha}T00:00:00`).toLocaleDateString('es-PE')}</td>
               <td data-label="ASUNTO">{item.asunto}</td>
               <td data-label="DESTINATARIOS">{item.destinatarios.map(destinatario => <div key={destinatario.id}>{destinatario.nombre}</div>)}</td>

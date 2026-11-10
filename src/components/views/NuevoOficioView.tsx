@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react'
+import { FormEvent, useMemo, useState } from 'react'
 import { FileUp, LoaderCircle } from 'lucide-react'
 import { Expediente } from '../../types'
 import {
@@ -6,7 +6,7 @@ import {
   getAreaCopia,
   getAreaResponsable
 } from '../../constants'
-import { getSupportedDocumentMimeType } from '../../utils/expedienteHelpers'
+import { formatNroExp, getSupportedDocumentMimeType } from '../../utils/expedienteHelpers'
 import { useToast } from '../common/ToastProvider'
 
 type Props = {
@@ -43,10 +43,18 @@ export default function NuevoOficioView({
   const [asuntoDetalle, setAsuntoDetalle] = useState('')
   const [destinatario, setDestinatario] = useState('')
   const [areaDestino, setAreaDestino] = useState('')
+  const [areaBusqueda, setAreaBusqueda] = useState('')
+  const [areaAbierta, setAreaAbierta] = useState(false)
   const responsable = getAreaResponsable(areaDestino)
   const [archivo, setArchivo] = useState<File | null>(null)
 
   const [guardando, setGuardando] = useState(false)
+  const areasFiltradas = useMemo(() => {
+    const texto = areaBusqueda.trim().toLowerCase()
+    return AREA_DESTINO_OPTIONS.filter(area =>
+      !texto || area.toLowerCase().includes(texto)
+    )
+  }, [areaBusqueda])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -136,16 +144,22 @@ export default function NuevoOficioView({
               <p>El Oficio quedará vinculado a este expediente.</p>
             </div>
 
-            <div className="form-grid oficio-form-grid document-form-grid">
-              <div className="form-group document-form-field">
-                <label>N.° Expediente</label>
-                <input
-                  type="text"
-                  value={expediente.nroExp || ''}
-                  readOnly
-                />
+            <div className="memo-expediente-info">
+              <div>
+                <strong>Expediente</strong>
+                <p>{formatNroExp(expediente.nroExp, false, expediente.fechaIngreso)}</p>
               </div>
+              <div>
+                <strong>Remitente</strong>
+                <p>{expediente.remitente || 'Sin especificar'}</p>
+              </div>
+              <div>
+                <strong>Asunto del expediente</strong>
+                <p>{expediente.asunto || 'Sin asunto'}</p>
+              </div>
+            </div>
 
+            <div className="form-grid oficio-form-grid document-form-grid">
               <div className="form-group document-form-field">
                 <label>Fecha</label>
                 <input
@@ -158,19 +172,46 @@ export default function NuevoOficioView({
 
               <div className="form-group document-form-field">
                 <label>Área de destino DRELM *</label>
-                <input
-                  type="text"
-                  value={areaDestino}
-                  onChange={event => setAreaDestino(event.target.value)}
-                  list="oficio-areas-con-responsable"
-                  placeholder="Ej. DRELM - OAJ"
-                  required
-                />
-                <datalist id="oficio-areas-con-responsable">
-                  {AREA_DESTINO_OPTIONS.map(area => (
-                    <option key={area} value={area} />
-                  ))}
-                </datalist>
+                <div className="memo-destino-combobox">
+                  <input
+                    type="text"
+                    value={areaBusqueda}
+                    onChange={event => {
+                      setAreaBusqueda(event.target.value)
+                      setAreaDestino('')
+                      setAreaAbierta(true)
+                    }}
+                    onFocus={() => setAreaAbierta(true)}
+                    placeholder="Escribe área o subárea..."
+                    autoComplete="off"
+                    required={!areaDestino}
+                  />
+                  {areaAbierta && (
+                    <div className="memo-destino-options">
+                      {areasFiltradas.length > 0 ? (
+                        areasFiltradas.map(area => (
+                          <button
+                            key={area}
+                            type="button"
+                            className="memo-destino-option"
+                            onMouseDown={event => {
+                              event.preventDefault()
+                              setAreaDestino(area)
+                              setAreaBusqueda(area)
+                              setAreaAbierta(false)
+                            }}
+                          >
+                            {area}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="memo-destino-empty">
+                          No se encontraron áreas o subáreas.
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="form-group document-form-field">

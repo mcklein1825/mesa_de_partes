@@ -40,8 +40,8 @@ Estas mejoras requieren registrar datos consistentes a lo largo del tiempo. Conv
 ## Estructura del frontend
 
 - `src/App.tsx` conserva la composición general, navegación y operaciones que comparten varias vistas.
-- `src/features/mesaPartes/useMesaPartesData.ts` carga y mantiene los expedientes, memos, oficios, proveídos y tipos de documento obtenidos de Supabase.
-- `src/features/mesaPartes/useMemosList.ts` centraliza los filtros, la paginación y la carga de documentos asociados a la lista de memos.
+- `src/features/direccionGeneral/useDireccionGeneralData.ts` carga y mantiene los expedientes, memos, oficios, proveídos y tipos de documento obtenidos de Supabase.
+- `src/features/direccionGeneral/useMemosList.ts` centraliza los filtros, la paginación y la carga de documentos asociados a la lista de memos.
 - `src/components/views/` contiene las pantallas de cada sección; los elementos reutilizables están en `src/components/common/` y `src/components/modals/`.
 - `src/components/modals/MemoDetailsModal.tsx` muestra los datos del memo seleccionado y mantiene esa presentación fuera de la vista de listado.
 - `src/styles.css` es el punto de entrada de estilos. Importa los módulos de `src/styles/` en orden; se debe conservar ese orden para mantener la cascada visual existente.
@@ -50,15 +50,17 @@ La división se realiza por responsabilidad y conserva las interfaces actuales d
 
 ## Permisos y alcance de acceso
 
-La interfaz aplica la matriz `ROLE_PERMISSIONS` de `src/constants/index.ts`: oculta acciones no autorizadas y vuelve a comprobar permisos antes de ejecutar sus RPC. Los perfiles de acceso se obtienen de `perfiles` después de iniciar sesión.
+La interfaz aplica la matriz `ROLE_PERMISSIONS` de `src/constants/index.ts`: oculta acciones no autorizadas y vuelve a comprobar permisos antes de ejecutar sus RPC. Los perfiles de acceso se obtienen de `perfiles` después de iniciar sesión. La URL y la clave pública de Supabase se configuran mediante `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`; usa `.env.example` como referencia y no subas archivos `.env`.
 
 El rol de interfaz no protege por sí solo los datos. Las tablas principales se consultan desde el navegador con la clave pública de Supabase; por ello, la autorización efectiva debe estar en las políticas RLS y en cada función RPC. No se deben considerar seguros los filtros por área del frontend. En esta versión, `AreaOperativa` solo ve en la interfaz expedientes relacionados con su área y documentos asociados, pero esa selección ocurre después de cargar los registros.
 
 Antes de habilitar el sistema con datos reales, ejecute las consultas de solo lectura de [`supabase/audit_access.sql`](./supabase/audit_access.sql) en el SQL Editor de Supabase. Verifique que RLS esté habilitado para `mesa_partes_2026`, `memos`, `oficios`, `proveidos`, `expediente_documentos` y `perfiles`; revise que las políticas se restrinjan por usuario/área y que las RPC validen `auth.uid()` y permisos antes de modificar datos. No copie políticas de ejemplo ni habilite RLS sin conocer las operaciones y políticas existentes: podría bloquear la aplicación. Comparta los resultados (sin tokens, claves ni datos personales) para preparar las políticas exactas.
 
+Para retirar las políticas públicas heredadas de `public.expedientes`, limitar Memorandos múltiples por perfil/área y revocar el acceso anónimo a su RPC, ejecute [`supabase/patches/20261110_security_hardening.sql`](./supabase/patches/20261110_security_hardening.sql). Vuelva a ejecutar [`supabase/patches/20261104_rpc_authorization.sql`](./supabase/patches/20261104_rpc_authorization.sql) después de aplicar su versión actualizada para que la autorización de Proveídos quede instalada en producción.
+
 ## Autoría y responsables de documentos
 
-En las listas de Memos, Oficios y Proveídos, **Realizado por** identifica al usuario que registró el documento; **Responsable** identifica al jefe del área destinataria. Para Administración y sus subáreas, el responsable continúa siendo la jefatura de Administración y el nombre de la persona de cada subárea aparece como **Con copia a** (Tesorería: Celio Verde Marcelino; Área de Personal: Julio García de la Chira; Patrimonio: Willy Quintana; Logística: Noa Wilfredo). Mesa de Partes tiene como responsable a Pilar de la Cruz. Los nombres de copia se muestran a partir del área destino guardada; no requieren columnas adicionales en Supabase.
+En las listas de Memos, Oficios y Proveídos, **Realizado por** identifica al usuario que registró el documento; **Responsable** identifica al jefe del área destinataria. Para Administración y sus subáreas, el responsable continúa siendo la jefatura de Administración y el nombre de la persona de cada subárea aparece como **Con copia a** (Tesorería: Celio Verde Marcelino; Área de Personal: Julio García de la Chira; Patrimonio: Willy Quintana; Logística: Noa Wilfredo). Dirección General usa el rol técnico `DireccionGeneral` y tiene como responsable a Pilar de la Cruz. Los nombres de copia se muestran a partir del área destino guardada; no requieren columnas adicionales en Supabase.
 
 Antes de desplegar esta versión, ejecute [`supabase/patches/20261109_document_realizado_por.sql`](./supabase/patches/20261109_document_realizado_por.sql) en el SQL Editor de Supabase. Memos ya conservan la autoría en `registrado_por`; el parche agrega autoría para nuevos Oficios y Proveídos, y recupera la de Oficios antiguos cuando existe un evento inequívoco. Los Proveídos históricos no guardan al creador y se mostrarán como **No registrado**; el parche no atribuye autores por suposición.
 
@@ -81,6 +83,8 @@ El apartado de Memorandos múltiples permite registrar un documento anual con va
 Ejecutar en Supabase antes de usar este apartado:
 
 - `supabase/patches/20261110_memorandos_multiples.sql`
+- `supabase/patches/20261110_memorandos_multiples_expediente.sql`
+- `supabase/patches/20261110_security_hardening.sql`
 - Si la aplicación muestra `PGRST205` indicando que no encuentra `public.memorandos_multiples`, ejecutar después `supabase/patches/20261110_memorandos_multiples_reload_schema.sql`.
 
 El catálogo inicial se encuentra en `src/constants/index.ts` y puede ampliarse cuando se confirmen nuevos grupos institucionales.

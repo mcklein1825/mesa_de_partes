@@ -55,7 +55,7 @@ BEGIN
   END IF;
 
   IF NOT (
-    v_perfil.rol IN ('MesaPartes', 'Administrador')
+    v_perfil.rol IN ('DireccionGeneral', 'Administrador')
     OR (
       v_perfil.rol = 'AreaOperativa'
       AND v_perfil.area = 'Dirección General'
