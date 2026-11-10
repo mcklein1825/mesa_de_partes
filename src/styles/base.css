@@ -1576,7 +1576,7 @@ tbody tr:last-child td {
 }
 
 .step-number {
-  font: 700 11px 'Plus Jakarta Sans';
+  font: 700 12px 'Plus Jakarta Sans';
   color: var(--color-115);
 }
 
