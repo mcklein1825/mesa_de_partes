@@ -5,6 +5,7 @@ import StatusBadge from '../common/StatusBadge'
 import { getAreaCopia } from '../../constants'
 import RiskInsightPanel from '../common/RiskInsightPanel'
 import type { ExpedienteRiskAnalysis } from '../../utils/expedienteRiskModel'
+import { AlertCircle, CheckCircle2, Clock3, Files } from 'lucide-react'
 
 export default function DashboardView({
   expedientes,
@@ -104,7 +105,7 @@ const archived = expedientes.filter(
           value={pending}
           detail="Pendientes de gestión"
           tone="orange"
-          icon="◷"
+          icon={<Clock3 size={20} aria-hidden="true" />}
           onClick={() => onFilterExp?.('Pendiente')}
 
         />
@@ -114,7 +115,7 @@ const archived = expedientes.filter(
           value={noResponse}
           detail="Requieren seguimiento"
           tone="blue"
-          icon="!"
+          icon={<AlertCircle size={20} aria-hidden="true" />}
           onClick={() => onFilterExp?.('Sin respuesta')}
 
         />
@@ -124,7 +125,7 @@ const archived = expedientes.filter(
           value={attended}
           detail="Registros atendidos"
           tone="green"
-          icon="✓"
+          icon={<CheckCircle2 size={20} aria-hidden="true" />}
           onClick={() => onFilterExp?.('Atendido')}
 
         />
@@ -134,7 +135,7 @@ const archived = expedientes.filter(
           value={archived}
           detail="Expedientes cerrados"
           tone="purple"
-          icon="▤"
+          icon={<Files size={20} aria-hidden="true" />}
           onClick={() => onFilterExp?.('Archivado')}
 
         />

@@ -7,6 +7,7 @@ import {
 import { supabase } from '../../lib/supabaseClient'
 import { Expediente, Proveido } from '../../types'
 import { useToast } from './ToastProvider'
+import { FileText, LoaderCircle } from 'lucide-react'
 
 export default function DocumentLink({
   item,
@@ -235,9 +236,11 @@ return (
         whiteSpace: 'nowrap'
       }}
     >
-      {cargando
-        ? '⏳ Cargando...'
-        : `📄 ${item.archivo}`}
+      {cargando ? (
+        <><LoaderCircle size={15} aria-hidden="true" /> Cargando...</>
+      ) : (
+        <><FileText size={15} aria-hidden="true" /> {item.archivo}</>
+      )}
     </button>
   </span>
 )

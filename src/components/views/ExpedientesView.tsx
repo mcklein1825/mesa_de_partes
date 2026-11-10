@@ -4,6 +4,7 @@ import { formatNroExp, displayDate, getRemitenteNombre, getAreaDestino, getDeadl
 import DocumentLink from '../common/DocumentLink'
 import StatusBadge from '../common/StatusBadge'
 import DuplicateExpedienteModal from '../modals/DuplicateExpedienteModal'
+import { Copy, Eye, Search } from 'lucide-react'
 
 export default function ExpedientesView({
   items,
@@ -116,7 +117,7 @@ export default function ExpedientesView({
                 className="primary-button"
                 onClick={() => setShowDuplicateModal(true)}
               >
-                ⧉ Duplicar expediente
+                <Copy size={16} aria-hidden="true" /> Duplicar expediente
               </button>
             )}
           </div>
@@ -126,7 +127,7 @@ export default function ExpedientesView({
       <section className="panel list-panel">
         <div className="toolbar">
           <div className="search-box">
-            <span>⌕</span>
+            <Search size={16} aria-hidden="true" />
             <input
               value={query}
               onChange={e => {
@@ -401,7 +402,7 @@ export default function ExpedientesView({
                         onClick={() => onTracking(item.id)}
                       >
 
-                      ◉ Ver seguimiento
+                      <Eye size={16} aria-hidden="true" /> Ver seguimiento
                     </button>
 
 

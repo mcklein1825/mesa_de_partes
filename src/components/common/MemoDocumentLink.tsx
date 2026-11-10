@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { useToast } from './ToastProvider'
+import { FileText, LoaderCircle } from 'lucide-react'
 
 export default function MemoDocumentLink({
   archivoData,
@@ -133,9 +134,11 @@ export default function MemoDocumentLink({
       fontWeight: 500
     }}
   >
-    {cargando
-      ? '⏳ Cargando...'
-      : `📄 ${archivo || 'Documento'}`}
+    {cargando ? (
+      <><LoaderCircle size={15} aria-hidden="true" /> Cargando...</>
+    ) : (
+      <><FileText size={15} aria-hidden="true" /> {archivo || 'Documento'}</>
+    )}
   </button>
 )
 }

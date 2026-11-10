@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { FileUp } from 'lucide-react'
 import { Expediente } from '../../types'
 import {
   AREA_DESTINO_OPTIONS,
@@ -181,7 +182,7 @@ export default function NuevoProveidoView({
           <div className="form-group wide document-form-field document-form-field-wide document-form-file-field">
             <label>Documento adjunto (opcional)</label>
             <label className="document-form-file-button">
-              ▣ Seleccionar archivo
+              <><FileUp size={16} aria-hidden="true" /> Seleccionar archivo</>
               <input
                 type="file"
                 accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"

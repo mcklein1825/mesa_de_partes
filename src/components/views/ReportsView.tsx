@@ -8,6 +8,7 @@ import {
 import type { ExpedienteRiskAnalysis } from '../../utils/expedienteRiskModel'
 import StatCard from '../common/StatCard'
 import RiskInsightPanel from '../common/RiskInsightPanel'
+import { BarChart3, CheckCircle2, Clock3, Files } from 'lucide-react'
 
 const statusSummary = [
   { status: 'Pendiente', label: 'Pendientes', className: 'report-status-pending' },
@@ -86,28 +87,28 @@ export default function ReportsView({
           value={total}
           detail={`Año ${new Date().getFullYear()}`}
           tone="purple"
-          icon="▤"
+          icon={<Files size={20} aria-hidden="true" />}
         />
         <StatCard
           label="Pendientes"
           value={expedientes.filter(item => item.estado === 'Pendiente').length}
           detail="Por derivar o atender"
           tone="orange"
-          icon="◷"
+          icon={<Clock3 size={20} aria-hidden="true" />}
         />
         <StatCard
           label="Atendidos"
           value={expedientes.filter(item => item.estado === 'Atendido').length}
           detail="Con seguimiento"
           tone="green"
-          icon="✓"
+          icon={<CheckCircle2 size={20} aria-hidden="true" />}
         />
         <StatCard
           label="Tiempo promedio"
           value={avgTime}
           detail="Días de atención registrados"
           tone="blue"
-          icon="◴"
+          icon={<BarChart3 size={20} aria-hidden="true" />}
         />
       </section>
 

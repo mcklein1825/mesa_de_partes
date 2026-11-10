@@ -7,6 +7,7 @@ import ExpedienteSelector from '../common/ExpedienteSelector'
 import MemoDocumentLink from '../common/MemoDocumentLink'
 import StatusBadge from '../common/StatusBadge'
 import Modal from '../common/Modal'
+import { Search } from 'lucide-react'
 
 type Props = {
   oficios: Oficio[]
@@ -150,7 +151,7 @@ export default function OficiosView({
       <section className="panel list-panel">
         <div className="toolbar">
           <div className="search-box">
-            <span>⌕</span>
+            <Search size={16} aria-hidden="true" />
             <input
               value={busqueda}
               onChange={e => setBusqueda(e.target.value)}

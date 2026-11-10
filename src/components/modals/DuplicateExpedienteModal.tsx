@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import { formatNroExp } from '../../utils/expedienteHelpers'
 import Modal from '../common/Modal'
+import { Copy, Search } from 'lucide-react'
 
 type ExpedienteDuplicado = {
   id: number
@@ -139,7 +140,7 @@ export default function DuplicateExpedienteModal({
             Buscar expediente
 
             <div className="duplicate-search-box">
-              <span>⌕</span>
+              <Search size={16} aria-hidden="true" />
 
               <input
                 type="text"
@@ -309,7 +310,7 @@ export default function DuplicateExpedienteModal({
               className="primary-button"
               onClick={() => onSelect(seleccionado)}
             >
-              ⧉ Duplicar expediente
+              <Copy size={16} aria-hidden="true" /> Duplicar expediente
             </button>
           )}
         </div>

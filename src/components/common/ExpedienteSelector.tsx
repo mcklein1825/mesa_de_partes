@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Search } from 'lucide-react'
 import { Expediente } from '../../types'
 import {
   formatNroExp,
@@ -139,7 +140,7 @@ export default function ExpedienteSelector({
       <div className="expediente-selector">
         <div className="toolbar">
           <div className="search-box">
-            <span>⌕</span>
+            <Search size={16} aria-hidden="true" />
 
             <input
               value={query}

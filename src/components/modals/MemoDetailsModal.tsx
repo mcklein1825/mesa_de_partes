@@ -3,6 +3,7 @@ import { formatNroExp } from '../../utils/expedienteHelpers'
 import { formatDocumentNumber } from '../../utils/documentHelpers'
 import { getAreaCopia } from '../../constants'
 import Modal from '../common/Modal'
+import { ExternalLink, X } from 'lucide-react'
 
 export default function MemoDetailsModal({
   memo,
@@ -23,7 +24,7 @@ export default function MemoDetailsModal({
           </h2>
         </div>
         <button className="action-link" onClick={onClose} aria-label="Cerrar detalle del memo">
-          ✕
+          <X size={18} aria-hidden="true" />
         </button>
       </div>
 
@@ -42,7 +43,7 @@ export default function MemoDetailsModal({
           <p>{memo.archivo || 'Sin archivo'}</p>
           {memo.archivoData && (
             <button className="tracking-button" onClick={() => window.open(memo.archivoData, '_blank', 'noopener,noreferrer')}>
-              ◉ Abrir archivo
+              <ExternalLink size={16} aria-hidden="true" /> Abrir archivo
             </button>
           )}
         </div>

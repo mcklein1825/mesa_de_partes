@@ -26,7 +26,10 @@
     ChartNoAxesCombined,
     Layers3,
     Menu,
-    X
+    X,
+    ShieldCheck,
+    MoreVertical,
+    Check
   } from 'lucide-react'
 
 // Tipos y Constantes
@@ -1252,7 +1255,7 @@
   </nav>
           <div className="sidebar-footer">
             <div className="secure-note">
-              <span>⌁</span>
+              <ShieldCheck size={16} aria-hidden="true" />
               <div><b>Supabase</b><small>Datos almacenados en la base de datos</small></div>
             </div>
             <div className="profile-menu">
@@ -1265,7 +1268,7 @@
               >
                 <div className="avatar">{currentUser.nombre.split(' ').map(n => n[0]).slice(0, 2).join('')}</div>
                 <div><b>{currentUser.nombre}</b><small>{currentUser.rol === 'MesaPartes' ? 'Gestión documental' : currentUser.rol}</small></div>
-                <span>⋮</span>
+                <MoreVertical size={18} aria-hidden="true" />
               </button>
               {showProfile && (
                 <div className="profile-popover">
@@ -1840,7 +1843,7 @@
           </Modal>
         )}
 
-        {toast && <div className="toast"><span>✓</span>{toast}</div>}
+        {toast && <div className="toast"><Check size={16} aria-hidden="true" />{toast}</div>}
         {trackingId && (
           <TrackingModal
             item={visibleExpedientes.find(item => item.id === trackingId)}

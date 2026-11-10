@@ -7,6 +7,7 @@ import ExpedienteSelector from '../common/ExpedienteSelector'
 import MemoDocumentLink from '../common/MemoDocumentLink'
 import StatusBadge from '../common/StatusBadge'
 import Modal from '../common/Modal'
+import { Search } from 'lucide-react'
 
 type Props = {
   proveidos: Proveido[]
@@ -149,7 +150,7 @@ export default function ProveidosView({
       <section className="panel list-panel proveidos-list">
         <div className="toolbar">
           <div className="search-box">
-            <span>⌕</span>
+            <Search size={16} aria-hidden="true" />
             <input
               value={busqueda}
               onChange={e => setBusqueda(e.target.value)}

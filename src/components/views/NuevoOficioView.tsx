@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react'
+import { FileUp } from 'lucide-react'
 import { Expediente } from '../../types'
 import {
   AREA_DESTINO_OPTIONS,
@@ -230,7 +231,7 @@ export default function NuevoOficioView({
               <div className="form-group document-form-field">
                 <label htmlFor="oficio-archivo">Adjunto (opcional)</label>
                 <label className="document-form-file-button" htmlFor="oficio-archivo">
-                  ▣ Seleccionar archivo
+                  <><FileUp size={16} aria-hidden="true" /> Seleccionar archivo</>
                   <input
                     id="oficio-archivo"
                     type="file"

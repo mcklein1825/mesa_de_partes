@@ -6,6 +6,7 @@ import type {
   MemorandoMultipleMedio
 } from '../../types'
 import { createMemorandoMultiple } from '../../services/memorandosMultiplesService'
+import { Search } from 'lucide-react'
 
 const categorias: Array<MemorandoMultipleCategoria | 'Todas'> = [
   'Todas',
@@ -143,7 +144,7 @@ export default function MemorandosMultiplesView({
 
       <section className="panel list-panel">
         <div className="toolbar">
-          <div className="search-box"><span>⌕</span><input value={busqueda} onChange={event => setBusqueda(event.target.value)} placeholder="Buscar por registro o asunto..." /></div>
+          <div className="search-box"><Search size={16} aria-hidden="true" /><input value={busqueda} onChange={event => setBusqueda(event.target.value)} placeholder="Buscar por registro o asunto..." /></div>
           <select value={filtro} onChange={event => setFiltro(event.target.value as MemorandoMultipleCategoria | 'Todas')}>
             {categorias.map(item => <option key={item}>{item}</option>)}
           </select>

@@ -10,6 +10,7 @@
   import { getSupportedDocumentMimeType } from '../../utils/expedienteHelpers'
   import { useToast } from '../common/ToastProvider'
   import Modal from '../common/Modal'
+  import { Copy, Paperclip, Search } from 'lucide-react'
 
   export default function MemosView({
     expediente,
@@ -466,7 +467,7 @@ if (showMemoForm && expediente) {
             <label>Archivo del Memo</label>
 
             <label className="memo-file-button">
-              ▣ Seleccionar archivo
+              <><Paperclip size={16} aria-hidden="true" /> Seleccionar archivo</>
 
               <input
                 type="file"
@@ -585,7 +586,7 @@ if (showMemoForm && expediente) {
             <label className="duplicate-search-label">
               Buscar Memo
               <div className="duplicate-search-box">
-                <span>⌕</span>
+                <Search size={16} aria-hidden="true" />
                 <input
                   type="text"
                   value={memoDuplicadoBusqueda}
@@ -704,7 +705,7 @@ if (showMemoForm && expediente) {
                   setMemoSeleccionadoParaDuplicar(null)
                 }}
               >
-                ⧉ Continuar con este Memo
+                <Copy size={16} aria-hidden="true" /> Continuar con este Memo
               </button>
             )}
           </div>
@@ -826,7 +827,7 @@ if (showMemoForm && expediente) {
                   setShowDuplicateMemoModal(true)
                 }}
               >
-                ⧉ Duplicar Memo
+                <Copy size={16} aria-hidden="true" /> Duplicar Memo
               </button>
             </div>
           )}
@@ -839,7 +840,7 @@ if (showMemoForm && expediente) {
 
             <div className="search-box">
 
-              <span>⌕</span>
+              <Search size={16} aria-hidden="true" />
 
               <input
                 value={query}
@@ -1121,7 +1122,7 @@ if (showMemoForm && expediente) {
           className="tracking-button"
           onClick={() => setSelectedMemo(memo)}
         >
-          ◉ Ver más datos
+          <Search size={16} aria-hidden="true" /> Ver más datos
         </button>
       </td>
 
