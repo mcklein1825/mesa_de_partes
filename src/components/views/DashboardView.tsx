@@ -5,7 +5,7 @@ import StatusBadge from '../common/StatusBadge'
 import { getAreaCopia } from '../../constants'
 import RiskInsightPanel from '../common/RiskInsightPanel'
 import type { ExpedienteRiskAnalysis } from '../../utils/expedienteRiskModel'
-import { AlertCircle, CheckCircle2, Clock3, Files } from 'lucide-react'
+import { AlertCircle, AlertTriangle, CheckCircle2, Clock3, Files } from 'lucide-react'
 
 export default function DashboardView({
   expedientes,
@@ -98,6 +98,56 @@ const archived = expedientes.filter(
           <button className="primary-button" onClick={onNew}>＋ Nuevo expediente</button>
         )}
       </div>
+
+      <section className="panel deadlines-panel attention-panel">
+        <div className="panel-header">
+          <div>
+            <h2>Atención hoy</h2>
+            <p>Expedientes próximos a vencer o con plazo vencido</p>
+          </div>
+          <AlertTriangle className="warning-icon" size={18} aria-hidden="true" />
+        </div>
+
+        <div className="deadline-list">
+          {upcomingDeadlines.length > 0 ? (
+            upcomingDeadlines.map(item => {
+              const { day, month } = formatDateShort(item.plazo)
+              return (
+                <div className="deadline-item" key={item.id}>
+                  <div
+                    className={`deadline-date ${
+                      item.deadline.kind === 'vencido'
+                        ? 'overdue'
+                        : item.deadline.kind === 'por_vencer'
+                          ? 'urgent'
+                          : ''
+                    }`}
+                  >
+                    <b>{day}</b>
+                    <span>{month}</span>
+                  </div>
+                  <div>
+                    <b>{formatNroExp(item.nroExp, false, item.fechaIngreso)}</b>
+                    <p>{item.asunto}</p>
+                    <small
+                      className={
+                        item.deadline.kind === 'vencido' ? 'overdue' : ''
+                      }
+                    >
+                      {item.deadline.label}
+                    </small>
+                  </div>
+                </div>
+              )
+            })
+          ) : (
+            <div className="empty-state" style={{ padding: '20px', textAlign: 'center' }}>
+              No hay expedientes con plazos que requieran atención
+            </div>
+          )}
+        </div>
+        <button className="outline-button" onClick={onViewAll}>Ver todos los expedientes</button>
+      </section>
 
       <section className="stats-grid">
         <StatCard
@@ -196,55 +246,6 @@ const archived = expedientes.filter(
           </div>
         </section>
 
-        <section className="panel deadlines-panel">
-          <div className="panel-header">
-            <div>
-              <h2>Vencimientos y plazos</h2>
-              <p>Expedientes próximos a vencer o con plazo vencido</p>
-            </div>
-            <span className="warning-icon">!</span>
-          </div>
-
-          <div className="deadline-list">
-            {upcomingDeadlines.length > 0 ? (
-              upcomingDeadlines.map(item => {
-                const { day, month } = formatDateShort(item.plazo)
-                return (
-                  <div className="deadline-item" key={item.id}>
-                    <div
-                      className={`deadline-date ${
-                        item.deadline.kind === 'vencido'
-                          ? 'overdue'
-                          : item.deadline.kind === 'por_vencer'
-                            ? 'urgent'
-                            : ''
-                      }`}
-                    >
-                      <b>{day}</b>
-                      <span>{month}</span>
-                    </div>
-                    <div>
-                      <b>{formatNroExp(item.nroExp, false, item.fechaIngreso)}</b>
-                      <p>{item.asunto}</p>
-                      <small
-                        className={
-                          item.deadline.kind === 'vencido' ? 'overdue' : ''
-                        }
-                      >
-                        {item.deadline.label}
-                      </small>
-                    </div>
-                  </div>
-                )
-              })
-            ) : (
-              <div className="empty-state" style={{ padding: '20px', textAlign: 'center' }}>
-                No hay expedientes con plazos que requieran atención
-              </div>
-            )}
-          </div>
-          <button className="outline-button" onClick={onViewAll}>Ver todos los expedientes</button>
-        </section>
       </div>
       <section className="panel">
         <div className="panel-header">

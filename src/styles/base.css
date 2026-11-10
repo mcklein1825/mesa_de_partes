@@ -1222,6 +1222,14 @@ tbody tr:last-child td {
   padding-bottom: 16px;
 }
 
+.attention-panel {
+  margin-bottom: 22px;
+}
+
+.attention-panel .warning-icon {
+  padding: 4px;
+}
+
 .warning-icon {
   background: var(--color-089);
   color: var(--color-090);
@@ -1729,9 +1737,8 @@ tbody tr:last-child td {
   .content-grid {
     grid-template-columns: 1fr;
   }
-  .deadlines-panel {
-    display: block;
-    order: -1;
+  .attention-panel {
+    margin-bottom: 18px;
   }
 }
 /* Ajustes específicos del Portal Shell */
