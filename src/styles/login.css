@@ -72,10 +72,10 @@
   height: 48px;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid var(--color-018)fff3b;
+  border: 1px solid var(--color-180);
   border-radius: 14px;
   color: var(--color-018);
-  background: var(--color-018)fff12;
+  background: var(--color-181);
 }
 
 .login-brand-top span,
@@ -117,6 +117,7 @@
 .login-brand-copy h1 {
   margin: 24px 0 18px;
   color: var(--color-018);
+  font-family: var(--font-display);
   font-size: clamp(36px, 4vw, 48px);
   font-weight: 700;
   letter-spacing: -2.3px;
@@ -168,7 +169,7 @@
 
 .login-decoration {
   position: absolute;
-  border: 1px solid var(--color-018)fff0d;
+  border: 1px solid var(--color-188);
   border-radius: 50%;
   pointer-events: none;
 }
@@ -185,7 +186,7 @@
   bottom: 95px;
   width: 320px;
   height: 320px;
-  border-color: var(--color-018)fff12;
+  border-color: var(--color-181);
 }
 
 .login-content {
@@ -298,7 +299,7 @@
 
 .login-input-wrap:focus-within {
   border-color: var(--color-195);
-  box-shadow: 0 0 0 3px var(--color-168)0e;
+  box-shadow: 0 0 0 3px var(--color-196);
 }
 
 .login-input-wrap > svg {
@@ -345,7 +346,7 @@
   border: 1px solid var(--color-200);
   border-radius: 8px;
   color: var(--color-201);
-  background: var(--color-018)8f7;
+  background: var(--color-202);
 }
 
 .login-error svg {

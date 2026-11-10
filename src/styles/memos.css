@@ -5,7 +5,7 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: var(--color-001)99;
+  background: var(--color-155);
   display: grid;
   place-items: center;
   padding: 24px;
@@ -19,7 +19,7 @@
   background: var(--color-018);
   border: 2px solid var(--color-004);
   border-radius: 10px;
-  box-shadow: 0 18px 50px var(--color-001)55;
+  box-shadow: 0 18px 50px var(--color-156);
 }
 
 .modal-card .section-header {
@@ -246,7 +246,7 @@
 .expediente-selector-item:focus {
   outline: 0;
   border-color: var(--color-147);
-  box-shadow: 0 0 0 2px var(--color-147)2b;
+  box-shadow: 0 0 0 2px var(--color-148);
 }
 
 /* Primera línea */
@@ -366,7 +366,7 @@
   padding: 10px 12px;
   border: 1px solid var(--color-146);
   border-radius: 6px;
-  background: var(--color-018)fff;
+  background: var(--color-210);
   color: var(--color-117);
   font-size: 14px;
   outline: none;
@@ -390,7 +390,7 @@
 .proveido-form-grid select:focus,
 .proveido-form-grid textarea:focus {
   border-color: var(--color-147);
-  box-shadow: 0 0 0 2px var(--color-147)2b;
+  box-shadow: 0 0 0 2px var(--color-148);
 }
 
 .proveido-form-grid input[readonly] {
@@ -435,7 +435,7 @@
 
 .proveido-form-actions .outline-button {
   border: 1px solid var(--color-218);
-  background: var(--color-018)fff;
+  background: var(--color-210);
   color: var(--color-037);
 }
 
@@ -447,7 +447,7 @@
 .proveido-form-actions .primary-button {
   border: 1px solid var(--color-147);
   background: var(--color-147);
-  color: var(--color-018)fff;
+  color: var(--color-210);
 }
 
 .proveido-form-actions .primary-button:hover {
@@ -563,7 +563,7 @@
   padding: 7px 12px;
   border: 1px solid var(--color-253);
   border-radius: 6px;
-  background: var(--color-018)fff;
+  background: var(--color-210);
   color: var(--color-153);
   font-size: 12px;
   font-weight: 700;
@@ -658,7 +658,7 @@
   width: min(760px, 100%);
   max-height: 90vh;
   overflow-y: auto;
-  background: var(--color-018)fff;
+  background: var(--color-210);
   border-radius: 16px;
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.25);
 }
@@ -867,7 +867,7 @@
 
   overflow-y: auto;
 
-  background: var(--color-018)fff;
+  background: var(--color-210);
   border-radius: 18px;
 
   box-shadow:

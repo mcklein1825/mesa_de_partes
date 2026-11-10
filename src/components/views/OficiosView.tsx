@@ -5,6 +5,7 @@ import { formatDocumentNumber } from '../../utils/documentHelpers'
 import { getAreaCopia } from '../../constants'
 import ExpedienteSelector from '../common/ExpedienteSelector'
 import MemoDocumentLink from '../common/MemoDocumentLink'
+import StatusBadge from '../common/StatusBadge'
 
 type Props = {
   oficios: Oficio[]
@@ -334,13 +335,7 @@ export default function OficiosView({
                   </td>
 
                   <td>
-                    <span
-                      className={`status-badge status-${oficio.estado
-                        .toLowerCase()
-                        .replace(/\s+/g, '-')}`}
-                    >
-                      {oficio.estado}
-                    </span>
+                    <StatusBadge status={oficio.estado} />
                   </td>
                 </tr>
               ))}

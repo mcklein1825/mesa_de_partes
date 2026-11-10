@@ -311,13 +311,7 @@ const archived = expedientes.filter(
                   </td>
 
                   <td>
-                    <span
-                      className={`status-badge status-${proveido.estado
-                        .toLowerCase()
-                        .replace(/\s+/g, '-')}`}
-                    >
-                      {proveido.estado || '—'}
-                    </span>
+                    <StatusBadge status={proveido.estado || 'Pendiente'} />
                   </td>
                 </tr>
               ))}

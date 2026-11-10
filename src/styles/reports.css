@@ -104,7 +104,7 @@
 .portal-shell .toolbar select:focus,
 .portal-shell .filter-input:focus {
   border-color: var(--color-286);
-  box-shadow: 0 0 0 3px var(--color-275)0d;
+  box-shadow: 0 0 0 3px var(--color-287);
   outline: 0;
 }
 
@@ -142,12 +142,12 @@
 
 .portal-shell .deadline-date.urgent {
   color: var(--color-289);
-  background: var(--color-018)0e9;
+  background: var(--color-290);
 }
 
 .portal-shell .deadline-date.overdue {
   color: var(--color-201);
-  background: var(--color-018)0ef;
+  background: var(--color-291);
 }
 
 .portal-shell .stats-grid {
@@ -239,7 +239,7 @@
   border: 1px solid var(--color-296);
   border-radius: 9px;
   color: var(--color-297);
-  background: var(--color-018)8f7;
+  background: var(--color-202);
 }
 
 .risk-summary strong {
@@ -340,12 +340,12 @@
 
 .risk-high {
   color: var(--color-305);
-  background: var(--color-018)0ee;
+  background: var(--color-306);
 }
 
 .risk-medium {
   color: var(--color-307);
-  background: var(--color-018)6e9;
+  background: var(--color-308);
 }
 
 .risk-view-all {
@@ -390,7 +390,7 @@
   align-items: flex-start;
   border-color: var(--color-314);
   color: var(--color-315);
-  background: var(--color-018)cf5;
+  background: var(--color-316);
 }
 
 .risk-model-notice p {

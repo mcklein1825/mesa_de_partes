@@ -70,7 +70,8 @@
 
 .portal-shell .list-panel .data-table .exp-id {
   font-size: 12px;
-  letter-spacing: 0;
+  font-family: var(--font-folio);
+  letter-spacing: 0.04em;
 }
 
 /* =====================================================

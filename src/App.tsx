@@ -49,6 +49,7 @@
 
   // Componentes Comunes y Modales
   import NavItem from './components/common/NavItem'
+  import Logo from './components/common/Logo'
   import TrackingModal from './components/modals/TrackingModal'
   export default function App() {
 
@@ -1095,8 +1096,7 @@
       <div className="app-shell portal-shell">
         <aside className="sidebar">
           <div className="brand">
-            <div className="brand-mark">DG</div>
-            <div><strong>Dirección General</strong><span>Gestión documental</span></div>
+            <Logo />
           </div>
           <div className="menu-label">MENÚ PRINCIPAL</div>
           <nav className="nav-menu">
