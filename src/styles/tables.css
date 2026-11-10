@@ -399,6 +399,60 @@
     width: fit-content;
     max-width: 100%;
   }
+
+  .portal-shell .dashboard-table {
+    display: block;
+    width: 100%;
+  }
+
+  .portal-shell .dashboard-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .portal-shell .dashboard-table tbody,
+  .portal-shell .dashboard-table tr,
+  .portal-shell .dashboard-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .portal-shell .dashboard-table tbody tr {
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    border: 1px solid var(--color-339);
+    border-radius: 12px;
+    background: var(--color-150);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .portal-shell .dashboard-table tbody td {
+    display: grid;
+    grid-template-columns: minmax(108px, 36%) minmax(0, 1fr);
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--color-343);
+    white-space: normal;
+  }
+
+  .portal-shell .dashboard-table tbody td::before {
+    content: attr(data-label);
+    color: var(--color-342);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+  }
+
+  .portal-shell .dashboard-table tbody td:last-child {
+    border-bottom: 0;
+  }
+
+  .portal-shell .memorandos-multiples-table tbody tr {
+    border-left: 3px solid var(--color-004);
+  }
 }
 
 /* =========================================================

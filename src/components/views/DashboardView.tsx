@@ -208,7 +208,7 @@ const archived = expedientes.filter(
           </div>
 
           <div className="table-wrap">
-            <table>
+            <table className="dashboard-table">
               <caption className="sr-only">Expedientes recientes</caption>
               <thead>
                 <tr>
@@ -222,13 +222,13 @@ const archived = expedientes.filter(
               <tbody>
                 {recentExpedientes.map(item => (
                   <tr key={item.id}>
-                    <td>
+                    <td data-label="N.° DE EXPEDIENTE">
                       <b className="exp-id">
                         {formatNroExp(item.nroExp, false, item.fechaIngreso)}
                       </b>
                       <small>{item.fechaIngreso || 'Sin fecha'}</small>
                     </td>
-                    <td>
+                    <td data-label="REMITENTE">
                       <span className="person-cell">
                         <span className="small-avatar">
                           {getRemitenteNombre(item).split(' ').map(x => x[0]).slice(0, 2).join('')}
@@ -236,9 +236,9 @@ const archived = expedientes.filter(
                         {getRemitenteNombre(item)}
                       </span>
                     </td>
-                    <td>{item.asunto}</td>
-                    <td>{getAreaDestino(item)}</td>
-                    <td><StatusBadge status={item.estado} /></td>
+                    <td data-label="ASUNTO">{item.asunto}</td>
+                    <td data-label="ÁREA DESTINO">{getAreaDestino(item)}</td>
+                    <td data-label="ESTADO"><StatusBadge status={item.estado} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -256,7 +256,7 @@ const archived = expedientes.filter(
         </div>
 
         <div className="table-wrap">
-          <table>
+          <table className="dashboard-table">
             <caption className="sr-only">Proveídos recientes</caption>
             <thead>
               <tr>
@@ -273,7 +273,7 @@ const archived = expedientes.filter(
             <tbody>
               {proveidos.slice(0, 4).map(proveido => (
                 <tr key={proveido.id}>
-                 <td>
+                 <td data-label="EXPEDIENTE">
                     <b className="exp-id">
                       {proveido.nroExpediente
                         ? formatNroExp(
@@ -289,11 +289,11 @@ const archived = expedientes.filter(
                     </b>
                   </td>
 
-                  <td>
+                  <td data-label="FECHA">
                     {proveido.fecha || '—'}
                   </td>
 
-                  <td>
+                  <td data-label="ÁREA DESTINO">
                     {proveido.areaDestino || '—'}
                     {getAreaCopia(proveido.areaDestino) && (
                       <small>
@@ -302,19 +302,19 @@ const archived = expedientes.filter(
                     )}
                   </td>
 
-                  <td>
+                  <td data-label="REALIZADO POR">
                     {proveido.realizadoPor || 'No registrado'}
                   </td>
 
-                  <td>
+                  <td data-label="RESPONSABLE">
                     {proveido.responsable || '—'}
                   </td>
 
-                  <td>
+                  <td data-label="INSTRUCCIÓN">
                     {proveido.instruccion || '—'}
                   </td>
 
-                  <td>
+                  <td data-label="ESTADO">
                     <StatusBadge status={proveido.estado || 'Pendiente'} />
                   </td>
                 </tr>

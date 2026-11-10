@@ -151,16 +151,16 @@ export default function MemorandosMultiplesView({
           <span className="result-count">{visibles.length} resultados</span>
         </div>
         <div className="table-wrap">
-          <table className="data-table">
+          <table className="data-table memorandos-multiples-table">
             <caption className="sr-only">Listado de memorandos múltiples</caption>
             <thead><tr><th scope="col">N.° REGISTRO</th><th scope="col">FECHA</th><th scope="col">ASUNTO</th><th scope="col">DESTINATARIOS</th><th scope="col">MEDIOS</th><th scope="col">REALIZADO POR</th></tr></thead>
             <tbody>{visibles.map(item => <tr key={item.id}>
-              <td><b className="exp-id">{item.nroRegistro}</b></td>
-              <td>{new Date(`${item.fecha}T00:00:00`).toLocaleDateString('es-PE')}</td>
-              <td>{item.asunto}</td>
-              <td>{item.destinatarios.map(destinatario => <div key={destinatario.id}>{destinatario.nombre}</div>)}</td>
-              <td>{item.destinatarios.map(destinatario => <div key={destinatario.id}>{destinatario.medioEntrega}</div>)}</td>
-              <td>{item.realizadoPor}</td>
+              <td data-label="N.° REGISTRO"><b className="exp-id">{item.nroRegistro}</b></td>
+              <td data-label="FECHA">{new Date(`${item.fecha}T00:00:00`).toLocaleDateString('es-PE')}</td>
+              <td data-label="ASUNTO">{item.asunto}</td>
+              <td data-label="DESTINATARIOS">{item.destinatarios.map(destinatario => <div key={destinatario.id}>{destinatario.nombre}</div>)}</td>
+              <td data-label="MEDIOS">{item.destinatarios.map(destinatario => <div key={destinatario.id}>{destinatario.medioEntrega}</div>)}</td>
+              <td data-label="REALIZADO POR">{item.realizadoPor}</td>
             </tr>)}</tbody>
           </table>
           {visibles.length === 0 && <div className="empty-state">No hay memorandos múltiples registrados.</div>}
