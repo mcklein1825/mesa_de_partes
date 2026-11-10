@@ -188,18 +188,19 @@ export default function OficiosView({
 
         <div className="table-wrap">
           <table className="data-table oficios-table">
+            <caption className="sr-only">Listado de oficios</caption>
             <thead>
               <tr>
-                <th>N.° REGISTRO</th>
-                <th>EXPEDIENTE</th>
-                <th>FECHA</th>
-                <th>ASUNTO</th>
-                <th>DESTINATARIO</th>
-                <th>ÁREA DESTINO</th>
-                <th>REALIZADO POR</th>
-                <th>RESPONSABLE</th>
-                <th>ADJUNTO</th>
-                <th>ESTADO</th>
+                <th scope="col">N.° REGISTRO</th>
+                <th scope="col">EXPEDIENTE</th>
+                <th scope="col">FECHA</th>
+                <th scope="col">ASUNTO</th>
+                <th scope="col">DESTINATARIO</th>
+                <th scope="col">ÁREA DESTINO</th>
+                <th scope="col">REALIZADO POR</th>
+                <th scope="col">RESPONSABLE</th>
+                <th scope="col">ADJUNTO</th>
+                <th scope="col">ESTADO</th>
               </tr>
             </thead>
 

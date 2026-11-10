@@ -196,15 +196,16 @@ export default function ExpedientesView({
 
         <div className="table-wrap">
           <table className="data-table expedientes-table">
+            <caption className="sr-only">Listado de expedientes</caption>
             <thead>
               <tr>
-                <th>N.° EXP</th>
-                <th>FECHA</th>
-                <th>FECHA LÍMITE</th>
-                <th>NOMBRE / APELLIDO</th>
-                <th>ASUNTO</th>
-                <th>ESTADO</th>
-                <th>ACCIONES</th>
+                <th scope="col">N.° EXP</th>
+                <th scope="col">FECHA</th>
+                <th scope="col">FECHA LÍMITE</th>
+                <th scope="col">NOMBRE / APELLIDO</th>
+                <th scope="col">ASUNTO</th>
+                <th scope="col">ESTADO</th>
+                <th scope="col">ACCIONES</th>
               </tr>
             </thead>
             <tbody>

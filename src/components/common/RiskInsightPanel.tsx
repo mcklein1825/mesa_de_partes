@@ -62,13 +62,14 @@ export default function RiskInsightPanel({
         cases.length > 0 ? (
           <div className="risk-table-wrap">
             <table className="risk-table">
+              <caption className="sr-only">Análisis de riesgo de expedientes</caption>
               <thead>
                 <tr>
-                  <th>EXPEDIENTE</th>
-                  <th>ÁREA Y TIPO</th>
-                  <th>ESTIMACIÓN</th>
-                  <th>PLAZO RESTANTE</th>
-                  <th>RIESGO</th>
+                  <th scope="col">EXPEDIENTE</th>
+                  <th scope="col">ÁREA Y TIPO</th>
+                  <th scope="col">ESTIMACIÓN</th>
+                  <th scope="col">PLAZO RESTANTE</th>
+                  <th scope="col">RIESGO</th>
                 </tr>
               </thead>
               <tbody>

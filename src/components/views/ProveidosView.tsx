@@ -174,17 +174,18 @@ export default function ProveidosView({
 
         <div className="table-wrap">
           <table className="data-table proveidos-table">
+            <caption className="sr-only">Listado de proveídos</caption>
             <thead>
               <tr>
-                <th>N.º PROVEÍDO</th>
-                <th>N.° EXP</th>
-                <th>FECHA</th>
-                <th>ÁREA DESTINO</th>
-                <th>REALIZADO POR</th>
-                <th>RESPONSABLE</th>
-                <th>INSTRUCCIÓN</th>
-                <th>ESTADO</th>
-                <th>DOCUMENTO</th>
+                <th scope="col">N.º PROVEÍDO</th>
+                <th scope="col">N.° EXP</th>
+                <th scope="col">FECHA</th>
+                <th scope="col">ÁREA DESTINO</th>
+                <th scope="col">REALIZADO POR</th>
+                <th scope="col">RESPONSABLE</th>
+                <th scope="col">INSTRUCCIÓN</th>
+                <th scope="col">ESTADO</th>
+                <th scope="col">DOCUMENTO</th>
               </tr>
             </thead>
 

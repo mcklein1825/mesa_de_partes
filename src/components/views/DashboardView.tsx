@@ -158,13 +158,14 @@ const archived = expedientes.filter(
 
           <div className="table-wrap">
             <table>
+              <caption className="sr-only">Expedientes recientes</caption>
               <thead>
                 <tr>
-                  <th>N° DE EXPEDIENTE</th>
-                  <th>REMITENTE</th>
-                  <th>ASUNTO</th>
-                  <th>ÁREA DESTINO</th>
-                  <th>ESTADO</th>
+                  <th scope="col">N° DE EXPEDIENTE</th>
+                  <th scope="col">REMITENTE</th>
+                  <th scope="col">ASUNTO</th>
+                  <th scope="col">ÁREA DESTINO</th>
+                  <th scope="col">ESTADO</th>
                 </tr>
               </thead>
               <tbody>
@@ -254,15 +255,16 @@ const archived = expedientes.filter(
 
         <div className="table-wrap">
           <table>
+            <caption className="sr-only">Proveídos recientes</caption>
             <thead>
               <tr>
-                <th>EXPEDIENTE</th>
-                <th>FECHA</th>
-                <th>ÁREA DESTINO</th>
-                <th>REALIZADO POR</th>
-                <th>RESPONSABLE</th>
-                <th>INSTRUCCIÓN</th>
-                <th>ESTADO</th>
+                <th scope="col">EXPEDIENTE</th>
+                <th scope="col">FECHA</th>
+                <th scope="col">ÁREA DESTINO</th>
+                <th scope="col">REALIZADO POR</th>
+                <th scope="col">RESPONSABLE</th>
+                <th scope="col">INSTRUCCIÓN</th>
+                <th scope="col">ESTADO</th>
               </tr>
             </thead>
 

@@ -151,7 +151,8 @@ export default function MemorandosMultiplesView({
         </div>
         <div className="table-wrap">
           <table className="data-table">
-            <thead><tr><th>N.° REGISTRO</th><th>FECHA</th><th>ASUNTO</th><th>DESTINATARIOS</th><th>MEDIOS</th><th>REALIZADO POR</th></tr></thead>
+            <caption className="sr-only">Listado de memorandos múltiples</caption>
+            <thead><tr><th scope="col">N.° REGISTRO</th><th scope="col">FECHA</th><th scope="col">ASUNTO</th><th scope="col">DESTINATARIOS</th><th scope="col">MEDIOS</th><th scope="col">REALIZADO POR</th></tr></thead>
             <tbody>{visibles.map(item => <tr key={item.id}>
               <td><b className="exp-id">{item.nroRegistro}</b></td>
               <td>{new Date(`${item.fecha}T00:00:00`).toLocaleDateString('es-PE')}</td>

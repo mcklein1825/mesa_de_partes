@@ -906,18 +906,19 @@ if (showMemoForm && expediente) {
           <div className="table-wrap">
 
             <table className="data-table memos-table">
+             <caption className="sr-only">Listado de memos</caption>
 
              <thead>
               <tr>
-                <th>N.º MEMO</th>
-                <th>N.º EXPEDIENTE</th>
-                <th>FECHA</th>
-                <th>ASUNTO</th>
-                <th>ÁREA DESTINO</th>
-                <th>REALIZADO POR</th>
-                <th>RESPONSABLE</th>
-                <th>ESTADO</th>
-                <th>ACCIONES</th>
+                <th scope="col">N.º MEMO</th>
+                <th scope="col">N.º EXPEDIENTE</th>
+                <th scope="col">FECHA</th>
+                <th scope="col">ASUNTO</th>
+                <th scope="col">ÁREA DESTINO</th>
+                <th scope="col">REALIZADO POR</th>
+                <th scope="col">RESPONSABLE</th>
+                <th scope="col">ESTADO</th>
+                <th scope="col">ACCIONES</th>
               </tr>
             </thead>
 
