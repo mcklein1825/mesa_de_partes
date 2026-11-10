@@ -133,7 +133,6 @@
 /* Tabla de Memos */
 .memos-table {
   width: 100%;
-  min-width: 1080px;
   table-layout: fixed;
 }
 

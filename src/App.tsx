@@ -24,7 +24,9 @@
     Send,
     ClipboardList,
     ChartNoAxesCombined,
-    Layers3
+    Layers3,
+    Menu,
+    X
   } from 'lucide-react'
 
 // Tipos y Constantes
@@ -69,6 +71,7 @@
     const [managementFilter, setManagementFilter] = useState('Todos')
     const [trackingId, setTrackingId] = useState<string | null>(null)
     const [showProfile, setShowProfile] = useState(false)
+    const [sidebarOpen, setSidebarOpen] = useState(false)
     const [toast, setToast] = useState('')
     const [isSaving, setIsSaving] = useState(false)
 
@@ -134,6 +137,15 @@
         events.forEach(event => window.removeEventListener(event, resetSessionTimeout))
       }
     }, [currentUser, resetSessionTimeout])
+
+    useEffect(() => {
+      if (!sidebarOpen) return
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === 'Escape') setSidebarOpen(false)
+      }
+      document.addEventListener('keydown', handleKeyDown)
+      return () => document.removeEventListener('keydown', handleKeyDown)
+    }, [sidebarOpen])
 
     const userPermissions = currentUser ? ROLE_PERMISSIONS[currentUser.rol] : null
     const canRegister = userPermissions?.puedeRegistrar === true
@@ -1094,7 +1106,24 @@
 
     return (
       <div className="app-shell portal-shell">
-        <aside className="sidebar">
+        <button
+          type="button"
+          className="mobile-menu-button"
+          aria-label={sidebarOpen ? 'Cerrar menú' : 'Abrir menú'}
+          aria-expanded={sidebarOpen}
+          onClick={() => setSidebarOpen(value => !value)}
+        >
+          {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+        {sidebarOpen && (
+          <button
+            type="button"
+            className="sidebar-overlay"
+            aria-label="Cerrar menú"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+        <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
           <div className="brand">
             <Logo />
           </div>

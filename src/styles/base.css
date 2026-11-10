@@ -441,6 +441,22 @@ button {
   color: inherit;
 }
 
+:focus-visible {
+  outline: 2px solid var(--turquesa);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
 /* ========================================
    LAYOUT PRINCIPAL (APP SHELL)
    ======================================== */
@@ -590,6 +606,11 @@ button {
 
 .sidebar-footer {
   margin-top: auto;
+}
+
+.mobile-menu-button,
+.sidebar-overlay {
+  display: none;
 }
 
 .secure-note {
@@ -1683,7 +1704,8 @@ tbody tr:last-child td {
     grid-template-columns: 1fr;
   }
   .deadlines-panel {
-    display: none;
+    display: block;
+    order: -1;
   }
 }
 /* Ajustes específicos del Portal Shell */
@@ -2205,49 +2227,55 @@ tbody tr:last-child td {
 
 /* Responsive adicional */
 @media (max-width: 800px) {
+  .mobile-menu-button {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 2100;
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-md);
+    background: var(--mar);
+    color: var(--color-018);
+    box-shadow: var(--shadow-card);
+  }
+
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1998;
+    display: block;
+    background: var(--color-001)99;
+  }
+
   .sidebar {
-    width: 68px;
-    padding-left: 8px;
-    padding-right: 8px;
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 1999;
+    width: min(280px, 86vw);
+    transform: translateX(-100%);
+    transition: transform 180ms ease;
   }
-  .brand {
-    padding-left: 8px;
-    padding-right: 8px;
+
+  .sidebar.sidebar-open {
+    transform: translateX(0);
   }
-  .brand > div:last-child,
-  .menu-label,
-  .nav-item .nav-label,
-  .secure-note,
-  .user-mini div:not(.avatar) {
-    display: none;
+
+  .portal-shell .main-content {
+    width: 100%;
   }
-  .nav-item {
-    justify-content: center;
-    padding: 0;
+
+  .portal-shell .page {
+    padding: 72px 16px 40px;
   }
-  .nav-icon {
-    width: auto;
-  }
-  .topbar {
-    padding: 0 14px;
-  }
-  .page {
-    padding: 24px 12px;
-  }
-  .stats-grid {
-    grid-template-columns: 1fr 1fr;
-  }
+
   .toolbar {
     flex-wrap: wrap;
   }
   .result-count {
     margin-left: 0;
-  }
-  .list-panel table {
-    min-width: 1800px;
-  }
-  .proveidos-list table {
-    min-width: 980px;
   }
 }
 

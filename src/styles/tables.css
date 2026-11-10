@@ -184,7 +184,6 @@
 
 .list-panel.proveidos-list .table-wrap > table.data-table.proveidos-table {
   width: 100%;
-  min-width: 1080px;
   table-layout: fixed;
 }
 
