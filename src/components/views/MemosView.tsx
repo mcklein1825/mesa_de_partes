@@ -926,7 +926,10 @@ if (showMemoForm && expediente) {
               <tbody>
 
   {pageItems.map(memo => (
-    <tr key={memo.id}>
+    <tr
+      key={memo.id}
+      className={`priority-row priority-${memo.estado.toLowerCase().replace(/\s+/g, '-')}`}
+    >
 
       <td data-label="N.º MEMO">
         <b className="exp-id">

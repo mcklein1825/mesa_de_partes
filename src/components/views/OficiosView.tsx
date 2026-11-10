@@ -207,7 +207,10 @@ export default function OficiosView({
 
             <tbody>
               {resultados.map(oficio => (
-                <tr key={oficio.id}>
+                <tr
+                  key={oficio.id}
+                  className={`priority-row priority-${oficio.estado.toLowerCase().replace(/\s+/g, '-')}`}
+                >
                   <td data-label="N.° REGISTRO">
                     <b className="exp-id">
                       {formatDocumentNumber(oficio.nRegistro, oficio.createdAt)}

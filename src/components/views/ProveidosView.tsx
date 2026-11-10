@@ -192,7 +192,10 @@ export default function ProveidosView({
 
             <tbody>
               {resultados.map(proveido => (
-                <tr key={proveido.id}>
+                <tr
+                  key={proveido.id}
+                  className={`priority-row priority-${proveido.estado.toLowerCase().replace(/\s+/g, '-')}`}
+                >
                   <td data-label="N.º PROVEÍDO">
                     <b className="exp-id">
                       {formatDocumentNumber(proveido.id, proveido.createdAt)}

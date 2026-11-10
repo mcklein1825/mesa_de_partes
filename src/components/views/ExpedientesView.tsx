@@ -213,7 +213,10 @@ export default function ExpedientesView({
               {pageItems.map(item => {
                 const deadline = getDeadlineState(item)
                 return (
-                  <tr key={item.id}>
+                  <tr
+                    key={item.id}
+                    className={`priority-row priority-${deadline.kind}`}
+                  >
                     <td data-label="N.° EXP">
                       <b className="exp-id">
                         {formatNroExp(item.nroExp, false, item.fechaIngreso)}
