@@ -24,7 +24,12 @@
     Send,
     ClipboardList,
     ChartNoAxesCombined,
-    Layers3
+    Layers3,
+    Menu,
+    X,
+    ShieldCheck,
+    MoreVertical,
+    Check
   } from 'lucide-react'
 
 // Tipos y Constantes
@@ -49,11 +54,32 @@
 
   // Componentes Comunes y Modales
   import NavItem from './components/common/NavItem'
+  import Logo from './components/common/Logo'
+  import Modal from './components/common/Modal'
+  import LoadingSkeleton from './components/common/LoadingSkeleton'
   import TrackingModal from './components/modals/TrackingModal'
+
+  const viewFromHash = (hash: string): View => {
+    const section = hash.replace(/^#\/?/, '').split('/')[0]
+    const validViews: View[] = [
+      'inicio',
+      'expedientes',
+      'reportes',
+      'memos',
+      'memos-multiples',
+      'oficios',
+      'proveidos'
+    ]
+    return validViews.includes(section as View) ? section as View : 'inicio'
+  }
+
+  const hashForView = (nextView: View, trackingId?: string | null) =>
+    `#/${nextView}${trackingId ? `/${trackingId}` : ''}`
+
   export default function App() {
 
     const [currentUser, setCurrentUser] = useState<User | null>(null)
-    const [view, setView] = useState<View>('inicio')
+    const [view, setView] = useState<View>(() => viewFromHash(window.location.hash))
     const [expedienteParaDuplicar, setExpedienteParaDuplicar] =
     useState<Expediente | null>(null)
     const [showNewExpedienteForm, setShowNewExpedienteForm] = useState(false)
@@ -68,6 +94,9 @@
     const [managementFilter, setManagementFilter] = useState('Todos')
     const [trackingId, setTrackingId] = useState<string | null>(null)
     const [showProfile, setShowProfile] = useState(false)
+    const [sidebarOpen, setSidebarOpen] = useState(false)
+    const sidebarRef = useRef<HTMLElement | null>(null)
+    const sidebarTriggerRef = useRef<HTMLButtonElement | null>(null)
     const [toast, setToast] = useState('')
     const [isSaving, setIsSaving] = useState(false)
 
@@ -84,6 +113,48 @@
     const [showMemoSelector, setShowMemoSelector] = useState(false)
     const [memoAreaDestino, setMemoAreaDestino] = useState('')
     const [memoResponsable, setMemoResponsable] = useState('')
+
+    useEffect(() => {
+      const handleHashChange = () => {
+        const hashParts = window.location.hash.replace(/^#\/?/, '').split('/')
+        setView(viewFromHash(window.location.hash))
+        setTrackingId(hashParts[1] || null)
+      }
+
+      window.addEventListener('hashchange', handleHashChange)
+      return () => window.removeEventListener('hashchange', handleHashChange)
+    }, [])
+
+    useEffect(() => {
+      const sectionTitles: Record<View, string> = {
+        inicio: 'Inicio',
+        expedientes: 'Expedientes',
+        reportes: 'Reportes',
+        memos: 'Memos',
+        'memos-multiples': 'Memos múltiples',
+        oficios: 'Oficios',
+        proveidos: 'Proveídos'
+      }
+      document.title = `${sectionTitles[view]} | Gestión Documental`
+    }, [view])
+
+    const navigateToView = useCallback((nextView: View) => {
+      const nextHash = hashForView(nextView)
+      if (window.location.hash !== nextHash) {
+        window.location.hash = nextHash
+      } else {
+        setView(nextView)
+      }
+    }, [])
+
+    const navigateToTracking = useCallback((id: string | null) => {
+      const nextHash = hashForView(id ? 'expedientes' : view, id)
+      if (window.location.hash !== nextHash) {
+        window.location.hash = nextHash
+      } else {
+        setTrackingId(id)
+      }
+    }, [view])
     useEffect(() => {
     if (!memoAreaDestino) {
       setMemoResponsable('')
@@ -133,6 +204,50 @@
         events.forEach(event => window.removeEventListener(event, resetSessionTimeout))
       }
     }, [currentUser, resetSessionTimeout])
+
+    useEffect(() => {
+      if (!sidebarOpen) return
+      const focusableSelector = [
+        'a[href]',
+        'button:not([disabled])',
+        'input:not([disabled])',
+        'select:not([disabled])',
+        'textarea:not([disabled])',
+        '[tabindex]:not([tabindex="-1"])'
+      ].join(',')
+      const focusInitial = window.setTimeout(() => {
+        sidebarRef.current?.querySelector<HTMLElement>(focusableSelector)?.focus()
+      }, 0)
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === 'Escape') {
+          event.preventDefault()
+          setSidebarOpen(false)
+          return
+        }
+        if (event.key !== 'Tab') return
+        const focusable = Array.from(
+          sidebarRef.current?.querySelectorAll<HTMLElement>(focusableSelector) || []
+        )
+        if (focusable.length === 0) return
+        const first = focusable[0]
+        const last = focusable[focusable.length - 1]
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault()
+          last.focus()
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault()
+          first.focus()
+        }
+      }
+      document.addEventListener('keydown', handleKeyDown)
+      return () => {
+        window.clearTimeout(focusInitial)
+        document.removeEventListener('keydown', handleKeyDown)
+        if (document.activeElement !== sidebarTriggerRef.current) {
+          sidebarTriggerRef.current?.focus()
+        }
+      }
+    }, [sidebarOpen])
 
     const userPermissions = currentUser ? ROLE_PERMISSIONS[currentUser.rol] : null
     const canRegister = userPermissions?.puedeRegistrar === true
@@ -606,7 +721,7 @@
   setExpedienteParaDuplicar(null)
   setShowNewExpedienteForm(false)
 
-  setView('expedientes')
+  navigateToView('expedientes')
 
   notify(
     clasificacionError
@@ -819,14 +934,14 @@
       setMemoAreaDestino('')
       setShowMemoSelector(false)
       setShowMemoForm(true)
-      setView('memos')
+      navigateToView('memos')
       return
     }
 
     if (tipo === 'Oficio') {
       setOficioExpediente(expediente)
       setShowOficioForm(true)
-      setView('oficios')
+      navigateToView('oficios')
       return
     }
 
@@ -1093,10 +1208,32 @@
 
     return (
       <div className="app-shell portal-shell">
-        <aside className="sidebar">
+        <button
+          ref={sidebarTriggerRef}
+          type="button"
+          className="mobile-menu-button"
+          aria-label={sidebarOpen ? 'Cerrar menú' : 'Abrir menú'}
+          aria-expanded={sidebarOpen}
+          onClick={() => setSidebarOpen(value => !value)}
+        >
+          {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+        {sidebarOpen && (
+          <button
+            type="button"
+            className="sidebar-overlay"
+            aria-label="Cerrar menú"
+            tabIndex={-1}
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+        <aside
+          ref={sidebarRef}
+          className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}
+          aria-label="Menú principal"
+        >
           <div className="brand">
-            <div className="brand-mark">DG</div>
-            <div><strong>Dirección General</strong><span>Gestión documental</span></div>
+            <Logo />
           </div>
           <div className="menu-label">MENÚ PRINCIPAL</div>
           <nav className="nav-menu">
@@ -1104,14 +1241,14 @@
       icon={<House size={18} strokeWidth={1.8} />}
       label="Inicio"
       active={view === 'inicio'}
-      onClick={() => setView('inicio')}
+      onClick={() => navigateToView('inicio')}
     />
 
     <NavItem
       icon={<Files size={18} strokeWidth={1.8} />}
       label="Expedientes"
       active={view === 'expedientes'}
-      onClick={() => setView('expedientes')}
+      onClick={() => navigateToView('expedientes')}
       count={visibleExpedientes.filter(item => item.estado === 'Pendiente').length}
     />
     <NavItem
@@ -1122,7 +1259,7 @@
       setMemoExpediente(null)
       setShowMemoForm(false)
       setShowMemoSelector(false)
-      setView('memos')
+      navigateToView('memos')
     }}
     count={visibleMemos.length}
   />
@@ -1130,7 +1267,7 @@
       icon={<Layers3 size={18} strokeWidth={1.8} />}
       label="Memos múltiples"
       active={view === 'memos-multiples'}
-      onClick={() => setView('memos-multiples')}
+      onClick={() => navigateToView('memos-multiples')}
       count={memorandosMultiples.length}
     />
     <NavItem
@@ -1138,7 +1275,7 @@
     label="Oficios"
     active={view === 'oficios'}
     onClick={() => {
-      setView('oficios')
+      navigateToView('oficios')
     }}
     count={visibleOficios.length}
   />
@@ -1147,7 +1284,7 @@
       label="Proveídos"
       active={view === 'proveidos'}
       onClick={() => {
-        setView('proveidos')
+        navigateToView('proveidos')
       }}
       count={visibleProveidos.length}
     />
@@ -1156,13 +1293,13 @@
       icon={<ChartNoAxesCombined size={18} strokeWidth={1.8} />}
       label="Reportes"
       active={view === 'reportes'}
-      onClick={() => setView('reportes')}
+      onClick={() => navigateToView('reportes')}
     />
     )}
   </nav>
           <div className="sidebar-footer">
             <div className="secure-note">
-              <span>⌁</span>
+              <ShieldCheck size={16} aria-hidden="true" />
               <div><b>Supabase</b><small>Datos almacenados en la base de datos</small></div>
             </div>
             <div className="profile-menu">
@@ -1175,7 +1312,7 @@
               >
                 <div className="avatar">{currentUser.nombre.split(' ').map(n => n[0]).slice(0, 2).join('')}</div>
                 <div><b>{currentUser.nombre}</b><small>{currentUser.rol === 'MesaPartes' ? 'Gestión documental' : currentUser.rol}</small></div>
-                <span>⋮</span>
+                <MoreVertical size={18} aria-hidden="true" />
               </button>
               {showProfile && (
                 <div className="profile-popover">
@@ -1203,7 +1340,7 @@
         <main className="main-content">
           <div className="page">
             {loadingDb ? (
-              <div className="empty-state">Cargando expedientes desde Supabase...</div>
+              <LoadingSkeleton />
             ) : (
               <>
           {view === 'inicio' && (
@@ -1216,14 +1353,14 @@
                   notify('No tiene permisos para registrar expedientes')
                   return
                 }
-                setView('expedientes')
+                navigateToView('expedientes')
                 setShowNewExpedienteForm(true)
               }}
-              onViewAll={() => setView('expedientes')}
+              onViewAll={() => navigateToView('expedientes')}
               onFilterExp={(status) => {
                 setStatusFilter(status)
                 setExpedientesPage(1)
-                setView('expedientes')
+                navigateToView('expedientes')
               }}
               currentDate={currentDate}
               currentUser={currentUser}
@@ -1335,7 +1472,7 @@
                         })
                       )
 
-                      setTrackingId(id)
+                      navigateToTracking(id)
                     }}
 
                     onAttachDocument={adjuntarDocumento}
@@ -1362,7 +1499,7 @@
         setMemoExpediente(null)
         setShowMemoForm(false)
         setShowMemoSelector(false)
-        setView('expedientes')
+        navigateToView('expedientes')
       }}
       onNewMemo={openNewMemo}
       onDuplicateMemo={openDuplicateMemo}
@@ -1540,7 +1677,7 @@
 
           setShowOficioForm(false)
           setOficioExpediente(null)
-          setView('oficios')
+          navigateToView('oficios')
 
           notify(
             `Oficio ${formatDocumentNumber(oficioNuevo.nRegistro, oficioNuevo.createdAt)} registrado correctamente.`
@@ -1614,7 +1751,7 @@
               'Error leyendo el archivo del proveído:',
               errorLectura
             )
-            alert('No se pudo leer el archivo seleccionado.')
+            notify('No se pudo leer el archivo seleccionado.')
             return
           }
         }
@@ -1647,12 +1784,12 @@
 
         if (error) {
           console.error('Error al guardar proveído:', error)
-          alert(`No se pudo guardar el proveído: ${error.message}`)
+          notify(`No se pudo guardar el proveído: ${error.message}`)
           return
         }
 
         if (!data) {
-          alert('Supabase no devolvió los datos del proveído registrado.')
+          notify('Supabase no devolvió los datos del proveído registrado.')
           return
         }
 
@@ -1729,27 +1866,28 @@
         </main>
 
         {showNewExpedienteForm && (
-          <div className="new-expediente-modal-overlay">
-            <div
-              className="new-expediente-modal"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="new-expediente-title"
-            >
-              <NewExpedienteView
-                onSubmit={addExpediente}
-                onCancel={() => {
-                  setShowNewExpedienteForm(false)
-                  setExpedienteParaDuplicar(null)
-                }}
-                isSaving={isSaving}
-                expedienteParaDuplicar={expedienteParaDuplicar}
-              />
-            </div>
-          </div>
+          <Modal
+            titleId="new-expediente-title"
+            onClose={() => {
+              setShowNewExpedienteForm(false)
+              setExpedienteParaDuplicar(null)
+            }}
+            className="new-expediente-modal"
+            overlayClassName="new-expediente-modal-overlay"
+          >
+            <NewExpedienteView
+              onSubmit={addExpediente}
+              onCancel={() => {
+                setShowNewExpedienteForm(false)
+                setExpedienteParaDuplicar(null)
+              }}
+              isSaving={isSaving}
+              expedienteParaDuplicar={expedienteParaDuplicar}
+            />
+          </Modal>
         )}
 
-        {toast && <div className="toast"><span>✓</span>{toast}</div>}
+        {toast && <div className="toast"><Check size={16} aria-hidden="true" />{toast}</div>}
         {trackingId && (
           <TrackingModal
             item={visibleExpedientes.find(item => item.id === trackingId)}
@@ -1759,7 +1897,7 @@
             onAttachDocument={file =>
               adjuntarDocumento(trackingId, file)
             }
-            onClose={() => setTrackingId(null)}
+            onClose={() => navigateToTracking(null)}
           />
         )}
         </div>

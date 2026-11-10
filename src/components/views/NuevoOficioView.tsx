@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react'
+import { FileUp, LoaderCircle } from 'lucide-react'
 import { Expediente } from '../../types'
 import {
   AREA_DESTINO_OPTIONS,
@@ -6,6 +7,7 @@ import {
   getAreaResponsable
 } from '../../constants'
 import { getSupportedDocumentMimeType } from '../../utils/expedienteHelpers'
+import { useToast } from '../common/ToastProvider'
 
 type Props = {
   expediente: Expediente | null
@@ -33,6 +35,7 @@ export default function NuevoOficioView({
   onCancelar,
   onGuardar
 }: Props) {
+  const { toast } = useToast()
   const [fecha, setFecha] = useState(
     new Date().toISOString().split('T')[0]
   )
@@ -49,32 +52,32 @@ export default function NuevoOficioView({
     e.preventDefault()
 
     if (!expediente) {
-      alert('Debe seleccionar un expediente.')
+      toast('Debe seleccionar un expediente.', 'warning')
       return
     }
 
     if (!areaDestino) {
-      alert('Seleccione el área destino.')
+      toast('Seleccione el área destino.', 'warning')
       return
     }
 
     if (!asuntoDetalle.trim()) {
-      alert('Ingrese el asunto del Oficio.')
+      toast('Ingrese el asunto del Oficio.', 'warning')
       return
     }
 
     if (!destinatario.trim()) {
-      alert('Ingrese el destinatario del Oficio.')
+      toast('Ingrese el destinatario del Oficio.', 'warning')
       return
     }
 
     if (archivo && !getSupportedDocumentMimeType(archivo)) {
-      alert('Adjunte un archivo PDF, JPG, JPEG o PNG.')
+      toast('Adjunte un archivo PDF, JPG, JPEG o PNG.', 'warning')
       return
     }
 
     if (archivo && archivo.size > 5 * 1024 * 1024) {
-      alert('El archivo no puede superar los 5 MB.')
+      toast('El archivo no puede superar los 5 MB.', 'warning')
       return
     }
 
@@ -228,7 +231,7 @@ export default function NuevoOficioView({
               <div className="form-group document-form-field">
                 <label htmlFor="oficio-archivo">Adjunto (opcional)</label>
                 <label className="document-form-file-button" htmlFor="oficio-archivo">
-                  ▣ Seleccionar archivo
+                  <><FileUp size={16} aria-hidden="true" /> Seleccionar archivo</>
                   <input
                     id="oficio-archivo"
                     type="file"
@@ -241,14 +244,14 @@ export default function NuevoOficioView({
                       }
 
                       if (!getSupportedDocumentMimeType(file)) {
-                        alert('Adjunte un archivo PDF, JPG, JPEG o PNG.')
+                        toast('Adjunte un archivo PDF, JPG, JPEG o PNG.', 'warning')
                         event.target.value = ''
                         setArchivo(null)
                         return
                       }
 
                       if (file.size > 5 * 1024 * 1024) {
-                        alert('El archivo no puede superar los 5 MB.')
+                        toast('El archivo no puede superar los 5 MB.', 'warning')
                         event.target.value = ''
                         setArchivo(null)
                         return
@@ -292,7 +295,11 @@ export default function NuevoOficioView({
               className="primary-button"
               disabled={guardando}
             >
-              {guardando ? 'Guardando...' : 'Guardar Oficio'}
+              {guardando ? (
+                <><LoaderCircle className="button-spinner" size={16} aria-hidden="true" /> Guardando...</>
+              ) : (
+                'Guardar Oficio'
+              )}
             </button>
           </div>
         </form>

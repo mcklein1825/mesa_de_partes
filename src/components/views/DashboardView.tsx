@@ -5,6 +5,7 @@ import StatusBadge from '../common/StatusBadge'
 import { getAreaCopia } from '../../constants'
 import RiskInsightPanel from '../common/RiskInsightPanel'
 import type { ExpedienteRiskAnalysis } from '../../utils/expedienteRiskModel'
+import { AlertCircle, AlertTriangle, CheckCircle2, Clock3, Files } from 'lucide-react'
 
 export default function DashboardView({
   expedientes,
@@ -98,13 +99,63 @@ const archived = expedientes.filter(
         )}
       </div>
 
+      <section className="panel deadlines-panel attention-panel">
+        <div className="panel-header">
+          <div>
+            <h2>Atención hoy</h2>
+            <p>Expedientes próximos a vencer o con plazo vencido</p>
+          </div>
+          <AlertTriangle className="warning-icon" size={18} aria-hidden="true" />
+        </div>
+
+        <div className="deadline-list">
+          {upcomingDeadlines.length > 0 ? (
+            upcomingDeadlines.map(item => {
+              const { day, month } = formatDateShort(item.plazo)
+              return (
+                <div className="deadline-item" key={item.id}>
+                  <div
+                    className={`deadline-date ${
+                      item.deadline.kind === 'vencido'
+                        ? 'overdue'
+                        : item.deadline.kind === 'por_vencer'
+                          ? 'urgent'
+                          : ''
+                    }`}
+                  >
+                    <b>{day}</b>
+                    <span>{month}</span>
+                  </div>
+                  <div>
+                    <b>{formatNroExp(item.nroExp, false, item.fechaIngreso)}</b>
+                    <p>{item.asunto}</p>
+                    <small
+                      className={
+                        item.deadline.kind === 'vencido' ? 'overdue' : ''
+                      }
+                    >
+                      {item.deadline.label}
+                    </small>
+                  </div>
+                </div>
+              )
+            })
+          ) : (
+            <div className="empty-state" style={{ padding: '20px', textAlign: 'center' }}>
+              No hay expedientes con plazos que requieran atención
+            </div>
+          )}
+        </div>
+        <button className="outline-button" onClick={onViewAll}>Ver todos los expedientes</button>
+      </section>
+
       <section className="stats-grid">
         <StatCard
           label="Por atender"
           value={pending}
           detail="Pendientes de gestión"
           tone="orange"
-          icon="◷"
+          icon={<Clock3 size={20} aria-hidden="true" />}
           onClick={() => onFilterExp?.('Pendiente')}
 
         />
@@ -114,7 +165,7 @@ const archived = expedientes.filter(
           value={noResponse}
           detail="Requieren seguimiento"
           tone="blue"
-          icon="!"
+          icon={<AlertCircle size={20} aria-hidden="true" />}
           onClick={() => onFilterExp?.('Sin respuesta')}
 
         />
@@ -124,7 +175,7 @@ const archived = expedientes.filter(
           value={attended}
           detail="Registros atendidos"
           tone="green"
-          icon="✓"
+          icon={<CheckCircle2 size={20} aria-hidden="true" />}
           onClick={() => onFilterExp?.('Atendido')}
 
         />
@@ -134,7 +185,7 @@ const archived = expedientes.filter(
           value={archived}
           detail="Expedientes cerrados"
           tone="purple"
-          icon="▤"
+          icon={<Files size={20} aria-hidden="true" />}
           onClick={() => onFilterExp?.('Archivado')}
 
         />
@@ -157,26 +208,27 @@ const archived = expedientes.filter(
           </div>
 
           <div className="table-wrap">
-            <table>
+            <table className="dashboard-table">
+              <caption className="sr-only">Expedientes recientes</caption>
               <thead>
                 <tr>
-                  <th>N° DE EXPEDIENTE</th>
-                  <th>REMITENTE</th>
-                  <th>ASUNTO</th>
-                  <th>ÁREA DESTINO</th>
-                  <th>ESTADO</th>
+                  <th scope="col">N° DE EXPEDIENTE</th>
+                  <th scope="col">REMITENTE</th>
+                  <th scope="col">ASUNTO</th>
+                  <th scope="col">ÁREA DESTINO</th>
+                  <th scope="col">ESTADO</th>
                 </tr>
               </thead>
               <tbody>
                 {recentExpedientes.map(item => (
                   <tr key={item.id}>
-                    <td>
+                    <td data-label="N.° DE EXPEDIENTE">
                       <b className="exp-id">
                         {formatNroExp(item.nroExp, false, item.fechaIngreso)}
                       </b>
                       <small>{item.fechaIngreso || 'Sin fecha'}</small>
                     </td>
-                    <td>
+                    <td data-label="REMITENTE">
                       <span className="person-cell">
                         <span className="small-avatar">
                           {getRemitenteNombre(item).split(' ').map(x => x[0]).slice(0, 2).join('')}
@@ -184,9 +236,9 @@ const archived = expedientes.filter(
                         {getRemitenteNombre(item)}
                       </span>
                     </td>
-                    <td>{item.asunto}</td>
-                    <td>{getAreaDestino(item)}</td>
-                    <td><StatusBadge status={item.estado} /></td>
+                    <td data-label="ASUNTO">{item.asunto}</td>
+                    <td data-label="ÁREA DESTINO">{getAreaDestino(item)}</td>
+                    <td data-label="ESTADO"><StatusBadge status={item.estado} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -194,55 +246,6 @@ const archived = expedientes.filter(
           </div>
         </section>
 
-        <section className="panel deadlines-panel">
-          <div className="panel-header">
-            <div>
-              <h2>Vencimientos y plazos</h2>
-              <p>Expedientes próximos a vencer o con plazo vencido</p>
-            </div>
-            <span className="warning-icon">!</span>
-          </div>
-
-          <div className="deadline-list">
-            {upcomingDeadlines.length > 0 ? (
-              upcomingDeadlines.map(item => {
-                const { day, month } = formatDateShort(item.plazo)
-                return (
-                  <div className="deadline-item" key={item.id}>
-                    <div
-                      className={`deadline-date ${
-                        item.deadline.kind === 'vencido'
-                          ? 'overdue'
-                          : item.deadline.kind === 'por_vencer'
-                            ? 'urgent'
-                            : ''
-                      }`}
-                    >
-                      <b>{day}</b>
-                      <span>{month}</span>
-                    </div>
-                    <div>
-                      <b>{formatNroExp(item.nroExp, false, item.fechaIngreso)}</b>
-                      <p>{item.asunto}</p>
-                      <small
-                        className={
-                          item.deadline.kind === 'vencido' ? 'overdue' : ''
-                        }
-                      >
-                        {item.deadline.label}
-                      </small>
-                    </div>
-                  </div>
-                )
-              })
-            ) : (
-              <div className="empty-state" style={{ padding: '20px', textAlign: 'center' }}>
-                No hay expedientes con plazos que requieran atención
-              </div>
-            )}
-          </div>
-          <button className="outline-button" onClick={onViewAll}>Ver todos los expedientes</button>
-        </section>
       </div>
       <section className="panel">
         <div className="panel-header">
@@ -253,23 +256,24 @@ const archived = expedientes.filter(
         </div>
 
         <div className="table-wrap">
-          <table>
+          <table className="dashboard-table">
+            <caption className="sr-only">Proveídos recientes</caption>
             <thead>
               <tr>
-                <th>EXPEDIENTE</th>
-                <th>FECHA</th>
-                <th>ÁREA DESTINO</th>
-                <th>REALIZADO POR</th>
-                <th>RESPONSABLE</th>
-                <th>INSTRUCCIÓN</th>
-                <th>ESTADO</th>
+                <th scope="col">EXPEDIENTE</th>
+                <th scope="col">FECHA</th>
+                <th scope="col">ÁREA DESTINO</th>
+                <th scope="col">REALIZADO POR</th>
+                <th scope="col">RESPONSABLE</th>
+                <th scope="col">INSTRUCCIÓN</th>
+                <th scope="col">ESTADO</th>
               </tr>
             </thead>
 
             <tbody>
               {proveidos.slice(0, 4).map(proveido => (
                 <tr key={proveido.id}>
-                 <td>
+                 <td data-label="EXPEDIENTE">
                     <b className="exp-id">
                       {proveido.nroExpediente
                         ? formatNroExp(
@@ -285,11 +289,11 @@ const archived = expedientes.filter(
                     </b>
                   </td>
 
-                  <td>
+                  <td data-label="FECHA">
                     {proveido.fecha || '—'}
                   </td>
 
-                  <td>
+                  <td data-label="ÁREA DESTINO">
                     {proveido.areaDestino || '—'}
                     {getAreaCopia(proveido.areaDestino) && (
                       <small>
@@ -298,26 +302,20 @@ const archived = expedientes.filter(
                     )}
                   </td>
 
-                  <td>
+                  <td data-label="REALIZADO POR">
                     {proveido.realizadoPor || 'No registrado'}
                   </td>
 
-                  <td>
+                  <td data-label="RESPONSABLE">
                     {proveido.responsable || '—'}
                   </td>
 
-                  <td>
+                  <td data-label="INSTRUCCIÓN">
                     {proveido.instruccion || '—'}
                   </td>
 
-                  <td>
-                    <span
-                      className={`status-badge status-${proveido.estado
-                        .toLowerCase()
-                        .replace(/\s+/g, '-')}`}
-                    >
-                      {proveido.estado || '—'}
-                    </span>
+                  <td data-label="ESTADO">
+                    <StatusBadge status={proveido.estado || 'Pendiente'} />
                   </td>
                 </tr>
               ))}

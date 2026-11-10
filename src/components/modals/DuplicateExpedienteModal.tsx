@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import { formatNroExp } from '../../utils/expedienteHelpers'
+import Modal from '../common/Modal'
+import { Copy, Search } from 'lucide-react'
 
 type ExpedienteDuplicado = {
   id: number
@@ -106,20 +108,12 @@ export default function DuplicateExpedienteModal({
   }
 
   return (
-    <div
-      className="duplicate-modal-overlay"
-      onMouseDown={event => {
-        if (event.target === event.currentTarget) {
-          onClose()
-        }
-      }}
+    <Modal
+      titleId="duplicate-modal-title"
+      onClose={onClose}
+      className="duplicate-modal"
+      overlayClassName="duplicate-modal-overlay"
     >
-      <div
-        className="duplicate-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="duplicate-modal-title"
-      >
         <div className="duplicate-modal-header">
           <div>
             <h2 id="duplicate-modal-title">
@@ -146,7 +140,7 @@ export default function DuplicateExpedienteModal({
             Buscar expediente
 
             <div className="duplicate-search-box">
-              <span>⌕</span>
+              <Search size={16} aria-hidden="true" />
 
               <input
                 type="text"
@@ -282,19 +276,21 @@ export default function DuplicateExpedienteModal({
                   </strong>
                 </div>
               </div>
+            </div>
+          )}
 
-              <div className="duplicate-new-expediente">
-                <span>Nuevo expediente</span>
+          {seleccionado && (
+            <div className="duplicate-new-expediente">
+              <span>Nuevo expediente</span>
 
-                <strong>
-                  {formatNroExp(
-                    String(seleccionado.nro_exp),
-                    false,
-                    seleccionado.fecha_ingreso
-                  )}{' '}
-                  *
-                </strong>
-              </div>
+              <strong>
+                {formatNroExp(
+                  String(seleccionado.nro_exp),
+                  false,
+                  seleccionado.fecha_ingreso
+                )}{' '}
+                *
+              </strong>
             </div>
           )}
         </div>
@@ -314,11 +310,10 @@ export default function DuplicateExpedienteModal({
               className="primary-button"
               onClick={() => onSelect(seleccionado)}
             >
-              ⧉ Duplicar expediente
+              <Copy size={16} aria-hidden="true" /> Duplicar expediente
             </button>
           )}
         </div>
-      </div>
-    </div>
+    </Modal>
   )
 }

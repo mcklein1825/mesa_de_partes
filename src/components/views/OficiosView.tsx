@@ -5,6 +5,9 @@ import { formatDocumentNumber } from '../../utils/documentHelpers'
 import { getAreaCopia } from '../../constants'
 import ExpedienteSelector from '../common/ExpedienteSelector'
 import MemoDocumentLink from '../common/MemoDocumentLink'
+import StatusBadge from '../common/StatusBadge'
+import Modal from '../common/Modal'
+import { Search } from 'lucide-react'
 
 type Props = {
   oficios: Oficio[]
@@ -73,20 +76,12 @@ export default function OficiosView({
     <>
       {/* MODAL DE SELECCIÓN DE EXPEDIENTE (Igual al de Memos) */}
       {showSelector && (
-        <div
-          className="memo-modal-overlay"
-          onMouseDown={event => {
-            if (event.target === event.currentTarget) {
-              onCloseSelector()
-            }
-          }}
+        <Modal
+          titleId="nuevo-oficio-title"
+          onClose={onCloseSelector}
+          className="memo-modal"
+          overlayClassName="memo-modal-overlay"
         >
-          <div
-            className="memo-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="nuevo-oficio-title"
-          >
             <div className="memo-modal-header">
               <div>
                 <p className="eyebrow">GESTIÓN DOCUMENTAL</p>
@@ -130,8 +125,7 @@ export default function OficiosView({
                 Cancelar
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       <div className="page-heading compact">
@@ -157,7 +151,7 @@ export default function OficiosView({
       <section className="panel list-panel">
         <div className="toolbar">
           <div className="search-box">
-            <span>⌕</span>
+            <Search size={16} aria-hidden="true" />
             <input
               value={busqueda}
               onChange={e => setBusqueda(e.target.value)}
@@ -195,31 +189,35 @@ export default function OficiosView({
 
         <div className="table-wrap">
           <table className="data-table oficios-table">
+            <caption className="sr-only">Listado de oficios</caption>
             <thead>
               <tr>
-                <th>N.° REGISTRO</th>
-                <th>EXPEDIENTE</th>
-                <th>FECHA</th>
-                <th>ASUNTO</th>
-                <th>DESTINATARIO</th>
-                <th>ÁREA DESTINO</th>
-                <th>REALIZADO POR</th>
-                <th>RESPONSABLE</th>
-                <th>ADJUNTO</th>
-                <th>ESTADO</th>
+                <th scope="col">N.° REGISTRO</th>
+                <th scope="col">EXPEDIENTE</th>
+                <th scope="col">FECHA</th>
+                <th scope="col">ASUNTO</th>
+                <th scope="col">DESTINATARIO</th>
+                <th scope="col">ÁREA DESTINO</th>
+                <th scope="col">REALIZADO POR</th>
+                <th scope="col">RESPONSABLE</th>
+                <th scope="col">ADJUNTO</th>
+                <th scope="col">ESTADO</th>
               </tr>
             </thead>
 
             <tbody>
               {resultados.map(oficio => (
-                <tr key={oficio.id}>
-                  <td>
+                <tr
+                  key={oficio.id}
+                  className={`priority-row priority-${oficio.estado.toLowerCase().replace(/\s+/g, '-')}`}
+                >
+                  <td data-label="N.° REGISTRO">
                     <b className="exp-id">
                       {formatDocumentNumber(oficio.nRegistro, oficio.createdAt)}
                     </b>
                   </td>
 
-                  <td>
+                  <td data-label="EXPEDIENTE">
                     <b className="exp-id">
                       {oficio.nroExpediente
                         ? formatNroExp(
@@ -235,13 +233,13 @@ export default function OficiosView({
                     </b>
                   </td>
 
-                  <td>
+                  <td data-label="FECHA">
                     <span style={{ whiteSpace: 'nowrap' }}>
                       {oficio.fecha ? displayDate(oficio.fecha) : '-'}
                     </span>
                   </td>
 
-                  <td>
+                  <td data-label="ASUNTO">
                     <div
                       title={[oficio.asuntoTipo, oficio.asuntoDetalle].filter(Boolean).join(' - ')}
                       style={{
@@ -258,7 +256,7 @@ export default function OficiosView({
                     </div>
                   </td>
 
-                  <td>
+                  <td data-label="DESTINATARIO">
                     <span
                       title={oficio.destinatario || '-'}
                       style={{
@@ -273,7 +271,7 @@ export default function OficiosView({
                     </span>
                   </td>
 
-                  <td>
+                  <td data-label="ÁREA DESTINO">
                     <span
                       title={oficio.areaDestino || '-'}
                       style={{
@@ -293,7 +291,7 @@ export default function OficiosView({
                     )}
                   </td>
 
-                  <td>
+                  <td data-label="REALIZADO POR">
                     <span
                       title={oficio.realizadoPor || 'No registrado'}
                       style={{
@@ -308,7 +306,7 @@ export default function OficiosView({
                     </span>
                   </td>
 
-                  <td>
+                  <td data-label="RESPONSABLE">
                     <span
                       title={oficio.responsable || '-'}
                       style={{
@@ -323,7 +321,7 @@ export default function OficiosView({
                     </span>
                   </td>
 
-                  <td>
+                  <td data-label="ADJUNTO">
                     <MemoDocumentLink
                       archivoData={oficio.archivoData}
                       archivo={oficio.archivo}
@@ -333,14 +331,8 @@ export default function OficiosView({
                     </MemoDocumentLink>
                   </td>
 
-                  <td>
-                    <span
-                      className={`status-badge status-${oficio.estado
-                        .toLowerCase()
-                        .replace(/\s+/g, '-')}`}
-                    >
-                      {oficio.estado}
-                    </span>
+                  <td data-label="ESTADO">
+                    <StatusBadge status={oficio.estado} />
                   </td>
                 </tr>
               ))}

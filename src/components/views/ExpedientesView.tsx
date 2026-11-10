@@ -4,6 +4,7 @@ import { formatNroExp, displayDate, getRemitenteNombre, getAreaDestino, getDeadl
 import DocumentLink from '../common/DocumentLink'
 import StatusBadge from '../common/StatusBadge'
 import DuplicateExpedienteModal from '../modals/DuplicateExpedienteModal'
+import { Copy, Eye, Search } from 'lucide-react'
 
 export default function ExpedientesView({
   items,
@@ -116,7 +117,7 @@ export default function ExpedientesView({
                 className="primary-button"
                 onClick={() => setShowDuplicateModal(true)}
               >
-                ⧉ Duplicar expediente
+                <Copy size={16} aria-hidden="true" /> Duplicar expediente
               </button>
             )}
           </div>
@@ -126,7 +127,7 @@ export default function ExpedientesView({
       <section className="panel list-panel">
         <div className="toolbar">
           <div className="search-box">
-            <span>⌕</span>
+            <Search size={16} aria-hidden="true" />
             <input
               value={query}
               onChange={e => {
@@ -196,30 +197,34 @@ export default function ExpedientesView({
 
         <div className="table-wrap">
           <table className="data-table expedientes-table">
+            <caption className="sr-only">Listado de expedientes</caption>
             <thead>
               <tr>
-                <th>N.° EXP</th>
-                <th>FECHA</th>
-                <th>FECHA LÍMITE</th>
-                <th>NOMBRE / APELLIDO</th>
-                <th>ASUNTO</th>
-                <th>ESTADO</th>
-                <th>ACCIONES</th>
+                <th scope="col">N.° EXP</th>
+                <th scope="col">FECHA</th>
+                <th scope="col">FECHA LÍMITE</th>
+                <th scope="col">NOMBRE / APELLIDO</th>
+                <th scope="col">ASUNTO</th>
+                <th scope="col">ESTADO</th>
+                <th scope="col">ACCIONES</th>
               </tr>
             </thead>
             <tbody>
               {pageItems.map(item => {
                 const deadline = getDeadlineState(item)
                 return (
-                  <tr key={item.id}>
-                    <td>
+                  <tr
+                    key={item.id}
+                    className={`priority-row priority-${deadline.kind}`}
+                  >
+                    <td data-label="N.° EXP">
                       <b className="exp-id">
                         {formatNroExp(item.nroExp, false, item.fechaIngreso)}
                         {item.esDuplicado ? ' *' : ''}
                       </b>
                     </td>
 
-                    <td>
+                    <td data-label="FECHA">
                       {item.fechaIngreso ? (
                         displayDate(item.fechaIngreso)
                       ) : editingIngresoDateId === String(item.id) ? (
@@ -280,10 +285,10 @@ export default function ExpedientesView({
                             display: 'inline-flex',
                             alignItems: 'center',
                             padding: '5px 8px',
-                            border: '1px solid #d1d5db',
+                            border: '1px solid var(--ui-border)',
                             borderRadius: '6px',
-                            background: '#f9fafb',
-                            color: '#6b7280',
+                            background: 'var(--ui-surface-muted)',
+                            color: 'var(--ui-text-muted)',
                             fontSize: '12px',
                             fontWeight: 500,
                             cursor: 'pointer',
@@ -295,7 +300,7 @@ export default function ExpedientesView({
                       ) : <span>Sin fecha</span>}
                     </td>
 
-                    <td>
+                    <td data-label="FECHA LÍMITE">
                       <div
                         style={{
                           display: 'flex',
@@ -307,7 +312,7 @@ export default function ExpedientesView({
                         <span
                           style={{
                             fontSize: '12px',
-                            color: item.plazo ? '#1f2937' : '#6b7280',
+                            color: item.plazo ? 'var(--ui-text-strong)' : 'var(--ui-text-muted)',
                             whiteSpace: 'nowrap'
                           }}
                         >
@@ -318,14 +323,14 @@ export default function ExpedientesView({
                         {item.plazo && deadline.label && (
                           <small
                             style={{
-                              fontSize: '10px',
+                              fontSize: '12px',
                               fontWeight: deadline.kind === 'vencido' ? 700 : 500,
                               color:
                                 deadline.kind === 'vencido'
-                                  ? '#b91c1c'
+                                  ? 'var(--ui-danger)'
                                   : deadline.kind === 'por_vencer'
-                                    ? '#c2410c'
-                                    : '#6b7280',
+                                    ? 'var(--ui-warning)'
+                                    : 'var(--ui-text-muted)',
                               whiteSpace: 'nowrap'
                             }}
                           >
@@ -334,7 +339,7 @@ export default function ExpedientesView({
                         )}
                       </div>
                     </td>
-                    <td>
+                    <td data-label="NOMBRE / APELLIDO">
                       <span className="person-cell">
                         <span className="small-avatar">
                           {getRemitenteNombre(item).split(' ').map(x => x[0]).slice(0, 2).join('')}
@@ -346,14 +351,14 @@ export default function ExpedientesView({
                           )}
                           {/* AQUÍ MOSTRAMOS EL CARGO SI EXISTE */}
                           {item.cargoRepresentante && (
-                            <small style={{ color: '#64748b', display: 'block', fontSize: '10px', marginTop: '2px' }}>
+                            <small style={{ color: 'var(--ui-text-soft)', display: 'block', fontSize: '12px', marginTop: '2px' }}>
                               {item.cargoRepresentante}
                             </small>
                           )}
                         </span>
                       </span>
                     </td>
-                   <td
+                   <td data-label="ASUNTO"
                       style={{
                         width: 'auto',
                         maxWidth: '100%',
@@ -383,7 +388,7 @@ export default function ExpedientesView({
                         </DocumentLink>
                       </span>
                     </td>
-                    <td>
+                    <td data-label="ESTADO">
                       <StatusBadge
                         status={
                           !item.requiereGestion && item.estado === 'Pendiente'
@@ -393,14 +398,14 @@ export default function ExpedientesView({
                       />
                     </td>
 
-                    <td className="actions-cell">
+                    <td className="actions-cell" data-label="ACCIONES">
 
                       <button
                         className="tracking-button"
                         onClick={() => onTracking(item.id)}
                       >
 
-                      ◉ Ver seguimiento
+                      <Eye size={16} aria-hidden="true" /> Ver seguimiento
                     </button>
 
 

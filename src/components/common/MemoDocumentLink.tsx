@@ -1,4 +1,6 @@
 import { useState, type ReactNode } from 'react'
+import { useToast } from './ToastProvider'
+import { FileText, LoaderCircle } from 'lucide-react'
 
 export default function MemoDocumentLink({
   archivoData,
@@ -11,6 +13,7 @@ export default function MemoDocumentLink({
   documento?: string
   children: ReactNode
 }) {
+  const { toast } = useToast()
   const [cargando, setCargando] = useState(false)
 
   const abrirArchivo = () => {
@@ -77,9 +80,7 @@ export default function MemoDocumentLink({
       if (!nuevaVentana) {
         URL.revokeObjectURL(url)
 
-        alert(
-          'El navegador bloqueó la ventana emergente. Permita las ventanas emergentes para este sitio.'
-        )
+        toast('El navegador bloqueó la ventana emergente. Permita las ventanas emergentes para este sitio.', 'warning')
 
         return
       }
@@ -95,9 +96,7 @@ export default function MemoDocumentLink({
         error
       )
 
-      alert(
-        `No se pudo abrir el archivo del ${documento}.`
-      )
+      toast(`No se pudo abrir el archivo del ${documento}.`, 'error')
     } finally {
       setCargando(false)
     }
@@ -125,19 +124,21 @@ export default function MemoDocumentLink({
       display: 'inline-flex',
       alignItems: 'center',
       gap: '6px',
-      border: '1px solid #d1d5db',
+      border: '1px solid var(--ui-border)',
       borderRadius: '6px',
-      background: '#f8fafc',
-      color: '#374151',
+      background: 'var(--ui-surface)',
+      color: 'var(--ui-text)',
       padding: '5px 10px',
       cursor: cargando ? 'wait' : 'pointer',
       fontSize: '13px',
       fontWeight: 500
     }}
   >
-    {cargando
-      ? '⏳ Cargando...'
-      : `📄 ${archivo || 'Documento'}`}
+    {cargando ? (
+      <><LoaderCircle size={15} aria-hidden="true" /> Cargando...</>
+    ) : (
+      <><FileText size={15} aria-hidden="true" /> {archivo || 'Documento'}</>
+    )}
   </button>
 )
 }

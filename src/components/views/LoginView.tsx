@@ -6,13 +6,13 @@ import {
   CircleAlert,
   Eye,
   EyeOff,
-  GraduationCap,
   LockKeyhole,
   Mail,
   ShieldCheck
 } from 'lucide-react'
 import type { Role, User } from '../../types'
 import { supabase } from '../../lib/supabaseClient'
+import Logo from '../common/Logo'
 
 interface LoginViewProps {
   onSelectUser: (user: User | null) => void
@@ -139,7 +139,7 @@ export default function LoginView({ onSelectUser }: LoginViewProps) {
       <div className="login-frame">
         <section className="login-brand-panel" aria-label="Instituto Gilda Ballivián">
           <div className="login-brand-top">
-            <div className="login-crest"><GraduationCap size={27} strokeWidth={1.8} /></div>
+            <Logo compact />
             <div>
               <span>INSTITUTO DE EDUCACIÓN SUPERIOR</span>
               <strong>GILDA BALLIVIÁN</strong>
@@ -167,7 +167,7 @@ export default function LoginView({ onSelectUser }: LoginViewProps) {
 
         <section className="login-content" aria-labelledby="login-form-title">
           <div className="login-content-top">
-            <span className="login-mobile-brand"><GraduationCap size={20} /> IESTP Gilda Ballivián</span>
+            <span className="login-mobile-brand"><Logo compact /> IESTP Gilda Ballivián</span>
             <span className="login-secure-label"><ShieldCheck size={15} /> Acceso institucional</span>
           </div>
 

@@ -6,6 +6,7 @@ import type {
   MemorandoMultipleMedio
 } from '../../types'
 import { createMemorandoMultiple } from '../../services/memorandosMultiplesService'
+import { LoaderCircle, Search } from 'lucide-react'
 
 const categorias: Array<MemorandoMultipleCategoria | 'Todas'> = [
   'Todas',
@@ -130,12 +131,24 @@ export default function MemorandosMultiplesView({
             </div>
             {seleccionados.length > 0 && <div className="selected-recipients">
               {seleccionados.map(item => <span key={item.nombre}>{item.nombre} · {item.medioEntrega}
-                <button type="button" onClick={() => setSeleccionados(prev => prev.filter(destinatario => destinatario.nombre !== item.nombre))}>×</button>
+                <button
+                  type="button"
+                  aria-label={`Quitar destinatario ${item.nombre}`}
+                  onClick={() => setSeleccionados(prev => prev.filter(destinatario => destinatario.nombre !== item.nombre))}
+                >
+                  ×
+                </button>
               </span>)}
             </div>}
             <div className="form-actions">
               <button className="legacy-light-button" type="button" onClick={() => setShowForm(false)}>Cancelar</button>
-              <button className="primary-button" type="submit" disabled={guardando}>{guardando ? 'Guardando...' : 'Registrar memorando'}</button>
+              <button className="primary-button" type="submit" disabled={guardando}>
+                {guardando ? (
+                  <><LoaderCircle className="button-spinner" size={16} aria-hidden="true" /> Guardando...</>
+                ) : (
+                  'Registrar memorando'
+                )}
+              </button>
             </div>
           </form>
         </section>
@@ -143,22 +156,23 @@ export default function MemorandosMultiplesView({
 
       <section className="panel list-panel">
         <div className="toolbar">
-          <div className="search-box"><span>⌕</span><input value={busqueda} onChange={event => setBusqueda(event.target.value)} placeholder="Buscar por registro o asunto..." /></div>
+          <div className="search-box"><Search size={16} aria-hidden="true" /><input value={busqueda} onChange={event => setBusqueda(event.target.value)} placeholder="Buscar por registro o asunto..." /></div>
           <select value={filtro} onChange={event => setFiltro(event.target.value as MemorandoMultipleCategoria | 'Todas')}>
             {categorias.map(item => <option key={item}>{item}</option>)}
           </select>
           <span className="result-count">{visibles.length} resultados</span>
         </div>
         <div className="table-wrap">
-          <table className="data-table">
-            <thead><tr><th>N.° REGISTRO</th><th>FECHA</th><th>ASUNTO</th><th>DESTINATARIOS</th><th>MEDIOS</th><th>REALIZADO POR</th></tr></thead>
+          <table className="data-table memorandos-multiples-table">
+            <caption className="sr-only">Listado de memorandos múltiples</caption>
+            <thead><tr><th scope="col">N.° REGISTRO</th><th scope="col">FECHA</th><th scope="col">ASUNTO</th><th scope="col">DESTINATARIOS</th><th scope="col">MEDIOS</th><th scope="col">REALIZADO POR</th></tr></thead>
             <tbody>{visibles.map(item => <tr key={item.id}>
-              <td><b className="exp-id">{item.nroRegistro}</b></td>
-              <td>{new Date(`${item.fecha}T00:00:00`).toLocaleDateString('es-PE')}</td>
-              <td>{item.asunto}</td>
-              <td>{item.destinatarios.map(destinatario => <div key={destinatario.id}>{destinatario.nombre}</div>)}</td>
-              <td>{item.destinatarios.map(destinatario => <div key={destinatario.id}>{destinatario.medioEntrega}</div>)}</td>
-              <td>{item.realizadoPor}</td>
+              <td data-label="N.° REGISTRO"><b className="exp-id">{item.nroRegistro}</b></td>
+              <td data-label="FECHA">{new Date(`${item.fecha}T00:00:00`).toLocaleDateString('es-PE')}</td>
+              <td data-label="ASUNTO">{item.asunto}</td>
+              <td data-label="DESTINATARIOS">{item.destinatarios.map(destinatario => <div key={destinatario.id}>{destinatario.nombre}</div>)}</td>
+              <td data-label="MEDIOS">{item.destinatarios.map(destinatario => <div key={destinatario.id}>{destinatario.medioEntrega}</div>)}</td>
+              <td data-label="REALIZADO POR">{item.realizadoPor}</td>
             </tr>)}</tbody>
           </table>
           {visibles.length === 0 && <div className="empty-state">No hay memorandos múltiples registrados.</div>}

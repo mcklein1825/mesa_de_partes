@@ -19,7 +19,7 @@
   max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
-  border: 1px solid #e1e8ed;
+  border: 1px solid var(--color-339);
   border-radius: 0 0 12px 12px;
   scrollbar-width: thin;
 }
@@ -36,27 +36,51 @@
   z-index: 1;
   padding: 13px 12px;
   border-top: 0;
-  border-bottom: 1px solid #dce5eb;
-  background: #f3f7f9;
-  color: #536b78;
-  font-size: 9px;
+  border-bottom: 1px solid var(--color-340);
+  background: var(--color-341);
+  color: var(--color-342);
+  font-size: 12px;
   letter-spacing: 0.65px;
 }
 
 .portal-shell .table-wrap > table:not(.risk-table) tbody td {
   padding: 13px 12px;
-  border-bottom: 1px solid #edf1f4;
-  color: #405461;
+  border-bottom: 1px solid var(--color-343);
+  color: var(--color-344);
   line-height: 1.45;
   vertical-align: middle;
 }
 
 .portal-shell .table-wrap > table:not(.risk-table) tbody tr:nth-child(even) {
-  background: #fafcfd;
+  background: var(--color-246);
 }
 
 .portal-shell .table-wrap > table:not(.risk-table) tbody tr:hover {
-  background: #f0f8fa;
+  background: var(--color-145);
+}
+
+.portal-shell .data-table tbody tr.priority-row > td:first-child {
+  border-left: 3px solid var(--color-004);
+}
+
+.portal-shell .data-table tbody tr.priority-vencido > td:first-child,
+.portal-shell .data-table tbody tr.priority-rechazado > td:first-child {
+  border-left-color: var(--color-008);
+}
+
+.portal-shell .data-table tbody tr.priority-por_vencer > td:first-child,
+.portal-shell .data-table tbody tr.priority-pendiente > td:first-child,
+.portal-shell .data-table tbody tr.priority-sin-respuesta > td:first-child {
+  border-left-color: var(--color-007);
+}
+
+.portal-shell .data-table tbody tr.priority-atendido > td:first-child,
+.portal-shell .data-table tbody tr.priority-entregado > td:first-child {
+  border-left-color: var(--color-009);
+}
+
+.portal-shell .data-table tbody tr.priority-archivado > td:first-child {
+  border-left-color: var(--color-010);
 }
 
 .portal-shell .table-wrap > table:not(.risk-table) tbody tr:last-child td {
@@ -69,8 +93,9 @@
 }
 
 .portal-shell .list-panel .data-table .exp-id {
-  font-size: 11px;
-  letter-spacing: 0;
+  font-size: 12px;
+  font-family: var(--font-folio);
+  letter-spacing: 0.04em;
 }
 
 /* =====================================================
@@ -154,26 +179,26 @@
 }
 
 .status-badge.solo-registro {
-  color: #596674;
-  background: #edf1f4;
-  border-color: #cbd3d9;
+  color: var(--color-345);
+  background: var(--color-343);
+  border-color: var(--color-346);
 }
 
 .clear-filters-button {
   align-self: center;
   padding: 8px 10px;
-  border: 1px solid #c9d8de;
+  border: 1px solid var(--color-347);
   border-radius: 7px;
-  background: #f5fafb;
-  color: #315b68;
+  background: var(--color-150);
+  color: var(--color-348);
   font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
 }
 
 .clear-filters-button:hover {
-  border-color: #74a8b7;
-  background: #eaf5f7;
+  border-color: var(--color-349);
+  background: var(--color-251);
 }
 
 
@@ -183,7 +208,6 @@
 
 .list-panel.proveidos-list .table-wrap > table.data-table.proveidos-table {
   width: 100%;
-  min-width: 1080px;
   table-layout: fixed;
 }
 
@@ -252,6 +276,185 @@
   white-space: nowrap;
 }
 
+@media (max-width: 700px) {
+  .portal-shell .list-panel .table-wrap {
+    overflow: visible;
+    border: 0;
+  }
+
+  .portal-shell .list-panel .data-table {
+    display: block;
+    width: 100%;
+    table-layout: auto;
+  }
+
+  .portal-shell .list-panel .data-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .portal-shell .list-panel .data-table tbody,
+  .portal-shell .list-panel .data-table tr,
+  .portal-shell .list-panel .data-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .portal-shell .list-panel .data-table tbody tr {
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    border: 1px solid var(--color-339);
+    border-radius: 12px;
+    background: var(--color-150);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .portal-shell .list-panel .data-table tbody tr.priority-row {
+    border-left: 3px solid var(--color-004);
+  }
+
+  .portal-shell .list-panel .data-table tbody tr.priority-vencido,
+  .portal-shell .list-panel .data-table tbody tr.priority-rechazado {
+    border-left-color: var(--color-008);
+  }
+
+  .portal-shell .list-panel .data-table tbody tr.priority-por_vencer,
+  .portal-shell .list-panel .data-table tbody tr.priority-pendiente,
+  .portal-shell .list-panel .data-table tbody tr.priority-sin-respuesta {
+    border-left-color: var(--color-007);
+  }
+
+  .portal-shell .list-panel .data-table tbody tr.priority-atendido,
+  .portal-shell .list-panel .data-table tbody tr.priority-entregado {
+    border-left-color: var(--color-009);
+  }
+
+  .portal-shell .list-panel .data-table tbody tr.priority-archivado {
+    border-left-color: var(--color-010);
+  }
+
+  .portal-shell .list-panel .data-table tbody tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .portal-shell .list-panel .data-table tbody td {
+    display: grid;
+    grid-template-columns: minmax(108px, 36%) minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    min-width: 0;
+    max-width: none;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--color-343);
+    overflow: visible;
+    white-space: normal;
+    text-overflow: clip;
+  }
+
+  .portal-shell .list-panel .data-table tbody td::before {
+    content: attr(data-label);
+    color: var(--color-342);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    line-height: 1.35;
+  }
+
+  .portal-shell .list-panel .data-table tbody td:last-child {
+    border-bottom: 0;
+  }
+
+  .portal-shell .list-panel .data-table tbody td[colspan] {
+    display: block;
+    border-bottom: 0;
+  }
+
+  .portal-shell .list-panel .data-table tbody td[colspan]::before {
+    content: none;
+  }
+
+  .portal-shell .list-panel .data-table .actions-cell,
+  .portal-shell .list-panel .data-table .actions-cell button {
+    width: 100%;
+    max-width: none;
+  }
+
+  .portal-shell .list-panel .data-table .actions-cell {
+    display: block;
+  }
+
+  .portal-shell .list-panel .data-table .actions-cell::before {
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .portal-shell .list-panel .data-table .status-badge {
+    width: fit-content;
+    max-width: 100%;
+  }
+
+  .portal-shell .dashboard-table {
+    display: block;
+    width: 100%;
+  }
+
+  .portal-shell .dashboard-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .portal-shell .dashboard-table tbody,
+  .portal-shell .dashboard-table tr,
+  .portal-shell .dashboard-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .portal-shell .dashboard-table tbody tr {
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    border: 1px solid var(--color-339);
+    border-radius: 12px;
+    background: var(--color-150);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .portal-shell .dashboard-table tbody td {
+    display: grid;
+    grid-template-columns: minmax(108px, 36%) minmax(0, 1fr);
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--color-343);
+    white-space: normal;
+  }
+
+  .portal-shell .dashboard-table tbody td::before {
+    content: attr(data-label);
+    color: var(--color-342);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+  }
+
+  .portal-shell .dashboard-table tbody td:last-child {
+    border-bottom: 0;
+  }
+
+  .portal-shell .memorandos-multiples-table tbody tr {
+    border-left: 3px solid var(--color-004);
+  }
+}
+
 /* =========================================================
    SEGUIMIENTO DEL EXPEDIENTE: CRONOLOGÍA MÁS INTUITIVA
    ========================================================= */
@@ -266,23 +469,23 @@
   min-width: 0;
   padding: 14px;
   gap: 7px;
-  background: #f7f9fc;
-  border: 1px solid #e1e7ef;
+  background: var(--color-350);
+  border: 1px solid var(--color-351);
   border-radius: 12px;
   overflow-wrap: anywhere;
 }
 
 .tracking-modal .tracking-summary > span > b {
-  color: #64748b;
-  font-size: 10px;
+  color: var(--color-208);
+  font-size: 12px;
   letter-spacing: 0.7px;
 }
 
 .tracking-modal .tracking-documents {
   margin: 20px 28px 4px;
-  border: 1px solid #dce6eb;
+  border: 1px solid var(--color-352);
   border-radius: 12px;
-  background: #fbfdfe;
+  background: var(--color-163);
   overflow: hidden;
 }
 
@@ -292,18 +495,18 @@
   justify-content: space-between;
   gap: 14px;
   padding: 15px 18px;
-  border-bottom: 1px solid #e4ebef;
+  border-bottom: 1px solid var(--color-353);
 }
 
 .tracking-modal .tracking-documents-header .eyebrow {
   margin: 0 0 4px;
-  color: #c65a48;
-  font-size: 9px;
+  color: var(--color-354);
+  font-size: 12px;
 }
 
 .tracking-modal .tracking-documents-header h3 {
   margin: 0;
-  color: #193140;
+  color: var(--color-041);
   font-size: 15px;
 }
 
@@ -311,9 +514,9 @@
   flex: 0 0 auto;
   padding: 5px 9px;
   border-radius: 999px;
-  background: #edf4f6;
-  color: #526b76;
-  font-size: 11px;
+  background: var(--color-355);
+  color: var(--color-356);
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -328,7 +531,7 @@
   gap: 16px;
   min-width: 0;
   padding: 13px 18px;
-  border-bottom: 1px solid #e9eff2;
+  border-bottom: 1px solid var(--color-357);
 }
 
 .tracking-modal .tracking-document-row:last-child {
@@ -343,13 +546,13 @@
 }
 
 .tracking-modal .tracking-document-row > div strong {
-  color: #293f4a;
+  color: var(--color-358);
   font-size: 12px;
 }
 
 .tracking-modal .tracking-document-row > div small {
-  color: #687d87;
-  font-size: 11px;
+  color: var(--color-359);
+  font-size: 12px;
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
@@ -363,20 +566,20 @@
 .tracking-modal .tracking-file-available,
 .tracking-modal .tracking-file-unavailable {
   flex: 0 0 auto;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 
 .tracking-modal .tracking-file-missing {
-  color: #a44f35;
+  color: var(--color-360);
 }
 
 .tracking-modal .tracking-file-available {
-  color: #24744d;
+  color: var(--color-361);
 }
 
 .tracking-modal .tracking-file-unavailable {
-  color: #667780;
+  color: var(--color-362);
 }
 
 .tracking-modal .timeline {
@@ -386,7 +589,7 @@
 .tracking-modal .timeline-item {
   margin-left: 16px;
   padding: 0 0 24px 28px;
-  border-left: 2px solid #dbe5ef;
+  border-left: 2px solid var(--color-363);
 }
 
 .tracking-modal .timeline-item:last-child {
@@ -403,34 +606,34 @@
   justify-content: center;
   width: 34px;
   height: 34px;
-  border: 3px solid #fff;
+  border: 3px solid var(--color-018);
   border-radius: 50%;
-  background: #e0eafe;
-  color: #234e8a;
-  box-shadow: 0 0 0 1px #c5d5f1;
+  background: var(--color-364);
+  color: var(--color-365);
+  box-shadow: 0 0 0 1px var(--color-366);
   font-size: 12px;
   font-weight: 800;
   z-index: 1;
 }
 
 .tracking-modal .timeline-item.is-first .timeline-marker {
-  background: #d9f4e8;
-  color: #176747;
-  box-shadow: 0 0 0 1px #a9dfc5;
+  background: var(--color-367);
+  color: var(--color-368);
+  box-shadow: 0 0 0 1px var(--color-369);
 }
 
 .tracking-modal .timeline-card {
   min-width: 0;
   padding: 18px;
-  background: #fff;
-  border: 1px solid #e0e7ef;
+  background: var(--color-018);
+  border: 1px solid var(--color-370);
   border-radius: 14px;
   box-shadow: 0 3px 12px rgb(15 23 42 / 4%);
   overflow-wrap: anywhere;
 }
 
 .tracking-modal .timeline-item.is-first .timeline-card {
-  border-left: 4px solid #37a477;
+  border-left: 4px solid var(--color-371);
 }
 
 .tracking-modal .timeline-card-header {
@@ -440,7 +643,7 @@
   gap: 14px;
   flex-wrap: wrap;
   padding-bottom: 14px;
-  border-bottom: 1px solid #edf1f6;
+  border-bottom: 1px solid var(--color-372);
 }
 
 .tracking-modal .timeline-step-group {
@@ -452,14 +655,14 @@
 }
 
 .tracking-modal .timeline-step {
-  color: #64748b;
-  font-size: 10px;
+  color: var(--color-208);
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.8px;
 }
 
 .tracking-modal .timeline-card-header strong {
-  color: #172b4d;
+  color: var(--color-373);
   font-size: 16px;
   line-height: 1.4;
 }
@@ -467,11 +670,11 @@
 .tracking-modal .timeline-date {
   display: inline-block;
   padding: 6px 9px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-374);
   border-radius: 8px;
-  background: #f8fafc;
-  color: #475569;
-  font-size: 11px;
+  background: var(--color-259);
+  color: var(--color-375);
+  font-size: 12px;
   font-weight: 600;
   line-height: 1.5;
   white-space: normal;
@@ -492,37 +695,37 @@
   gap: 7px;
   min-width: 0;
   padding: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-374);
   border-radius: 10px;
-  background: #f8fafc;
+  background: var(--color-259);
 }
 
 .tracking-modal .timeline-location > span,
 .tracking-modal .timeline-initial-location > span {
-  color: #64748b;
-  font-size: 10px;
+  color: var(--color-208);
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.7px;
 }
 
 .tracking-modal .timeline-location > strong,
 .tracking-modal .timeline-initial-location > strong {
-  color: #233650;
+  color: var(--color-376);
   font-size: 13px;
   line-height: 1.45;
   overflow-wrap: anywhere;
 }
 
 .tracking-modal .timeline-location-destination {
-  border-color: #cbdcfb;
-  background: #f0f5ff;
+  border-color: var(--color-377);
+  background: var(--color-378);
 }
 
 .tracking-modal .timeline-route-connector {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #647fb0;
+  color: var(--color-379);
   font-size: 22px;
   font-weight: 700;
 }
@@ -533,9 +736,9 @@
   gap: 7px;
   margin: 15px 0;
   padding: 14px;
-  border: 1px solid #bfe8d4;
+  border: 1px solid var(--color-380);
   border-radius: 10px;
-  background: #f0fbf5;
+  background: var(--color-381);
 }
 
 .tracking-modal .timeline-details {
@@ -553,17 +756,17 @@
   min-width: 0;
   padding: 10px 12px;
   border-radius: 9px;
-  background: #f8fafc;
+  background: var(--color-259);
 }
 
 .tracking-modal .timeline-detail > span {
-  color: #64748b;
-  font-size: 10px;
+  color: var(--color-208);
+  font-size: 12px;
   font-weight: 700;
 }
 
 .tracking-modal .timeline-detail > strong {
-  color: #334155;
+  color: var(--color-382);
   font-size: 12px;
   line-height: 1.5;
   overflow-wrap: anywhere;
@@ -572,21 +775,21 @@
 .tracking-modal .timeline-observation {
   margin-top: 12px;
   padding: 13px 14px;
-  border-left: 3px solid #9aafd0;
+  border-left: 3px solid var(--color-383);
   border-radius: 0 9px 9px 0;
-  background: #f5f8fc;
+  background: var(--color-384);
 }
 
 .tracking-modal .timeline-observation > span {
-  color: #64748b;
-  font-size: 10px;
+  color: var(--color-208);
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.6px;
 }
 
 .tracking-modal .timeline-observation p {
   margin: 7px 0 0;
-  color: #334155;
+  color: var(--color-382);
   font-size: 13px;
   font-weight: 500;
   line-height: 1.65;

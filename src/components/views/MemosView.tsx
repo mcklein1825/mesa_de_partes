@@ -8,6 +8,9 @@
   import { formatDocumentNumber } from '../../utils/documentHelpers'
   import useMemosList from '../../features/mesaPartes/useMemosList'
   import { getSupportedDocumentMimeType } from '../../utils/expedienteHelpers'
+  import { useToast } from '../common/ToastProvider'
+  import Modal from '../common/Modal'
+  import { Copy, Paperclip, Search } from 'lucide-react'
 
   export default function MemosView({
     expediente,
@@ -70,6 +73,7 @@
     nuevoEstado: Memo['estado']
   ) => void
   }) {
+    const { toast } = useToast()
     const [memoArchivo, setMemoArchivo] = useState<File | null>(null)
     const [memoArchivoNombre, setMemoArchivoNombre] = useState('')
     const [showDuplicateMemoModal, setShowDuplicateMemoModal] = useState(false)
@@ -463,7 +467,7 @@ if (showMemoForm && expediente) {
             <label>Archivo del Memo</label>
 
             <label className="memo-file-button">
-              ▣ Seleccionar archivo
+              <><Paperclip size={16} aria-hidden="true" /> Seleccionar archivo</>
 
               <input
                 type="file"
@@ -478,7 +482,7 @@ if (showMemoForm && expediente) {
                   }
 
                   if (!getSupportedDocumentMimeType(file)) {
-                    alert('Adjunte un archivo PDF, JPG, JPEG o PNG.')
+                    toast('Adjunte un archivo PDF, JPG, JPEG o PNG.', 'warning')
                     event.target.value = ''
                     setMemoArchivo(null)
                     setMemoArchivoNombre('')
@@ -486,7 +490,7 @@ if (showMemoForm && expediente) {
                   }
 
                   if (file.size > 5 * 1024 * 1024) {
-                    alert('El archivo no puede superar los 5 MB.')
+                    toast('El archivo no puede superar los 5 MB.', 'warning')
                     event.target.value = ''
                     setMemoArchivo(null)
                     setMemoArchivoNombre('')
@@ -551,21 +555,15 @@ if (showMemoForm && expediente) {
   <>
 
     {showDuplicateMemoModal && (
-      <div
-        className="duplicate-modal-overlay"
-        onMouseDown={event => {
-          if (event.target === event.currentTarget) {
-            setShowDuplicateMemoModal(false)
-            setMemoSeleccionadoParaDuplicar(null)
-          }
+      <Modal
+        titleId="duplicate-memo-modal-title"
+        onClose={() => {
+          setShowDuplicateMemoModal(false)
+          setMemoSeleccionadoParaDuplicar(null)
         }}
+        className="duplicate-modal"
+        overlayClassName="duplicate-modal-overlay"
       >
-        <div
-          className="duplicate-modal"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="duplicate-memo-modal-title"
-        >
           <div className="duplicate-modal-header">
             <div>
               <h2 id="duplicate-memo-modal-title">Duplicar Memo</h2>
@@ -588,7 +586,7 @@ if (showMemoForm && expediente) {
             <label className="duplicate-search-label">
               Buscar Memo
               <div className="duplicate-search-box">
-                <span>⌕</span>
+                <Search size={16} aria-hidden="true" />
                 <input
                   type="text"
                   value={memoDuplicadoBusqueda}
@@ -707,31 +705,20 @@ if (showMemoForm && expediente) {
                   setMemoSeleccionadoParaDuplicar(null)
                 }}
               >
-                ⧉ Continuar con este Memo
+                <Copy size={16} aria-hidden="true" /> Continuar con este Memo
               </button>
             )}
           </div>
-        </div>
-      </div>
+      </Modal>
     )}
 
     {showMemoSelector && !expediente && (
-      <div
-        className="memo-modal-overlay"
-        onMouseDown={event => {
-          if (event.target === event.currentTarget) {
-            onCloseMemoSelector()
-          }
-        }}
+      <Modal
+        titleId="nuevo-memo-title"
+        onClose={onCloseMemoSelector}
+        className="memo-modal"
+        overlayClassName="memo-modal-overlay"
       >
-
-        <div
-          className="memo-modal"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="nuevo-memo-title"
-        >
-
           <div className="memo-modal-header">
 
             <div>
@@ -807,9 +794,7 @@ if (showMemoForm && expediente) {
 
           </div>
 
-        </div>
-
-      </div>
+      </Modal>
     )}
 
     <div className="page-heading compact">
@@ -842,7 +827,7 @@ if (showMemoForm && expediente) {
                   setShowDuplicateMemoModal(true)
                 }}
               >
-                ⧉ Duplicar Memo
+                <Copy size={16} aria-hidden="true" /> Duplicar Memo
               </button>
             </div>
           )}
@@ -855,7 +840,7 @@ if (showMemoForm && expediente) {
 
             <div className="search-box">
 
-              <span>⌕</span>
+              <Search size={16} aria-hidden="true" />
 
               <input
                 value={query}
@@ -922,33 +907,37 @@ if (showMemoForm && expediente) {
           <div className="table-wrap">
 
             <table className="data-table memos-table">
+             <caption className="sr-only">Listado de memos</caption>
 
              <thead>
               <tr>
-                <th>N.º MEMO</th>
-                <th>N.º EXPEDIENTE</th>
-                <th>FECHA</th>
-                <th>ASUNTO</th>
-                <th>ÁREA DESTINO</th>
-                <th>REALIZADO POR</th>
-                <th>RESPONSABLE</th>
-                <th>ESTADO</th>
-                <th>ACCIONES</th>
+                <th scope="col">N.º MEMO</th>
+                <th scope="col">N.º EXPEDIENTE</th>
+                <th scope="col">FECHA</th>
+                <th scope="col">ASUNTO</th>
+                <th scope="col">ÁREA DESTINO</th>
+                <th scope="col">REALIZADO POR</th>
+                <th scope="col">RESPONSABLE</th>
+                <th scope="col">ESTADO</th>
+                <th scope="col">ACCIONES</th>
               </tr>
             </thead>
 
               <tbody>
 
   {pageItems.map(memo => (
-    <tr key={memo.id}>
+    <tr
+      key={memo.id}
+      className={`priority-row priority-${memo.estado.toLowerCase().replace(/\s+/g, '-')}`}
+    >
 
-      <td>
+      <td data-label="N.º MEMO">
         <b className="exp-id">
           {formatDocumentNumber(memo.nroMemo, memo.createdAt)}
         </b>
       </td>
 
-     <td>
+     <td data-label="N.º EXPEDIENTE">
   <b>
     {formatExpediente(memo.nroExpediente, memo.expedienteId)}
   </b>
@@ -974,13 +963,13 @@ if (showMemoForm && expediente) {
 })()}
 </td>
 
-      <td>
+      <td data-label="FECHA">
         <span style={{ whiteSpace: 'nowrap' }}>
           {memo.fecha ? displayDate(memo.fecha) : '—'}
         </span>
       </td>
 
-      <td>
+      <td data-label="ASUNTO">
         <div
           title={memo.asunto || '—'}
           style={{
@@ -1005,7 +994,7 @@ if (showMemoForm && expediente) {
         )}
       </td>
       {/* ÁREA DESTINO */}
-      <td>
+      <td data-label="ÁREA DESTINO">
         <span
           title={memo.areaDestino || '—'}
           style={{
@@ -1014,8 +1003,8 @@ if (showMemoForm && expediente) {
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-            fontSize: '11px',
-            color: '#374151'
+            fontSize: '12px',
+            color: 'var(--ui-text)'
           }}
         >
           {memo.areaDestino || '—'}
@@ -1027,7 +1016,7 @@ if (showMemoForm && expediente) {
         )}
       </td>
 
-      <td>
+      <td data-label="REALIZADO POR">
         <span
           title={memo.realizadoPor || 'No registrado'}
           style={{
@@ -1036,8 +1025,8 @@ if (showMemoForm && expediente) {
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-            fontSize: '11px',
-            color: '#374151'
+            fontSize: '12px',
+            color: 'var(--ui-text)'
           }}
         >
           {memo.realizadoPor || 'No registrado'}
@@ -1045,7 +1034,7 @@ if (showMemoForm && expediente) {
       </td>
 
       {/* NUEVA COLUMNA RESPONSABLE */}
-      <td>
+      <td data-label="RESPONSABLE">
         <span
           title={memo.responsable || '—'}
           style={{
@@ -1054,15 +1043,15 @@ if (showMemoForm && expediente) {
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-            fontSize: '11px',
-            color: '#374151'
+            fontSize: '12px',
+            color: 'var(--ui-text)'
           }}
         >
           {memo.responsable || '—'}
         </span>
       </td>
       {/* ESTADO */}
-      <td>
+      <td data-label="ESTADO">
         <select
           className={`status-badge ${memo.estado.toLowerCase().replace(/\s+/g, '-')}`}
           value={memo.estado}
@@ -1131,12 +1120,12 @@ if (showMemoForm && expediente) {
       </td>
 
       {/* MÁS DATOS */}
-      <td>
+      <td data-label="ACCIONES">
         <button
           className="tracking-button"
           onClick={() => setSelectedMemo(memo)}
         >
-          ◉ Ver más datos
+          <Search size={16} aria-hidden="true" /> Ver más datos
         </button>
       </td>
 

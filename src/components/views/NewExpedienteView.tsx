@@ -1,5 +1,6 @@
 import { useState, FormEvent } from 'react'
 import { todayInputValue, formatNroExp } from '../../utils/expedienteHelpers'
+import { Check, FileUp, LoaderCircle, Search } from 'lucide-react'
 
 type ExpedienteParaDuplicar = {
   id: string
@@ -232,7 +233,7 @@ export default function NewExpedienteView({
                     type="button"
                     className="legacy-blue-button"
                   >
-                    ⌕ Validar
+                    <Search size={16} aria-hidden="true" /> Validar
                   </button>
                 </div>
               </label>
@@ -379,7 +380,7 @@ export default function NewExpedienteView({
               </label>
 
               <label className="file-button document-form-file-button">
-                ▣ Seleccionar archivo
+                <><FileUp size={16} aria-hidden="true" /> Seleccionar archivo</>
 
                 <input
                   name="archivo"
@@ -417,7 +418,11 @@ export default function NewExpedienteView({
             className="legacy-blue-button"
             disabled={isSaving}
           >
-            ✓ Enviar
+            {isSaving ? (
+              <><LoaderCircle className="button-spinner" size={16} aria-hidden="true" /> Guardando...</>
+            ) : (
+              <><Check size={16} aria-hidden="true" /> Enviar</>
+            )}
           </button>
 
           <button

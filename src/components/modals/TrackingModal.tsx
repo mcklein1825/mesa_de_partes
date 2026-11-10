@@ -1,4 +1,3 @@
-import { useEffect, useRef } from 'react'
 import { Expediente, Memo, Oficio, Proveido } from '../../types'
 import {
   formatNroExp,
@@ -14,6 +13,7 @@ import { getAreaCopia } from '../../constants'
 import StatusBadge from '../common/StatusBadge'
 import DocumentLink from '../common/DocumentLink'
 import MemoDocumentLink from '../common/MemoDocumentLink'
+import Modal from '../common/Modal'
 
 export default function TrackingModal({
   item,
@@ -31,23 +31,6 @@ export default function TrackingModal({
   onClose: () => void
 }) {
   if (!item) return null
-
-  const modalRef = useRef<HTMLElement>(null)
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose()
-      }
-    }
-    document.addEventListener('keydown', handleKeyDown)
-    // Enfocar el modal para que el teclado funcione de inmediato
-    modalRef.current?.focus()
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [onClose])
 
   // .reverse() hace que el más reciente salga primero
   const history = [
@@ -72,21 +55,13 @@ export default function TrackingModal({
   const deadline = getDeadlineState(item)
 
   return (
-    <div
-      className="modal-backdrop"
-      role="presentation"
-      onClick={onClose}
+    <Modal
+      titleId="tracking-title"
+      onClose={onClose}
+      className="tracking-modal"
+      overlayClassName="modal-backdrop"
+      initialFocus="container"
     >
-      <section
-        ref={modalRef}
-        tabIndex={-1}
-        className="tracking-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="tracking-title"
-        onClick={event => event.stopPropagation()}
-        style={{ outline: 'none' }}
-      >
         <div className="tracking-header">
           <div>
             <p className="eyebrow">RUTA DEL EXPEDIENTE</p>
@@ -134,7 +109,7 @@ export default function TrackingModal({
             <b>Fecha límite</b>
             {item.plazo ? displayDate(item.plazo) : 'Sin plazo'}
             {deadline.kind === 'vencido' && (
-              <small style={{ color: '#b91c1c', marginLeft: '4px', fontWeight: 'bold' }}>({deadline.label})</small>
+              <small style={{ color: 'var(--ui-danger)', marginLeft: '4px', fontWeight: 'bold' }}>({deadline.label})</small>
             )}
           </span>
           <span>
@@ -417,7 +392,6 @@ export default function TrackingModal({
         >
           Ocultar detalle
         </button>
-      </section>
-    </div>
+    </Modal>
   )
 }

@@ -6,6 +6,8 @@ import { getAreaCopia } from '../../constants'
 import ExpedienteSelector from '../common/ExpedienteSelector'
 import MemoDocumentLink from '../common/MemoDocumentLink'
 import StatusBadge from '../common/StatusBadge'
+import Modal from '../common/Modal'
+import { Search } from 'lucide-react'
 
 type Props = {
   proveidos: Proveido[]
@@ -65,20 +67,12 @@ export default function ProveidosView({
   return (
     <>
       {showSelector && (
-        <div
-          className="memo-modal-overlay"
-          onMouseDown={event => {
-            if (event.target === event.currentTarget) {
-              onCloseSelector()
-            }
-          }}
+        <Modal
+          titleId="nuevo-proveido-title"
+          onClose={onCloseSelector}
+          className="memo-modal"
+          overlayClassName="memo-modal-overlay"
         >
-          <div
-            className="memo-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="nuevo-proveido-title"
-          >
             <div className="memo-modal-header">
               <div>
                 <p className="eyebrow">GESTIÓN DOCUMENTAL</p>
@@ -128,8 +122,7 @@ export default function ProveidosView({
                 Cancelar
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       <div className="page-heading compact">
@@ -157,7 +150,7 @@ export default function ProveidosView({
       <section className="panel list-panel proveidos-list">
         <div className="toolbar">
           <div className="search-box">
-            <span>⌕</span>
+            <Search size={16} aria-hidden="true" />
             <input
               value={busqueda}
               onChange={e => setBusqueda(e.target.value)}
@@ -182,29 +175,33 @@ export default function ProveidosView({
 
         <div className="table-wrap">
           <table className="data-table proveidos-table">
+            <caption className="sr-only">Listado de proveídos</caption>
             <thead>
               <tr>
-                <th>N.º PROVEÍDO</th>
-                <th>N.° EXP</th>
-                <th>FECHA</th>
-                <th>ÁREA DESTINO</th>
-                <th>REALIZADO POR</th>
-                <th>RESPONSABLE</th>
-                <th>INSTRUCCIÓN</th>
-                <th>ESTADO</th>
-                <th>DOCUMENTO</th>
+                <th scope="col">N.º PROVEÍDO</th>
+                <th scope="col">N.° EXP</th>
+                <th scope="col">FECHA</th>
+                <th scope="col">ÁREA DESTINO</th>
+                <th scope="col">REALIZADO POR</th>
+                <th scope="col">RESPONSABLE</th>
+                <th scope="col">INSTRUCCIÓN</th>
+                <th scope="col">ESTADO</th>
+                <th scope="col">DOCUMENTO</th>
               </tr>
             </thead>
 
             <tbody>
               {resultados.map(proveido => (
-                <tr key={proveido.id}>
-                  <td>
+                <tr
+                  key={proveido.id}
+                  className={`priority-row priority-${proveido.estado.toLowerCase().replace(/\s+/g, '-')}`}
+                >
+                  <td data-label="N.º PROVEÍDO">
                     <b className="exp-id">
                       {formatDocumentNumber(proveido.id, proveido.createdAt)}
                     </b>
                   </td>
-                  <td>
+                  <td data-label="N.° EXP">
                     <b className="exp-id">
                       {proveido.nroExpediente
                         ? formatNroExp(
@@ -220,13 +217,13 @@ export default function ProveidosView({
                     </b>
                   </td>
 
-                  <td>
+                  <td data-label="FECHA">
                     <span style={{ whiteSpace: 'nowrap' }}>
                       {proveido.fecha ? displayDate(proveido.fecha) : '—'}
                     </span>
                   </td>
 
-                  <td>
+                  <td data-label="ÁREA DESTINO">
                     <span
                       title={proveido.areaDestino || '—'}
                       style={{
@@ -246,7 +243,7 @@ export default function ProveidosView({
                     )}
                   </td>
 
-                  <td>
+                  <td data-label="REALIZADO POR">
                     <span
                       title={proveido.realizadoPor || 'No registrado'}
                       style={{
@@ -261,7 +258,7 @@ export default function ProveidosView({
                     </span>
                   </td>
 
-                  <td>
+                  <td data-label="RESPONSABLE">
                     <span
                       title={proveido.responsable || '—'}
                       style={{
@@ -276,7 +273,7 @@ export default function ProveidosView({
                     </span>
                   </td>
 
-                  <td>
+                  <td data-label="INSTRUCCIÓN">
                     <span
                       title={proveido.instruccion || '—'}
                       style={{
@@ -292,11 +289,11 @@ export default function ProveidosView({
                   </td>
 
                   {/* NUEVO ESTADO */}
-                  <td>
+                  <td data-label="ESTADO">
                     <StatusBadge status={proveido.estado as any} />
                   </td>
 
-                  <td>
+                  <td data-label="DOCUMENTO">
                     <MemoDocumentLink
                       archivoData={proveido.archivoData}
                       archivo={proveido.archivo || ''}
