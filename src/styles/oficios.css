@@ -15,7 +15,7 @@
 .oficio-form-card h2 {
   margin: 0;
   padding: 18px 24px 12px;
-  color: #203642;
+  color: var(--color-058);
   font-size: 16px;
   line-height: 1.4;
 }
