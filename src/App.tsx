@@ -95,6 +95,8 @@
     const [trackingId, setTrackingId] = useState<string | null>(null)
     const [showProfile, setShowProfile] = useState(false)
     const [sidebarOpen, setSidebarOpen] = useState(false)
+    const sidebarRef = useRef<HTMLElement | null>(null)
+    const sidebarTriggerRef = useRef<HTMLButtonElement | null>(null)
     const [toast, setToast] = useState('')
     const [isSaving, setIsSaving] = useState(false)
 
@@ -205,11 +207,46 @@
 
     useEffect(() => {
       if (!sidebarOpen) return
+      const focusableSelector = [
+        'a[href]',
+        'button:not([disabled])',
+        'input:not([disabled])',
+        'select:not([disabled])',
+        'textarea:not([disabled])',
+        '[tabindex]:not([tabindex="-1"])'
+      ].join(',')
+      const focusInitial = window.setTimeout(() => {
+        sidebarRef.current?.querySelector<HTMLElement>(focusableSelector)?.focus()
+      }, 0)
       const handleKeyDown = (event: KeyboardEvent) => {
-        if (event.key === 'Escape') setSidebarOpen(false)
+        if (event.key === 'Escape') {
+          event.preventDefault()
+          setSidebarOpen(false)
+          return
+        }
+        if (event.key !== 'Tab') return
+        const focusable = Array.from(
+          sidebarRef.current?.querySelectorAll<HTMLElement>(focusableSelector) || []
+        )
+        if (focusable.length === 0) return
+        const first = focusable[0]
+        const last = focusable[focusable.length - 1]
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault()
+          last.focus()
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault()
+          first.focus()
+        }
       }
       document.addEventListener('keydown', handleKeyDown)
-      return () => document.removeEventListener('keydown', handleKeyDown)
+      return () => {
+        window.clearTimeout(focusInitial)
+        document.removeEventListener('keydown', handleKeyDown)
+        if (document.activeElement !== sidebarTriggerRef.current) {
+          sidebarTriggerRef.current?.focus()
+        }
+      }
     }, [sidebarOpen])
 
     const userPermissions = currentUser ? ROLE_PERMISSIONS[currentUser.rol] : null
@@ -1172,6 +1209,7 @@
     return (
       <div className="app-shell portal-shell">
         <button
+          ref={sidebarTriggerRef}
           type="button"
           className="mobile-menu-button"
           aria-label={sidebarOpen ? 'Cerrar menú' : 'Abrir menú'}
@@ -1185,10 +1223,15 @@
             type="button"
             className="sidebar-overlay"
             aria-label="Cerrar menú"
+            tabIndex={-1}
             onClick={() => setSidebarOpen(false)}
           />
         )}
-        <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
+        <aside
+          ref={sidebarRef}
+          className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}
+          aria-label="Menú principal"
+        >
           <div className="brand">
             <Logo />
           </div>
