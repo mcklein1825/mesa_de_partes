@@ -81,5 +81,6 @@ El apartado de Memorandos múltiples permite registrar un documento anual con va
 Ejecutar en Supabase antes de usar este apartado:
 
 - `supabase/patches/20261110_memorandos_multiples.sql`
+- Si la aplicación muestra `PGRST205` indicando que no encuentra `public.memorandos_multiples`, ejecutar después `supabase/patches/20261110_memorandos_multiples_reload_schema.sql`.
 
 El catálogo inicial se encuentra en `src/constants/index.ts` y puede ampliarse cuando se confirmen nuevos grupos institucionales.
