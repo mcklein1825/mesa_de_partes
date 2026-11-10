@@ -52,6 +52,7 @@
   // Componentes Comunes y Modales
   import NavItem from './components/common/NavItem'
   import Logo from './components/common/Logo'
+  import Modal from './components/common/Modal'
   import TrackingModal from './components/modals/TrackingModal'
 
   const viewFromHash = (hash: string): View => {
@@ -1818,24 +1819,25 @@
         </main>
 
         {showNewExpedienteForm && (
-          <div className="new-expediente-modal-overlay">
-            <div
-              className="new-expediente-modal"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="new-expediente-title"
-            >
-              <NewExpedienteView
-                onSubmit={addExpediente}
-                onCancel={() => {
-                  setShowNewExpedienteForm(false)
-                  setExpedienteParaDuplicar(null)
-                }}
-                isSaving={isSaving}
-                expedienteParaDuplicar={expedienteParaDuplicar}
-              />
-            </div>
-          </div>
+          <Modal
+            titleId="new-expediente-title"
+            onClose={() => {
+              setShowNewExpedienteForm(false)
+              setExpedienteParaDuplicar(null)
+            }}
+            className="new-expediente-modal"
+            overlayClassName="new-expediente-modal-overlay"
+          >
+            <NewExpedienteView
+              onSubmit={addExpediente}
+              onCancel={() => {
+                setShowNewExpedienteForm(false)
+                setExpedienteParaDuplicar(null)
+              }}
+              isSaving={isSaving}
+              expedienteParaDuplicar={expedienteParaDuplicar}
+            />
+          </Modal>
         )}
 
         {toast && <div className="toast"><span>✓</span>{toast}</div>}
