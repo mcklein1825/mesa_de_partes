@@ -53,10 +53,28 @@
   import NavItem from './components/common/NavItem'
   import Logo from './components/common/Logo'
   import TrackingModal from './components/modals/TrackingModal'
+
+  const viewFromHash = (hash: string): View => {
+    const section = hash.replace(/^#\/?/, '').split('/')[0]
+    const validViews: View[] = [
+      'inicio',
+      'expedientes',
+      'reportes',
+      'memos',
+      'memos-multiples',
+      'oficios',
+      'proveidos'
+    ]
+    return validViews.includes(section as View) ? section as View : 'inicio'
+  }
+
+  const hashForView = (nextView: View, trackingId?: string | null) =>
+    `#/${nextView}${trackingId ? `/${trackingId}` : ''}`
+
   export default function App() {
 
     const [currentUser, setCurrentUser] = useState<User | null>(null)
-    const [view, setView] = useState<View>('inicio')
+    const [view, setView] = useState<View>(() => viewFromHash(window.location.hash))
     const [expedienteParaDuplicar, setExpedienteParaDuplicar] =
     useState<Expediente | null>(null)
     const [showNewExpedienteForm, setShowNewExpedienteForm] = useState(false)
@@ -88,6 +106,48 @@
     const [showMemoSelector, setShowMemoSelector] = useState(false)
     const [memoAreaDestino, setMemoAreaDestino] = useState('')
     const [memoResponsable, setMemoResponsable] = useState('')
+
+    useEffect(() => {
+      const handleHashChange = () => {
+        const hashParts = window.location.hash.replace(/^#\/?/, '').split('/')
+        setView(viewFromHash(window.location.hash))
+        setTrackingId(hashParts[1] || null)
+      }
+
+      window.addEventListener('hashchange', handleHashChange)
+      return () => window.removeEventListener('hashchange', handleHashChange)
+    }, [])
+
+    useEffect(() => {
+      const sectionTitles: Record<View, string> = {
+        inicio: 'Inicio',
+        expedientes: 'Expedientes',
+        reportes: 'Reportes',
+        memos: 'Memos',
+        'memos-multiples': 'Memos múltiples',
+        oficios: 'Oficios',
+        proveidos: 'Proveídos'
+      }
+      document.title = `${sectionTitles[view]} | Gestión Documental`
+    }, [view])
+
+    const navigateToView = useCallback((nextView: View) => {
+      const nextHash = hashForView(nextView)
+      if (window.location.hash !== nextHash) {
+        window.location.hash = nextHash
+      } else {
+        setView(nextView)
+      }
+    }, [])
+
+    const navigateToTracking = useCallback((id: string | null) => {
+      const nextHash = hashForView(id ? 'expedientes' : view, id)
+      if (window.location.hash !== nextHash) {
+        window.location.hash = nextHash
+      } else {
+        setTrackingId(id)
+      }
+    }, [view])
     useEffect(() => {
     if (!memoAreaDestino) {
       setMemoResponsable('')
@@ -619,7 +679,7 @@
   setExpedienteParaDuplicar(null)
   setShowNewExpedienteForm(false)
 
-  setView('expedientes')
+  navigateToView('expedientes')
 
   notify(
     clasificacionError
@@ -832,14 +892,14 @@
       setMemoAreaDestino('')
       setShowMemoSelector(false)
       setShowMemoForm(true)
-      setView('memos')
+      navigateToView('memos')
       return
     }
 
     if (tipo === 'Oficio') {
       setOficioExpediente(expediente)
       setShowOficioForm(true)
-      setView('oficios')
+      navigateToView('oficios')
       return
     }
 
@@ -1133,14 +1193,14 @@
       icon={<House size={18} strokeWidth={1.8} />}
       label="Inicio"
       active={view === 'inicio'}
-      onClick={() => setView('inicio')}
+      onClick={() => navigateToView('inicio')}
     />
 
     <NavItem
       icon={<Files size={18} strokeWidth={1.8} />}
       label="Expedientes"
       active={view === 'expedientes'}
-      onClick={() => setView('expedientes')}
+      onClick={() => navigateToView('expedientes')}
       count={visibleExpedientes.filter(item => item.estado === 'Pendiente').length}
     />
     <NavItem
@@ -1151,7 +1211,7 @@
       setMemoExpediente(null)
       setShowMemoForm(false)
       setShowMemoSelector(false)
-      setView('memos')
+      navigateToView('memos')
     }}
     count={visibleMemos.length}
   />
@@ -1159,7 +1219,7 @@
       icon={<Layers3 size={18} strokeWidth={1.8} />}
       label="Memos múltiples"
       active={view === 'memos-multiples'}
-      onClick={() => setView('memos-multiples')}
+      onClick={() => navigateToView('memos-multiples')}
       count={memorandosMultiples.length}
     />
     <NavItem
@@ -1167,7 +1227,7 @@
     label="Oficios"
     active={view === 'oficios'}
     onClick={() => {
-      setView('oficios')
+      navigateToView('oficios')
     }}
     count={visibleOficios.length}
   />
@@ -1176,7 +1236,7 @@
       label="Proveídos"
       active={view === 'proveidos'}
       onClick={() => {
-        setView('proveidos')
+        navigateToView('proveidos')
       }}
       count={visibleProveidos.length}
     />
@@ -1185,7 +1245,7 @@
       icon={<ChartNoAxesCombined size={18} strokeWidth={1.8} />}
       label="Reportes"
       active={view === 'reportes'}
-      onClick={() => setView('reportes')}
+      onClick={() => navigateToView('reportes')}
     />
     )}
   </nav>
@@ -1245,14 +1305,14 @@
                   notify('No tiene permisos para registrar expedientes')
                   return
                 }
-                setView('expedientes')
+                navigateToView('expedientes')
                 setShowNewExpedienteForm(true)
               }}
-              onViewAll={() => setView('expedientes')}
+              onViewAll={() => navigateToView('expedientes')}
               onFilterExp={(status) => {
                 setStatusFilter(status)
                 setExpedientesPage(1)
-                setView('expedientes')
+                navigateToView('expedientes')
               }}
               currentDate={currentDate}
               currentUser={currentUser}
@@ -1364,7 +1424,7 @@
                         })
                       )
 
-                      setTrackingId(id)
+                      navigateToTracking(id)
                     }}
 
                     onAttachDocument={adjuntarDocumento}
@@ -1391,7 +1451,7 @@
         setMemoExpediente(null)
         setShowMemoForm(false)
         setShowMemoSelector(false)
-        setView('expedientes')
+        navigateToView('expedientes')
       }}
       onNewMemo={openNewMemo}
       onDuplicateMemo={openDuplicateMemo}
@@ -1569,7 +1629,7 @@
 
           setShowOficioForm(false)
           setOficioExpediente(null)
-          setView('oficios')
+          navigateToView('oficios')
 
           notify(
             `Oficio ${formatDocumentNumber(oficioNuevo.nRegistro, oficioNuevo.createdAt)} registrado correctamente.`
@@ -1788,7 +1848,7 @@
             onAttachDocument={file =>
               adjuntarDocumento(trackingId, file)
             }
-            onClose={() => setTrackingId(null)}
+            onClose={() => navigateToTracking(null)}
           />
         )}
         </div>
