@@ -109,7 +109,7 @@ export default function TrackingModal({
             <b>Fecha límite</b>
             {item.plazo ? displayDate(item.plazo) : 'Sin plazo'}
             {deadline.kind === 'vencido' && (
-              <small style={{ color: '#b91c1c', marginLeft: '4px', fontWeight: 'bold' }}>({deadline.label})</small>
+              <small style={{ color: 'var(--ui-danger)', marginLeft: '4px', fontWeight: 'bold' }}>({deadline.label})</small>
             )}
           </span>
           <span>

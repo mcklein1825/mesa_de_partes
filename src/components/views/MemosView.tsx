@@ -1000,8 +1000,8 @@ if (showMemoForm && expediente) {
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-            fontSize: '11px',
-            color: '#374151'
+            fontSize: '12px',
+            color: 'var(--ui-text)'
           }}
         >
           {memo.areaDestino || '—'}
@@ -1022,8 +1022,8 @@ if (showMemoForm && expediente) {
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-            fontSize: '11px',
-            color: '#374151'
+            fontSize: '12px',
+            color: 'var(--ui-text)'
           }}
         >
           {memo.realizadoPor || 'No registrado'}
@@ -1040,8 +1040,8 @@ if (showMemoForm && expediente) {
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-            fontSize: '11px',
-            color: '#374151'
+            fontSize: '12px',
+            color: 'var(--ui-text)'
           }}
         >
           {memo.responsable || '—'}

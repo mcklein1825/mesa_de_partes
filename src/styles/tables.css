@@ -313,7 +313,7 @@
   .portal-shell .list-panel .data-table tbody td::before {
     content: attr(data-label);
     color: var(--color-342);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.06em;
     line-height: 1.35;

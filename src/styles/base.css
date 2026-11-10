@@ -394,6 +394,17 @@
   --sin-respuesta: var(--color-008);    /* Rojo */
   --atendido: var(--color-009);         /* Verde */
   --archivado: var(--color-010);        /* Gris */
+  --ui-border: #d1d5db;
+  --ui-surface: #f8fafc;
+  --ui-surface-muted: #f9fafb;
+  --ui-text: #374151;
+  --ui-text-strong: #1f2937;
+  --ui-text-muted: #6b7280;
+  --ui-text-soft: #64748b;
+  --ui-accent-dark: #0f6b74;
+  --ui-danger: #b91c1c;
+  --ui-warning: #c2410c;
+  --ui-divider: #eef1f2;
 
   /* Tipografías */
   --font-ui: 'Plus Jakarta Sans', sans-serif;

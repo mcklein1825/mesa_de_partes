@@ -173,11 +173,11 @@ export default function ExpedienteSelector({
             className="expediente-selector-results"
             style={{
               marginTop: '10px',
-              border: '1px solid #d1d5db',
+              border: '1px solid var(--ui-border)',
               borderRadius: '6px',
               maxHeight: '350px',
               overflowY: 'auto',
-              backgroundColor: '#fff'
+              backgroundColor: 'var(--color-018)'
             }}
           >
             {resultados.map(item => {
@@ -201,14 +201,14 @@ export default function ExpedienteSelector({
                     width: '100%',
                     padding: '10px 12px',
                     border: 'none',
-                    borderBottom: '1px solid #eef1f2',
+                    borderBottom: '1px solid var(--ui-divider)',
                     background: 'transparent',
                     cursor: 'pointer',
                     textAlign: 'left'
                   }}
                 >
                   <div className="selector-main" style={{ flex: 1, minWidth: 0, paddingRight: '10px' }}>
-                    <strong style={{ display: 'block', fontSize: '12px', color: '#0f6b74' }}>
+                    <strong style={{ display: 'block', fontSize: '12px', color: 'var(--ui-accent-dark)' }}>
                       {formatNroExp(item.nroExp, false, item.fechaIngreso)}
                       {item.esDuplicado ? ' *' : ''}
                     </strong>
@@ -231,8 +231,8 @@ export default function ExpedienteSelector({
                       title={area || 'Sin área'}
                       style={{
                         display: 'block',
-                        fontSize: '11px',
-                        color: '#6b7280',
+                        fontSize: '12px',
+                        color: 'var(--ui-text-muted)',
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis'
@@ -244,8 +244,8 @@ export default function ExpedienteSelector({
                       title={item.asunto || 'Sin asunto'}
                       style={{
                         display: 'block',
-                        fontSize: '11px',
-                        color: '#374151',
+                        fontSize: '12px',
+                        color: 'var(--ui-text)',
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis'
