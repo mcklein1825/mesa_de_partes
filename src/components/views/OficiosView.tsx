@@ -208,13 +208,13 @@ export default function OficiosView({
             <tbody>
               {resultados.map(oficio => (
                 <tr key={oficio.id}>
-                  <td>
+                  <td data-label="N.° REGISTRO">
                     <b className="exp-id">
                       {formatDocumentNumber(oficio.nRegistro, oficio.createdAt)}
                     </b>
                   </td>
 
-                  <td>
+                  <td data-label="EXPEDIENTE">
                     <b className="exp-id">
                       {oficio.nroExpediente
                         ? formatNroExp(
@@ -230,13 +230,13 @@ export default function OficiosView({
                     </b>
                   </td>
 
-                  <td>
+                  <td data-label="FECHA">
                     <span style={{ whiteSpace: 'nowrap' }}>
                       {oficio.fecha ? displayDate(oficio.fecha) : '-'}
                     </span>
                   </td>
 
-                  <td>
+                  <td data-label="ASUNTO">
                     <div
                       title={[oficio.asuntoTipo, oficio.asuntoDetalle].filter(Boolean).join(' - ')}
                       style={{
@@ -253,7 +253,7 @@ export default function OficiosView({
                     </div>
                   </td>
 
-                  <td>
+                  <td data-label="DESTINATARIO">
                     <span
                       title={oficio.destinatario || '-'}
                       style={{
@@ -268,7 +268,7 @@ export default function OficiosView({
                     </span>
                   </td>
 
-                  <td>
+                  <td data-label="ÁREA DESTINO">
                     <span
                       title={oficio.areaDestino || '-'}
                       style={{
@@ -288,7 +288,7 @@ export default function OficiosView({
                     )}
                   </td>
 
-                  <td>
+                  <td data-label="REALIZADO POR">
                     <span
                       title={oficio.realizadoPor || 'No registrado'}
                       style={{
@@ -303,7 +303,7 @@ export default function OficiosView({
                     </span>
                   </td>
 
-                  <td>
+                  <td data-label="RESPONSABLE">
                     <span
                       title={oficio.responsable || '-'}
                       style={{
@@ -318,7 +318,7 @@ export default function OficiosView({
                     </span>
                   </td>
 
-                  <td>
+                  <td data-label="ADJUNTO">
                     <MemoDocumentLink
                       archivoData={oficio.archivoData}
                       archivo={oficio.archivo}
@@ -328,7 +328,7 @@ export default function OficiosView({
                     </MemoDocumentLink>
                   </td>
 
-                  <td>
+                  <td data-label="ESTADO">
                     <StatusBadge status={oficio.estado} />
                   </td>
                 </tr>

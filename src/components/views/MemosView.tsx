@@ -928,13 +928,13 @@ if (showMemoForm && expediente) {
   {pageItems.map(memo => (
     <tr key={memo.id}>
 
-      <td>
+      <td data-label="N.º MEMO">
         <b className="exp-id">
           {formatDocumentNumber(memo.nroMemo, memo.createdAt)}
         </b>
       </td>
 
-     <td>
+     <td data-label="N.º EXPEDIENTE">
   <b>
     {formatExpediente(memo.nroExpediente, memo.expedienteId)}
   </b>
@@ -960,13 +960,13 @@ if (showMemoForm && expediente) {
 })()}
 </td>
 
-      <td>
+      <td data-label="FECHA">
         <span style={{ whiteSpace: 'nowrap' }}>
           {memo.fecha ? displayDate(memo.fecha) : '—'}
         </span>
       </td>
 
-      <td>
+      <td data-label="ASUNTO">
         <div
           title={memo.asunto || '—'}
           style={{
@@ -991,7 +991,7 @@ if (showMemoForm && expediente) {
         )}
       </td>
       {/* ÁREA DESTINO */}
-      <td>
+      <td data-label="ÁREA DESTINO">
         <span
           title={memo.areaDestino || '—'}
           style={{
@@ -1013,7 +1013,7 @@ if (showMemoForm && expediente) {
         )}
       </td>
 
-      <td>
+      <td data-label="REALIZADO POR">
         <span
           title={memo.realizadoPor || 'No registrado'}
           style={{
@@ -1031,7 +1031,7 @@ if (showMemoForm && expediente) {
       </td>
 
       {/* NUEVA COLUMNA RESPONSABLE */}
-      <td>
+      <td data-label="RESPONSABLE">
         <span
           title={memo.responsable || '—'}
           style={{
@@ -1048,7 +1048,7 @@ if (showMemoForm && expediente) {
         </span>
       </td>
       {/* ESTADO */}
-      <td>
+      <td data-label="ESTADO">
         <select
           className={`status-badge ${memo.estado.toLowerCase().replace(/\s+/g, '-')}`}
           value={memo.estado}
@@ -1117,7 +1117,7 @@ if (showMemoForm && expediente) {
       </td>
 
       {/* MÁS DATOS */}
-      <td>
+      <td data-label="ACCIONES">
         <button
           className="tracking-button"
           onClick={() => setSelectedMemo(memo)}

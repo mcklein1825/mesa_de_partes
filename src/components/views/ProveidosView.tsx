@@ -193,12 +193,12 @@ export default function ProveidosView({
             <tbody>
               {resultados.map(proveido => (
                 <tr key={proveido.id}>
-                  <td>
+                  <td data-label="N.º PROVEÍDO">
                     <b className="exp-id">
                       {formatDocumentNumber(proveido.id, proveido.createdAt)}
                     </b>
                   </td>
-                  <td>
+                  <td data-label="N.° EXP">
                     <b className="exp-id">
                       {proveido.nroExpediente
                         ? formatNroExp(
@@ -214,13 +214,13 @@ export default function ProveidosView({
                     </b>
                   </td>
 
-                  <td>
+                  <td data-label="FECHA">
                     <span style={{ whiteSpace: 'nowrap' }}>
                       {proveido.fecha ? displayDate(proveido.fecha) : '—'}
                     </span>
                   </td>
 
-                  <td>
+                  <td data-label="ÁREA DESTINO">
                     <span
                       title={proveido.areaDestino || '—'}
                       style={{
@@ -240,7 +240,7 @@ export default function ProveidosView({
                     )}
                   </td>
 
-                  <td>
+                  <td data-label="REALIZADO POR">
                     <span
                       title={proveido.realizadoPor || 'No registrado'}
                       style={{
@@ -255,7 +255,7 @@ export default function ProveidosView({
                     </span>
                   </td>
 
-                  <td>
+                  <td data-label="RESPONSABLE">
                     <span
                       title={proveido.responsable || '—'}
                       style={{
@@ -270,7 +270,7 @@ export default function ProveidosView({
                     </span>
                   </td>
 
-                  <td>
+                  <td data-label="INSTRUCCIÓN">
                     <span
                       title={proveido.instruccion || '—'}
                       style={{
@@ -286,11 +286,11 @@ export default function ProveidosView({
                   </td>
 
                   {/* NUEVO ESTADO */}
-                  <td>
+                  <td data-label="ESTADO">
                     <StatusBadge status={proveido.estado as any} />
                   </td>
 
-                  <td>
+                  <td data-label="DOCUMENTO">
                     <MemoDocumentLink
                       archivoData={proveido.archivoData}
                       archivo={proveido.archivo || ''}

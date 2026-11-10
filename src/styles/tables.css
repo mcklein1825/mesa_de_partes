@@ -252,6 +252,107 @@
   white-space: nowrap;
 }
 
+@media (max-width: 700px) {
+  .portal-shell .list-panel .table-wrap {
+    overflow: visible;
+    border: 0;
+  }
+
+  .portal-shell .list-panel .data-table {
+    display: block;
+    width: 100%;
+    table-layout: auto;
+  }
+
+  .portal-shell .list-panel .data-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .portal-shell .list-panel .data-table tbody,
+  .portal-shell .list-panel .data-table tr,
+  .portal-shell .list-panel .data-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .portal-shell .list-panel .data-table tbody tr {
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    border: 1px solid var(--color-339);
+    border-radius: 12px;
+    background: var(--color-150);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .portal-shell .list-panel .data-table tbody tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .portal-shell .list-panel .data-table tbody td {
+    display: grid;
+    grid-template-columns: minmax(108px, 36%) minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    min-width: 0;
+    max-width: none;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--color-343);
+    overflow: visible;
+    white-space: normal;
+    text-overflow: clip;
+  }
+
+  .portal-shell .list-panel .data-table tbody td::before {
+    content: attr(data-label);
+    color: var(--color-342);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    line-height: 1.35;
+  }
+
+  .portal-shell .list-panel .data-table tbody td:last-child {
+    border-bottom: 0;
+  }
+
+  .portal-shell .list-panel .data-table tbody td[colspan] {
+    display: block;
+    border-bottom: 0;
+  }
+
+  .portal-shell .list-panel .data-table tbody td[colspan]::before {
+    content: none;
+  }
+
+  .portal-shell .list-panel .data-table .actions-cell,
+  .portal-shell .list-panel .data-table .actions-cell button {
+    width: 100%;
+    max-width: none;
+  }
+
+  .portal-shell .list-panel .data-table .actions-cell {
+    display: block;
+  }
+
+  .portal-shell .list-panel .data-table .actions-cell::before {
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .portal-shell .list-panel .data-table .status-badge {
+    width: fit-content;
+    max-width: 100%;
+  }
+}
+
 /* =========================================================
    SEGUIMIENTO DEL EXPEDIENTE: CRONOLOGÍA MÁS INTUITIVA
    ========================================================= */

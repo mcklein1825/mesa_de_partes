@@ -214,14 +214,14 @@ export default function ExpedientesView({
                 const deadline = getDeadlineState(item)
                 return (
                   <tr key={item.id}>
-                    <td>
+                    <td data-label="N.° EXP">
                       <b className="exp-id">
                         {formatNroExp(item.nroExp, false, item.fechaIngreso)}
                         {item.esDuplicado ? ' *' : ''}
                       </b>
                     </td>
 
-                    <td>
+                    <td data-label="FECHA">
                       {item.fechaIngreso ? (
                         displayDate(item.fechaIngreso)
                       ) : editingIngresoDateId === String(item.id) ? (
@@ -297,7 +297,7 @@ export default function ExpedientesView({
                       ) : <span>Sin fecha</span>}
                     </td>
 
-                    <td>
+                    <td data-label="FECHA LÍMITE">
                       <div
                         style={{
                           display: 'flex',
@@ -336,7 +336,7 @@ export default function ExpedientesView({
                         )}
                       </div>
                     </td>
-                    <td>
+                    <td data-label="NOMBRE / APELLIDO">
                       <span className="person-cell">
                         <span className="small-avatar">
                           {getRemitenteNombre(item).split(' ').map(x => x[0]).slice(0, 2).join('')}
@@ -355,7 +355,7 @@ export default function ExpedientesView({
                         </span>
                       </span>
                     </td>
-                   <td
+                   <td data-label="ASUNTO"
                       style={{
                         width: 'auto',
                         maxWidth: '100%',
@@ -385,7 +385,7 @@ export default function ExpedientesView({
                         </DocumentLink>
                       </span>
                     </td>
-                    <td>
+                    <td data-label="ESTADO">
                       <StatusBadge
                         status={
                           !item.requiereGestion && item.estado === 'Pendiente'
@@ -395,7 +395,7 @@ export default function ExpedientesView({
                       />
                     </td>
 
-                    <td className="actions-cell">
+                    <td className="actions-cell" data-label="ACCIONES">
 
                       <button
                         className="tracking-button"
