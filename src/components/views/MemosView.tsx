@@ -9,6 +9,7 @@
   import useMemosList from '../../features/mesaPartes/useMemosList'
   import { getSupportedDocumentMimeType } from '../../utils/expedienteHelpers'
   import { useToast } from '../common/ToastProvider'
+  import Modal from '../common/Modal'
 
   export default function MemosView({
     expediente,
@@ -553,21 +554,15 @@ if (showMemoForm && expediente) {
   <>
 
     {showDuplicateMemoModal && (
-      <div
-        className="duplicate-modal-overlay"
-        onMouseDown={event => {
-          if (event.target === event.currentTarget) {
-            setShowDuplicateMemoModal(false)
-            setMemoSeleccionadoParaDuplicar(null)
-          }
+      <Modal
+        titleId="duplicate-memo-modal-title"
+        onClose={() => {
+          setShowDuplicateMemoModal(false)
+          setMemoSeleccionadoParaDuplicar(null)
         }}
+        className="duplicate-modal"
+        overlayClassName="duplicate-modal-overlay"
       >
-        <div
-          className="duplicate-modal"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="duplicate-memo-modal-title"
-        >
           <div className="duplicate-modal-header">
             <div>
               <h2 id="duplicate-memo-modal-title">Duplicar Memo</h2>
@@ -713,27 +708,16 @@ if (showMemoForm && expediente) {
               </button>
             )}
           </div>
-        </div>
-      </div>
+      </Modal>
     )}
 
     {showMemoSelector && !expediente && (
-      <div
-        className="memo-modal-overlay"
-        onMouseDown={event => {
-          if (event.target === event.currentTarget) {
-            onCloseMemoSelector()
-          }
-        }}
+      <Modal
+        titleId="nuevo-memo-title"
+        onClose={onCloseMemoSelector}
+        className="memo-modal"
+        overlayClassName="memo-modal-overlay"
       >
-
-        <div
-          className="memo-modal"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="nuevo-memo-title"
-        >
-
           <div className="memo-modal-header">
 
             <div>
@@ -809,9 +793,7 @@ if (showMemoForm && expediente) {
 
           </div>
 
-        </div>
-
-      </div>
+      </Modal>
     )}
 
     <div className="page-heading compact">
