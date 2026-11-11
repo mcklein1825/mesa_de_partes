@@ -1,9 +1,8 @@
-import { useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { FileUp, LoaderCircle } from 'lucide-react'
-import { Expediente } from '../../types'
+import { Expediente, Proveido } from '../../types'
 import {
   AREA_DESTINO_OPTIONS,
-  getAreaCopia,
   getAreaResponsable
 } from '../../constants'
 import ExpedienteSelector from '../common/ExpedienteSelector'
@@ -23,6 +22,7 @@ type Props = {
     instruccion: string
     archivo: File | null
   }) => Promise<void>
+  proveidoParaEditar?: Proveido | null
 }
 
 export default function NuevoProveidoView({
@@ -31,20 +31,37 @@ export default function NuevoProveidoView({
   areaOptions,
   onExpedienteChange,
   onCancelar,
-  onGuardar
+  onGuardar,
+  proveidoParaEditar = null
 }: Props) {
   const { toast } = useToast()
-  const [fecha, setFecha] = useState(
-    new Date().toISOString().split('T')[0]
-  )
+  const [fecha, setFecha] = useState('')
   const [areaDestino, setAreaDestino] = useState('')
+  const [areaBusqueda, setAreaBusqueda] = useState('')
+  const [areaAbierta, setAreaAbierta] = useState(false)
   const responsable = getAreaResponsable(areaDestino)
   const [instruccion, setInstruccion] = useState('')
   const [archivoSeleccionado, setArchivoSeleccionado] =
   useState<File | null>(null)
   const [guardando, setGuardando] = useState(false)
   const guardandoRef = useRef(false)
+  const areasPrincipales = useMemo(
+    () => Array.from(new Set(AREA_DESTINO_OPTIONS.map(area => area.split(' / ')[0]))),
+    []
+  )
+  const areasFiltradas = useMemo(() => {
+    const texto = areaBusqueda.trim().toLowerCase()
+    return areasPrincipales.filter(area =>
+      !texto || area.toLowerCase().includes(texto)
+    )
+  }, [areaBusqueda, areasPrincipales])
 
+  useEffect(() => {
+    setFecha(proveidoParaEditar?.fecha?.slice(0, 10) || expediente?.fechaIngreso?.slice(0, 10) || new Date().toISOString().split('T')[0])
+    setAreaDestino(proveidoParaEditar?.areaDestino || '')
+    setAreaBusqueda(proveidoParaEditar?.areaDestino || '')
+    setInstruccion(proveidoParaEditar?.instruccion || '')
+  }, [expediente, proveidoParaEditar])
 
   const guardar = async () => {
     if (guardandoRef.current) return
@@ -92,7 +109,7 @@ export default function NuevoProveidoView({
       <div className="page-heading compact document-form-header">
         <div>
           <p className="eyebrow">GESTIÓN DOCUMENTAL</p>
-          <h1>Nuevo Proveído</h1>
+          <h1>{proveidoParaEditar ? 'Editar Proveído' : 'Nuevo Proveído'}</h1>
           <p className="muted">
             Registre un Proveído para el expediente.
           </p>
@@ -135,17 +152,49 @@ export default function NuevoProveidoView({
 
           <div className="form-group document-form-field">
             <label>Área destino *</label>
-            <select
-              value={areaDestino}
-              onChange={e => setAreaDestino(e.target.value)}
-            >
-              <option value="">Seleccione un área</option>
-              {AREA_DESTINO_OPTIONS.map(area => (
-                <option key={area} value={area}>
-                  {area}
-                </option>
-              ))}
-            </select>
+            <div className="memo-destino-combobox">
+              <input
+                type="text"
+                value={areaBusqueda}
+                onChange={event => {
+                  setAreaBusqueda(event.target.value)
+                  setAreaDestino('')
+                  setAreaAbierta(true)
+                }}
+                onFocus={() => setAreaAbierta(true)}
+                placeholder="Escribe área o subárea..."
+                autoComplete="off"
+                required={!areaDestino}
+              />
+              {areaAbierta && (
+                <div className="memo-destino-options">
+                  {areasFiltradas.length > 0 ? (
+                    areasFiltradas.map(area => (
+                      <button
+                        key={area}
+                        type="button"
+                        className="memo-destino-option"
+                        onMouseDown={event => {
+                          event.preventDefault()
+                          setAreaDestino(area)
+                          setAreaBusqueda(area)
+                          setAreaAbierta(false)
+                        }}
+                      >
+                        {area}
+                      </button>
+                    ))
+                  ) : (
+                    <div className="memo-destino-empty">
+                      No se encontraron áreas.
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            {areaDestino && (
+              <small>Área seleccionada: {areaDestino}</small>
+            )}
           </div>
 
           <div className="form-group document-form-field">
@@ -156,17 +205,6 @@ export default function NuevoProveidoView({
               readOnly
               placeholder="Jefe del área seleccionada"
             />
-            {areaDestino.startsWith('Administración / ') && (
-              <small>
-                El Responsable es la jefatura de Administración; la subárea
-                queda identificada como destino para la copia correspondiente.
-              </small>
-            )}
-            {getAreaCopia(areaDestino) && (
-              <small>
-                Con copia a: {getAreaCopia(areaDestino)}
-              </small>
-            )}
           </div>
 
           <div className="form-group wide document-form-field document-form-field-wide">

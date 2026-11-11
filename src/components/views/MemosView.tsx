@@ -35,11 +35,16 @@
     memoAreaDestino,
     setMemoAreaDestino,
     memoResponsable,
+    memoEnviaCopia,
+    setMemoEnviaCopia,
     onSaveMemo,
     onCancelMemo,
     onSelectExpediente,
     onCloseMemoSelector,
     onUpdateMemoEstado,
+    onDeleteMemo,
+    memoParaEditar,
+    onEditMemo,
   }: {
     expediente: Expediente | null
     expedientes: Expediente[]
@@ -64,7 +69,13 @@
     memoAreaDestino: string
     setMemoAreaDestino: (value: string) => void
     memoResponsable: string
-    onSaveMemo: (archivo: File | null) => void
+    memoEnviaCopia: boolean
+    setMemoEnviaCopia: (value: boolean) => void
+    onSaveMemo: (
+      archivo: File | null,
+      enviaCopia: boolean,
+      destinatarioCopia: string
+    ) => void
     onCancelMemo: () => void
     onSelectExpediente: (expediente: Expediente | null) => void
     onCloseMemoSelector: () => void
@@ -72,6 +83,9 @@
     memoId: string,
     nuevoEstado: Memo['estado']
   ) => void
+  onDeleteMemo: (memo: Memo) => void
+  memoParaEditar: Memo | null
+  onEditMemo?: (memo: Memo) => void
   }) {
     const { toast } = useToast()
     const [memoArchivo, setMemoArchivo] = useState<File | null>(null)
@@ -125,6 +139,17 @@
       setMemoSubareaDestino(subarea)
       setDestinoBusqueda(areaPrincipal)
     }, [showMemoForm, memoParaDuplicar])
+    useEffect(() => {
+      if (!memoParaEditar) return
+      setMemoArchivo(null)
+      setMemoArchivoNombre(memoParaEditar.archivo || '')
+      setMemoFecha(memoParaEditar.fecha?.slice(0, 10) || '')
+      setMemoAsunto(memoParaEditar.asunto)
+      setMemoAreaDestino(memoParaEditar.areaDestino)
+      setMemoAreaPrincipalDestino(memoParaEditar.areaDestino.split(' / ')[0] || '')
+      setMemoSubareaDestino(memoParaEditar.areaDestino.split(' / ')[1] || '')
+      setDestinoBusqueda(memoParaEditar.areaDestino.split(' / ')[0] || '')
+    }, [memoParaEditar, setMemoFecha, setMemoAsunto, setMemoAreaDestino])
       /*
     * =========================================================
     * OPCIONES DE FILTROS
@@ -209,7 +234,7 @@ if (showMemoForm && expediente) {
             GESTIÓN DOCUMENTAL
           </p>
 
-          <h1>Nuevo Memo</h1>
+          <h1>{memoParaEditar ? 'Editar Memo' : 'Nuevo Memo'}</h1>
 
           <p className="muted">
             {memoParaDuplicar
@@ -224,7 +249,6 @@ if (showMemoForm && expediente) {
         >
           ← Cancelar
         </button>
-
       </div>
 
       <div className="memo-form-card">
@@ -448,6 +472,16 @@ if (showMemoForm && expediente) {
                 Con copia a: {getAreaCopia(memoAreaDestino)}
               </small>
             )}
+            {getAreaCopia(memoAreaDestino) && (
+              <label className="memo-copy-toggle">
+                <input
+                  type="checkbox"
+                  checked={memoEnviaCopia}
+                  onChange={event => setMemoEnviaCopia(event.target.checked)}
+                />
+                Se envia copia
+              </label>
+            )}
           </div>
 
           <div className="memo-form-field">
@@ -464,7 +498,7 @@ if (showMemoForm && expediente) {
           </div>
 
           <div className="memo-form-field memo-file-field">
-            <label>Archivo del Memo</label>
+            <label>Archivo del Memo (opcional)</label>
 
             <label className="memo-file-button">
               <><Paperclip size={16} aria-hidden="true" /> Seleccionar archivo</>
@@ -508,7 +542,7 @@ if (showMemoForm && expediente) {
                 ? `Seleccionado: ${memoArchivoNombre}`
                 : memoParaDuplicar?.archivoData
                   ? `Se conservará el archivo ${memoParaDuplicar.archivo || 'original'} si no selecciona otro. Máximo 5 MB.`
-                  : 'Seleccione un archivo. Máximo 5 MB.'}
+                  : 'Puede adjuntar un archivo PDF, JPG o PNG. Máximo 5 MB.'}
             </small>
           </div>
 
@@ -516,7 +550,11 @@ if (showMemoForm && expediente) {
 
             <button
               className="primary-button"
-              onClick={() => onSaveMemo(memoArchivo)}
+              onClick={() => onSaveMemo(
+                memoArchivo,
+                memoEnviaCopia,
+                memoEnviaCopia ? getAreaCopia(memoAreaDestino) : ''
+              )}
             >
               Guardar Memo
             </button>
@@ -628,8 +666,8 @@ if (showMemoForm && expediente) {
                       </span>
                       <span>
                         {memo.areaDestino || 'Sin área destino'}
-                        {getAreaCopia(memo.areaDestino) &&
-                          ` · Con copia a: ${getAreaCopia(memo.areaDestino)}`}
+                        {memo.enviaCopia && memo.destinatarioCopia &&
+                          ` · Con copia a: ${memo.destinatarioCopia}`}
                       </span>
                     </div>
                   </button>
@@ -1009,9 +1047,9 @@ if (showMemoForm && expediente) {
         >
           {memo.areaDestino || '—'}
         </span>
-        {getAreaCopia(memo.areaDestino) && (
+        {memo.enviaCopia && memo.destinatarioCopia && (
           <small>
-            Con copia a: {getAreaCopia(memo.areaDestino)}
+            Con copia a: {memo.destinatarioCopia}
           </small>
         )}
       </td>
@@ -1127,6 +1165,10 @@ if (showMemoForm && expediente) {
         >
           <Search size={16} aria-hidden="true" /> Ver más datos
         </button>
+        <button type="button" className="action-link" onClick={() => onDeleteMemo(memo)}>
+          Eliminar
+        </button>
+        {onEditMemo && <button type="button" className="action-link" onClick={() => onEditMemo(memo)}>Editar</button>}
       </td>
 
     </tr>

@@ -2,7 +2,6 @@ import { Expediente, Proveido } from '../../types'
 import { formatNroExp, getRemitenteNombre, getAreaDestino, getDeadlineState, parseDate } from '../../utils/expedienteHelpers'
 import StatCard from '../common/StatCard'
 import StatusBadge from '../common/StatusBadge'
-import { getAreaCopia } from '../../constants'
 import RiskInsightPanel from '../common/RiskInsightPanel'
 import type { ExpedienteRiskAnalysis } from '../../utils/expedienteRiskModel'
 import { AlertCircle, AlertTriangle, CheckCircle2, Clock3, Files } from 'lucide-react'
@@ -295,11 +294,6 @@ const archived = expedientes.filter(
 
                   <td data-label="ÁREA DESTINO">
                     {proveido.areaDestino || '—'}
-                    {getAreaCopia(proveido.areaDestino) && (
-                      <small>
-                        Con copia a: {getAreaCopia(proveido.areaDestino)}
-                      </small>
-                    )}
                   </td>
 
                   <td data-label="REALIZADO POR">

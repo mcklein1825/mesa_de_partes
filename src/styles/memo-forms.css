@@ -137,6 +137,26 @@
   font-size: 12px;
 }
 
+.memo-copy-toggle {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  margin-bottom: 0 !important;
+  color: var(--color-042) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+}
+
+.memo-copy-toggle input[type='checkbox'] {
+  width: 14px;
+  min-height: 14px;
+  height: 14px;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--turquesa);
+}
+
 /* Archivo */
 
 .memo-file-field {

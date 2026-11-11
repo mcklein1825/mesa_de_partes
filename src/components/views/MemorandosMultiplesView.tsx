@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useState } from 'react'
 import { MEMORANDOS_MULTIPLES_DESTINATARIOS } from '../../constants'
 import type {
   MemorandoMultiple,
@@ -6,6 +6,7 @@ import type {
   MemorandoMultipleMedio
 } from '../../types'
 import { createMemorandoMultiple } from '../../services/memorandosMultiplesService'
+import { updateMemorandoMultiple } from '../../services/documentCrudService'
 import { LoaderCircle, Search } from 'lucide-react'
 import Modal from '../common/Modal'
 import ExpedienteSelector from '../common/ExpedienteSelector'
@@ -24,13 +25,21 @@ export default function MemorandosMultiplesView({
   expedientes,
   canCreate,
   onCreated,
-  notify
+  notify,
+  onDelete
+  , memoParaEditar
+  , onEditComplete
+  , onEdit
 }: {
   memorandos: MemorandoMultiple[]
   expedientes: Expediente[]
   canCreate: boolean
   onCreated: (memo: MemorandoMultiple) => void
   notify: (message: string) => void
+  onDelete: (memo: MemorandoMultiple) => void
+  memoParaEditar: MemorandoMultiple | null
+  onEditComplete: (memo: MemorandoMultiple) => void
+  onEdit: (memo: MemorandoMultiple) => void
 }) {
   const [showForm, setShowForm] = useState(false)
   const [expediente, setExpediente] = useState<Expediente | null>(null)
@@ -47,6 +56,18 @@ export default function MemorandosMultiplesView({
   const [filtro, setFiltro] = useState<MemorandoMultipleCategoria | 'Todas'>('Todas')
   const [busqueda, setBusqueda] = useState('')
   const [guardando, setGuardando] = useState(false)
+  useEffect(() => {
+    if (!memoParaEditar) return
+    setExpediente(expedientes.find(item => item.id === memoParaEditar.expedienteId) || null)
+    setFecha(memoParaEditar.fecha)
+    setAsunto(memoParaEditar.asunto)
+    setSeleccionados(memoParaEditar.destinatarios.map(item => ({
+      categoria: item.categoria,
+      nombre: item.nombre,
+      medioEntrega: item.medioEntrega
+    })))
+    setShowForm(true)
+  }, [memoParaEditar, expedientes])
 
   const opciones = useMemo(
     () => MEMORANDOS_MULTIPLES_DESTINATARIOS.filter(item =>
@@ -70,19 +91,30 @@ export default function MemorandosMultiplesView({
 
     setGuardando(true)
     try {
-      const creado = await createMemorandoMultiple({
+      const creado = memoParaEditar
+        ? await updateMemorandoMultiple(memoParaEditar.id, { fecha, asunto: asunto.trim(), destinatarios: seleccionados })
+        : await createMemorandoMultiple({
         expedienteId: expediente?.id || '',
         nroExpediente: expediente?.nroExp || '',
         fecha,
         asunto: asunto.trim(),
         destinatarios: seleccionados
       })
-      onCreated(creado)
+      if (memoParaEditar) {
+        onEditComplete({
+          ...memoParaEditar,
+          fecha,
+          asunto: asunto.trim(),
+          destinatarios: seleccionados.map((item, index) => ({
+            ...item, id: `${memoParaEditar.id}-${index}`, estado: 'Pendiente', observacion: ''
+          }))
+        })
+      } else onCreated(creado)
       setAsunto('')
       setExpediente(null)
       setSeleccionados([])
       setShowForm(false)
-      notify('Memorando múltiple registrado correctamente')
+      notify(memoParaEditar ? 'Memorando múltiple actualizado correctamente' : 'Memorando múltiple registrado correctamente')
     } catch (error) {
       console.error('Error registrando memorando múltiple:', error)
       notify('No se pudo registrar el memorando múltiple')
@@ -112,7 +144,7 @@ export default function MemorandosMultiplesView({
         </div>
         {canCreate && (
           <button className="primary-button" type="button" onClick={() => setShowForm(!showForm)}>
-            ＋ Nuevo memorando múltiple
+            {memoParaEditar ? 'Editar memorando múltiple' : '＋ Nuevo memorando múltiple'}
           </button>
         )}
       </div>
@@ -169,7 +201,7 @@ export default function MemorandosMultiplesView({
                 {guardando ? (
                   <><LoaderCircle className="button-spinner" size={16} aria-hidden="true" /> Guardando...</>
                 ) : (
-                  'Registrar memorando'
+                  memoParaEditar ? 'Guardar cambios' : 'Registrar memorando'
                 )}
               </button>
             </div>
@@ -198,6 +230,10 @@ export default function MemorandosMultiplesView({
               <td data-label="DESTINATARIOS">{item.destinatarios.map(destinatario => <div key={destinatario.id}>{destinatario.nombre}</div>)}</td>
               <td data-label="MEDIOS">{item.destinatarios.map(destinatario => <div key={destinatario.id}>{destinatario.medioEntrega}</div>)}</td>
               <td data-label="REALIZADO POR">{item.realizadoPor}</td>
+              <td data-label="ACCIONES">
+                <button type="button" className="action-link" onClick={() => onEdit(item)}>Editar</button>
+                <button type="button" className="action-link" onClick={() => onDelete(item)}>Eliminar</button>
+              </td>
             </tr>)}</tbody>
           </table>
           {visibles.length === 0 && <div className="empty-state">No hay memorandos múltiples registrados.</div>}

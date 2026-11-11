@@ -19,6 +19,8 @@ type Props = {
   onCloseSelector: () => void
   onNuevoOficio: () => void
   onSelectExpediente: (exp: Expediente) => void
+  onDeleteOficio: (oficio: Oficio) => void
+  onEditOficio: (oficio: Oficio) => void
 }
 
 export default function OficiosView({
@@ -30,7 +32,9 @@ export default function OficiosView({
   canCreate,
   onCloseSelector,
   onNuevoOficio,
-  onSelectExpediente
+  onSelectExpediente,
+  onDeleteOficio,
+  onEditOficio
 }: Props) {
   const [busqueda, setBusqueda] = useState('')
   const [estadoFiltro, setEstadoFiltro] = useState('Todos')
@@ -284,11 +288,6 @@ export default function OficiosView({
                     >
                       {oficio.areaDestino || '-'}
                     </span>
-                    {getAreaCopia(oficio.areaDestino) && (
-                      <small>
-                        Con copia a: {getAreaCopia(oficio.areaDestino)}
-                      </small>
-                    )}
                   </td>
 
                   <td data-label="REALIZADO POR">
@@ -333,6 +332,12 @@ export default function OficiosView({
 
                   <td data-label="ESTADO">
                     <StatusBadge status={oficio.estado} />
+                  </td>
+                  <td data-label="ACCIONES">
+                    <button type="button" className="action-link" onClick={() => onDeleteOficio(oficio)}>
+                      Eliminar
+                    </button>
+                    <button type="button" className="action-link" onClick={() => onEditOficio(oficio)}>Editar</button>
                   </td>
                 </tr>
               ))}

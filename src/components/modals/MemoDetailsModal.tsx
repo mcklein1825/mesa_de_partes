@@ -34,7 +34,7 @@ export default function MemoDetailsModal({
         <div><strong>Fecha</strong><p>{memo.fecha || '—'}</p></div>
         <div><strong>Realizado por</strong><p>{memo.realizadoPor || 'No registrado'}</p></div>
         <div><strong>Área destino</strong><p>{memo.areaDestino ? memo.areaDestino.split(' / ')[0] : '—'}</p></div>
-        {getAreaCopia(memo.areaDestino) && <div><strong>Con copia a</strong><p>{getAreaCopia(memo.areaDestino)}</p></div>}
+        {memo.enviaCopia && memo.destinatarioCopia && <div><strong>Con copia a</strong><p>{memo.destinatarioCopia}</p></div>}
         {memo.areaDestino?.includes(' / ') && <div><strong>Subárea</strong><p>{memo.areaDestino.split(' / ')[1]}</p></div>}
         <div><strong>Responsable</strong><p>{memo.responsable || '—'}</p></div>
         <div><strong>Estado</strong><p>{memo.estado || '—'}</p></div>

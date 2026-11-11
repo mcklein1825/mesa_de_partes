@@ -1,5 +1,6 @@
 import { useState, FormEvent } from 'react'
 import { todayInputValue, formatNroExp } from '../../utils/expedienteHelpers'
+import type { Expediente } from '../../types'
 import { Check, FileUp, LoaderCircle, Search } from 'lucide-react'
 
 type ExpedienteParaDuplicar = {
@@ -20,13 +21,15 @@ type Props = {
   onCancel: () => void
   isSaving: boolean
   expedienteParaDuplicar: ExpedienteParaDuplicar | null
+  expedienteParaEditar?: Expediente | null
 }
 
 export default function NewExpedienteView({
   onSubmit,
   onCancel,
   isSaving,
-  expedienteParaDuplicar
+  expedienteParaDuplicar,
+  expedienteParaEditar = null
 }: Props) {
   const [selectedFileName, setSelectedFileName] = useState('')
   const [showExtraFields, setShowExtraFields] = useState(false)
@@ -36,7 +39,7 @@ export default function NewExpedienteView({
       <div className="page-heading compact document-form-header">
         <div>
           <p className="eyebrow">GESTIÓN DOCUMENTAL</p>
-          <h1 id="new-expediente-title">Registro de Expediente</h1>
+          <h1 id="new-expediente-title">{expedienteParaEditar ? 'Editar expediente' : 'Registro de Expediente'}</h1>
           <p className="muted">
             Complete los datos solicitados para registrar el expediente.
           </p>
@@ -142,7 +145,7 @@ export default function NewExpedienteView({
                 name="fechaIngreso"
                 type="date"
                 required
-                defaultValue={todayInputValue()}
+                defaultValue={expedienteParaEditar?.fechaIngreso?.slice(0, 10) || todayInputValue()}
               />
             </label>
             <label className="document-form-field">
@@ -161,6 +164,7 @@ export default function NewExpedienteView({
                 required
                 placeholder="Ingrese el nombre completo o razón social."
                 defaultValue={
+                  expedienteParaEditar?.remitenteNombre ||
                   expedienteParaDuplicar?.remitenteNombre ||
                   expedienteParaDuplicar?.remitente ||
                   ''
@@ -174,7 +178,7 @@ export default function NewExpedienteView({
                 name="asunto"
                 placeholder="Registre en forma clara el asunto por el cual ingresa el documento."
                 defaultValue={
-                  expedienteParaDuplicar?.asunto || ''
+                  expedienteParaEditar?.asunto || expedienteParaDuplicar?.asunto || ''
                 }
               />
             </label>
@@ -185,6 +189,7 @@ export default function NewExpedienteView({
                 name="documentos"
                 required
                 placeholder="Ej. Oficio Múltiple N.° 00129-2025-MINEDU/..."
+                defaultValue={expedienteParaEditar?.documentos || ''}
               />
             </label>
           </div>

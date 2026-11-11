@@ -9,7 +9,6 @@ import {
   getDeadlineState
 } from '../../utils/expedienteHelpers'
 import { formatDocumentNumber } from '../../utils/documentHelpers'
-import { getAreaCopia } from '../../constants'
 import StatusBadge from '../common/StatusBadge'
 import DocumentLink from '../common/DocumentLink'
 import MemoDocumentLink from '../common/MemoDocumentLink'
@@ -195,8 +194,8 @@ export default function TrackingModal({
                     Realizado por: {memo.realizadoPor || 'No registrado'} ·
                     {' '}Responsable: {memo.responsable || '—'}
                   </small>
-                  {getAreaCopia(memo.areaDestino) && (
-                    <small>Con copia a: {getAreaCopia(memo.areaDestino)}</small>
+                  {memo.enviaCopia && memo.destinatarioCopia && (
+                    <small>Con copia a: {memo.destinatarioCopia}</small>
                   )}
                 </div>
                 <MemoDocumentLink
@@ -225,11 +224,6 @@ export default function TrackingModal({
                     Realizado por: {proveido.realizadoPor || 'No registrado'} ·
                     {' '}Responsable: {proveido.responsable || '—'}
                   </small>
-                  {getAreaCopia(proveido.areaDestino) && (
-                    <small>
-                      Con copia a: {getAreaCopia(proveido.areaDestino)}
-                    </small>
-                  )}
                 </div>
                 <MemoDocumentLink
                   archivoData={proveido.archivoData}
@@ -257,11 +251,6 @@ export default function TrackingModal({
                     Realizado por: {oficio.realizadoPor || 'No registrado'} ·
                     {' '}Responsable: {oficio.responsable || '—'}
                   </small>
-                  {getAreaCopia(oficio.areaDestino) && (
-                    <small>
-                      Con copia a: {getAreaCopia(oficio.areaDestino)}
-                    </small>
-                  )}
                 </div>
                 <span className="tracking-file-unavailable">
                   Registro vinculado
