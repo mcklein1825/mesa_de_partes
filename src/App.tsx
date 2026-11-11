@@ -34,7 +34,7 @@
 
 // Tipos y Constantes
   import { User, View, Expediente, Memo, Oficio, Proveido, Status } from './types'
-  import { ROLE_PERMISSIONS, areas, getAreaResponsable } from './constants'
+  import { ROLE_PERMISSIONS, areas, getAreaCopia, getAreaResponsable } from './constants'
 
   // Utilidades
   import {
@@ -44,6 +44,7 @@
   } from './utils/expedienteHelpers'
   import { formatDocumentNumber } from './utils/documentHelpers'
   import { analyzeExpedienteRisk } from './utils/expedienteRiskModel'
+    import { deleteDocument, updateDocument } from './services/documentCrudService'
 
   import DashboardView from './components/views/DashboardView'
   import ExpedientesView from './components/views/ExpedientesView'
@@ -82,6 +83,7 @@
     const [view, setView] = useState<View>(() => viewFromHash(window.location.hash))
     const [expedienteParaDuplicar, setExpedienteParaDuplicar] =
     useState<Expediente | null>(null)
+    const [expedienteParaEditar, setExpedienteParaEditar] = useState<Expediente | null>(null)
     const [showNewExpedienteForm, setShowNewExpedienteForm] = useState(false)
     const expedientesPageSize = 50
     const [memoExpediente, setMemoExpediente] = useState<Expediente | null>(null)
@@ -109,10 +111,15 @@
     const [memoAsunto, setMemoAsunto] = useState('')
     const [memoFecha, setMemoFecha] = useState(todayInputValue())
     const [memoParaDuplicar, setMemoParaDuplicar] = useState<Memo | null>(null)
+    const [memoParaEditar, setMemoParaEditar] = useState<Memo | null>(null)
+    const [oficioParaEditar, setOficioParaEditar] = useState<Oficio | null>(null)
+    const [proveidoParaEditar, setProveidoParaEditar] = useState<Proveido | null>(null)
+    const [memorandoMultipleParaEditar, setMemorandoMultipleParaEditar] = useState<any>(null)
     const [showMemoForm, setShowMemoForm] = useState(false)
     const [showMemoSelector, setShowMemoSelector] = useState(false)
     const [memoAreaDestino, setMemoAreaDestino] = useState('')
     const [memoResponsable, setMemoResponsable] = useState('')
+    const [memoEnviaCopia, setMemoEnviaCopia] = useState(true)
 
     useEffect(() => {
       const handleHashChange = () => {
@@ -168,6 +175,22 @@
       setToast(message)
       window.setTimeout(() => setToast(''), 3000)
     }, [])
+    const confirmDelete = useCallback(async (
+      type: Parameters<typeof deleteDocument>[0],
+      id: string,
+      label: string,
+      remove: () => void
+    ) => {
+      if (!window.confirm(`¿Eliminar permanentemente ${label}? Seleccione Sí para confirmar o No para cancelar.`)) return
+      try {
+        await deleteDocument(type, id)
+        remove()
+        notify(`${label} eliminado correctamente`)
+      } catch (error) {
+        console.error(`Error eliminando ${label}:`, error)
+        notify(`No se pudo eliminar ${label}`)
+      }
+    }, [notify])
     const {
       expedientes,
       setExpedientes,
@@ -636,6 +659,34 @@
         requiere_gestion: requiereGestion
       }
 
+      if (expedienteParaEditar) {
+        try {
+          const updated = await updateDocument('expediente', expedienteParaEditar.id, payloadDatos)
+          const actualizado = normalizeExpediente({
+            ...expedienteParaEditar,
+            ...newExpediente,
+            id: expedienteParaEditar.id,
+            nroExp: expedienteParaEditar.nroExp,
+            fechaIngreso: String((updated as any)?.fecha_ingreso || fechaIngreso),
+            archivo: archivoSeleccionado ? archivoSeleccionado.name : expedienteParaEditar.archivo,
+            archivoData: archivoSeleccionado ? fileData : expedienteParaEditar.archivoData,
+            archivoTipo: archivoSeleccionado ? archivoSeleccionado.type : expedienteParaEditar.archivoTipo,
+            archivoTamano: archivoSeleccionado ? archivoSeleccionado.size : expedienteParaEditar.archivoTamano
+          })
+          setExpedientes(prev => prev.map(item => item.id === expedienteParaEditar.id ? actualizado : item))
+          setExpedienteParaEditar(null)
+          setShowNewExpedienteForm(false)
+          form.reset()
+          notify('Expediente actualizado correctamente')
+        } catch (error) {
+          console.error('Error actualizando expediente:', error)
+          notify('No se pudo actualizar el expediente')
+        } finally {
+          setIsSaving(false)
+        }
+        return
+      }
+
       // 2. Llamamos a la RPC segura
       const { data: insertedData, error } = await supabase.rpc(
         'registrar_expediente',
@@ -929,7 +980,7 @@
       setMemoParaDuplicar(null)
       setMemoExpediente(expediente)
       setMemoNro('')
-      setMemoFecha(todayInputValue())
+      setMemoFecha(expediente.fechaIngreso?.slice(0, 10) || todayInputValue())
       setMemoAsunto(expediente.asunto || '')
       setMemoAreaDestino('')
       setShowMemoSelector(false)
@@ -983,10 +1034,15 @@
   const cancelNewMemo = () => {
     setShowMemoForm(false)
     setMemoParaDuplicar(null)
+    setMemoParaEditar(null)
     setMemoExpediente(null)
   }
 
-    const saveNewMemo = async (archivo: File | null) => {
+    const saveNewMemo = async (
+      archivo: File | null,
+      enviaCopia: boolean,
+      destinatarioCopia: string
+    ) => {
     if (!currentUser || !userPermissions?.puedeDerivar) {
       notify('No tiene permisos para registrar Memos')
       return
@@ -1011,11 +1067,8 @@
       notify('Seleccione el área destino')
       return
     }
-    if (!archivo && !memoParaDuplicar?.archivoData) {
-    notify('Seleccione el archivo del Memo')
-    return
-    }
-
+    const copiaAutomatica = getAreaCopia(memoAreaDestino)
+    const enviaCopiaEfectiva = enviaCopia && Boolean(copiaAutomatica)
     if (archivo && archivo.size > 5 * 1024 * 1024) {
       notify('El archivo no puede superar los 5 MB')
       return
@@ -1050,6 +1103,35 @@
       const archivoData = archivo
         ? await readFileAsDataUrl(archivo)
         : memoParaDuplicar?.archivoData || ''
+
+      if (memoParaEditar) {
+        try {
+          const updated = await updateDocument('memo', memoParaEditar.id, {
+            fecha: memoFecha,
+            asunto: memoAsunto.trim(),
+            area_destino: memoAreaDestino.trim(),
+            responsable: memoResponsable.trim(),
+            ...(archivo ? {
+              archivo: archivo.name,
+              archivo_data: archivoData,
+              archivo_tipo: archivo.type,
+              archivo_tamano: archivo.size
+            } : {})
+          })
+          setMemos(prev => prev.map(item => item.id === memoParaEditar.id ? {
+            ...item, fecha: memoFecha, asunto: memoAsunto.trim(),
+            areaDestino: memoAreaDestino.trim(), responsable: memoResponsable.trim(),
+            ...(archivo ? { archivo: archivo.name, archivoData, archivoTipo: archivo.type, archivoTamano: archivo.size } : {})
+          } : item))
+          setMemoParaEditar(null)
+          setShowMemoForm(false)
+          notify('Memo actualizado correctamente')
+        } catch (error) {
+          console.error('Error actualizando Memo:', error)
+          notify('No se pudo actualizar el Memo')
+        } finally { setIsSaving(false) }
+        return
+      }
 
       const { data, error } = await supabase.rpc('registrar_memo', {
       p_expediente_id: expedienteId,
@@ -1087,12 +1169,26 @@
         realizadoPor: String(data.registrado_por || ''),
         areaDestino: String(data.area_destino || ''),
         responsable: String(data.responsable || ''),
+        enviaCopia: enviaCopiaEfectiva,
+        destinatarioCopia: enviaCopiaEfectiva ? copiaAutomatica : '',
         estado: data.estado || 'Pendiente',
         archivo: String(data.archivo || ''),
         archivoData: String(data.archivo_data || ''),
         archivoTipo: String(data.archivo_tipo || ''),
         archivoTamano: Number(data.archivo_tamano || 0),
         createdAt: data.created_at
+      }
+
+      const { error: copiaError } = await supabase.rpc('actualizar_memo_copia', {
+        p_memo_id: Number(memoNuevo.id),
+        p_envia_copia: enviaCopiaEfectiva,
+        p_destinatario_copia: enviaCopiaEfectiva ? copiaAutomatica : null
+      })
+
+      if (copiaError) {
+        console.error('Error guardando la copia del Memo:', copiaError)
+        notify(`El Memo se guardó, pero no se pudo registrar la copia: ${copiaError.message}`)
+        return
       }
 
       setMemos(prev => [memoNuevo, ...prev])
@@ -1121,6 +1217,7 @@
       setMemoFecha(todayInputValue())
       setMemoAsunto('')
       setMemoAreaDestino('')
+      setMemoEnviaCopia(true)
       setMemoParaDuplicar(null)
       setShowMemoForm(false)
       notify(
@@ -1373,6 +1470,15 @@
               expedientes={visibleExpedientes}
               canCreate={canRegister}
               onCreated={memo => setMemorandosMultiples(prev => [memo, ...prev])}
+              onDelete={memo => void confirmDelete('memorando_multiple', memo.id, 'el memorando múltiple', () =>
+                setMemorandosMultiples(prev => prev.filter(item => item.id !== memo.id))
+              )}
+              memoParaEditar={memorandoMultipleParaEditar}
+              onEditComplete={memo => {
+                setMemorandosMultiples(prev => prev.map(item => item.id === memo.id ? memo : item))
+                setMemorandoMultipleParaEditar(null)
+              }}
+              onEdit={memo => setMemorandoMultipleParaEditar(memo)}
               notify={notify}
             />
           )}
@@ -1478,6 +1584,14 @@
 
                     onAttachDocument={adjuntarDocumento}
                     onRegisterDate={registrarFechaExpediente}
+                    onDelete={item => void confirmDelete('expediente', item.id, 'el expediente', () =>
+                      setExpedientes(prev => prev.filter(expediente => expediente.id !== item.id))
+                    )}
+                    onEdit={item => {
+                      setExpedienteParaEditar(item)
+                      setExpedienteParaDuplicar(null)
+                      setShowNewExpedienteForm(true)
+                    }}
                     onDuplicate={expediente => {
                       setExpedienteParaDuplicar(expediente)
                       setShowNewExpedienteForm(true)
@@ -1496,6 +1610,16 @@
                 canArchivar={canArchive}
                 showMemoSelector={showMemoSelector}
                 onUpdateMemoEstado={updateMemoEstado}
+                onDeleteMemo={memo => void confirmDelete('memo', memo.id, 'el Memo', () =>
+                  setMemos(prev => prev.filter(item => item.id !== memo.id))
+                )}
+                memoParaEditar={memoParaEditar}
+                onEditMemo={memo => {
+                  setMemoParaEditar(memo)
+                  setMemoExpediente(visibleExpedientes.find(item => item.id === memo.expedienteId) || null)
+                  setShowMemoForm(true)
+                  navigateToView('memos')
+                }}
                 onBack={() => {
         setMemoExpediente(null)
         setShowMemoForm(false)
@@ -1519,6 +1643,8 @@
       memoAreaDestino={memoAreaDestino}
       setMemoAreaDestino={setMemoAreaDestino}
       memoResponsable={memoResponsable}
+      memoEnviaCopia={memoEnviaCopia}
+      setMemoEnviaCopia={setMemoEnviaCopia}
       onSaveMemo={saveNewMemo}
       onCancelMemo={cancelNewMemo}
       onSelectExpediente={(expediente) => {
@@ -1534,7 +1660,7 @@
 
         if (expediente) {
           setMemoNro('')
-          setMemoFecha(todayInputValue())
+          setMemoFecha(expediente.fechaIngreso?.slice(0, 10) || todayInputValue())
           setMemoAsunto(
             memoParaDuplicar
               ? memoParaDuplicar.asunto
@@ -1581,23 +1707,33 @@
         setShowOficioSelector(false)
         setShowOficioForm(true)
       }}
+      onDeleteOficio={oficio => void confirmDelete('oficio', oficio.id, 'el Oficio', () =>
+        setOficios(prev => prev.filter(item => item.id !== oficio.id))
+      )}
+      onEditOficio={oficio => {
+        setOficioParaEditar(oficio)
+        setOficioExpediente(visibleExpedientes.find(item => item.id === oficio.expedienteId) || null)
+        setShowOficioForm(true)
+      }}
     />
   )}
   {view === 'oficios' && showOficioForm && (
     <NuevoOficioView
       expediente={oficioExpediente}
+      oficioParaEditar={oficioParaEditar}
       onCancelar={() => {
         setShowOficioForm(false)
         setOficioExpediente(null)
+        setOficioParaEditar(null)
       }}
       onGuardar={async datos => {
         if (!canDerive) {
           notify('No tiene permisos para registrar Oficios')
-          return
+          return false
         }
         if (!visibleExpedienteIds.has(String(datos.expedienteId))) {
           notify('No tiene acceso al expediente seleccionado')
-          return
+          return false
         }
 
         try {
@@ -1607,6 +1743,19 @@
           const archivoData = datos.archivo
             ? await readFileAsDataUrl(datos.archivo)
             : null
+
+          if (oficioParaEditar) {
+            const updated = await updateDocument('oficio', oficioParaEditar.id, {
+              fecha: datos.fecha, destinatario: datos.destinatario,
+              asunto_detalle: datos.asuntoDetalle, responsable: datos.responsable,
+              area_destino: datos.areaDestino, anio: datos.anio,
+              ...(datos.archivo ? { archivo: datos.archivo.name, archivo_data: archivoData, archivo_tipo: archivoMimeType, archivo_tamano: datos.archivo.size } : {})
+            })
+            setOficios(prev => prev.map(item => item.id === oficioParaEditar.id ? { ...item, fecha: datos.fecha, destinatario: datos.destinatario, asuntoDetalle: datos.asuntoDetalle, responsable: datos.responsable, areaDestino: datos.areaDestino, anio: datos.anio, ...(datos.archivo ? { archivo: datos.archivo.name, archivoData: archivoData || '', archivoTipo: archivoMimeType || '', archivoTamano: datos.archivo.size } : {}) } : item))
+            setOficioParaEditar(null); setShowOficioForm(false); setOficioExpediente(null)
+            notify('Oficio actualizado correctamente')
+            return true
+          }
 
           const { data, error } = await supabase.rpc('registrar_oficio', {
             p_datos: {
@@ -1629,12 +1778,12 @@
           if (error) {
             console.error('Error guardando Oficio:', error)
             notify(`No se pudo guardar el Oficio: ${error.message}`)
-            return
+            return false
           }
 
           if (!data || !data.expediente) {
             notify('La base de datos no devolvió el Oficio y expediente actualizados.')
-            return
+            return false
           }
 
           const oficioNuevo: Oficio = {
@@ -1683,9 +1832,11 @@
           notify(
             `Oficio ${formatDocumentNumber(oficioNuevo.nRegistro, oficioNuevo.createdAt)} registrado correctamente.`
           )
+          return true
         } catch (error) {
           console.error('Error inesperado guardando Oficio:', error)
           notify('Ocurrió un error al guardar el Oficio.')
+          return false
         }
       }}
     />
@@ -1717,18 +1868,28 @@
     setShowProveidoSelector(false)
     setShowProveidoForm(true)
   }}
+  onDeleteProveido={proveido => void confirmDelete('proveido', proveido.id, 'el Proveído', () =>
+    setProveidos(prev => prev.filter(item => item.id !== proveido.id))
+  )}
+  onEditProveido={proveido => {
+    setProveidoParaEditar(proveido)
+    setProveidoExpediente(visibleExpedientes.find(item => item.id === proveido.expedienteId) || null)
+    setShowProveidoForm(true)
+  }}
 />
   )}
 
   {view === 'proveidos' && showProveidoForm && (
     <NuevoProveidoView
       expediente={proveidoExpediente}
+      proveidoParaEditar={proveidoParaEditar}
       expedientes={visibleExpedientes}
       areaOptions={areaOptions}
       onExpedienteChange={setProveidoExpediente}
       onCancelar={() => {
         setShowProveidoForm(false)
         setProveidoExpediente(null)
+        setProveidoParaEditar(null)
       }}
 
       onGuardar={async datos => {
@@ -1753,6 +1914,17 @@
               errorLectura
             )
             notify('No se pudo leer el archivo seleccionado.')
+            return
+          }
+          if (proveidoParaEditar) {
+            await updateDocument('proveido', proveidoParaEditar.id, {
+              fecha: datos.fecha, area_destino: datos.areaDestino,
+              responsable: datos.responsable, instruccion: datos.instruccion,
+              ...(datos.archivo ? { archivo: datos.archivo.name, archivo_data: archivoData, archivo_tipo: datos.archivo.type, archivo_tamano: datos.archivo.size } : {})
+            })
+            setProveidos(prev => prev.map(item => item.id === proveidoParaEditar.id ? { ...item, fecha: datos.fecha, areaDestino: datos.areaDestino, responsable: datos.responsable, instruccion: datos.instruccion, ...(datos.archivo ? { archivo: datos.archivo.name, archivoData: archivoData || '', archivoTipo: datos.archivo.type, archivoTamano: datos.archivo.size } : {}) } : item))
+            setProveidoParaEditar(null); setShowProveidoForm(false); setProveidoExpediente(null)
+            notify('Proveído actualizado correctamente')
             return
           }
         }
@@ -1872,6 +2044,7 @@
             onClose={() => {
               setShowNewExpedienteForm(false)
               setExpedienteParaDuplicar(null)
+              setExpedienteParaEditar(null)
             }}
             className="new-expediente-modal"
             overlayClassName="new-expediente-modal-overlay"
@@ -1881,9 +2054,11 @@
               onCancel={() => {
                 setShowNewExpedienteForm(false)
                 setExpedienteParaDuplicar(null)
+                setExpedienteParaEditar(null)
               }}
               isSaving={isSaving}
               expedienteParaDuplicar={expedienteParaDuplicar}
+              expedienteParaEditar={expedienteParaEditar}
             />
           </Modal>
         )}

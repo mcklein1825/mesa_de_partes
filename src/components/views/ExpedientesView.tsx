@@ -35,6 +35,8 @@ export default function ExpedientesView({
   expedienteDocumentos,
   onAttachDocument,
   onRegisterDate,
+  onDelete,
+  onEdit,
 }: {
 
   items: Expediente[]
@@ -74,6 +76,8 @@ export default function ExpedientesView({
     expedienteId: string,
     fecha: string
   ) => Promise<void>
+  onDelete: (item: Expediente) => void
+  onEdit: (item: Expediente) => void
     pageSize: number
 }) {
   const [showDuplicateModal, setShowDuplicateModal] = useState(false)
@@ -406,6 +410,16 @@ export default function ExpedientesView({
                       >
 
                       <Eye size={16} aria-hidden="true" /> Ver seguimiento
+                    </button>
+                    <button
+                      type="button"
+                      className="action-link"
+                      onClick={() => onDelete(item)}
+                    >
+                      Eliminar
+                    </button>
+                    <button type="button" className="action-link" onClick={() => onEdit(item)}>
+                      Editar
                     </button>
 
 

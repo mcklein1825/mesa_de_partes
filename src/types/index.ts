@@ -36,6 +36,8 @@ export type Memo = {
   realizadoPor: string
   areaDestino: string
   responsable: string
+  enviaCopia?: boolean
+  destinatarioCopia?: string
   estado: 'Pendiente' | 'Sin respuesta' | 'Atendido' | 'Archivado'
   archivo?: string
   archivoData?: string

@@ -18,6 +18,8 @@ type Props = {
   onNuevoProveido: () => void
   onCloseSelector: () => void
   onSelectExpediente: (expediente: Expediente) => void
+  onDeleteProveido: (proveido: Proveido) => void
+  onEditProveido: (proveido: Proveido) => void
 }
 
 export default function ProveidosView({
@@ -28,7 +30,9 @@ export default function ProveidosView({
   canCreate,
   onNuevoProveido,
   onCloseSelector,
-  onSelectExpediente
+  onSelectExpediente,
+  onDeleteProveido,
+  onEditProveido
 }: Props) {
   const [busqueda, setBusqueda] = useState('')
   const [areaFilter, setAreaFilter] = useState('Todas')
@@ -236,11 +240,6 @@ export default function ProveidosView({
                     >
                       {proveido.areaDestino || '—'}
                     </span>
-                    {getAreaCopia(proveido.areaDestino) && (
-                      <small>
-                        Con copia a: {getAreaCopia(proveido.areaDestino)}
-                      </small>
-                    )}
                   </td>
 
                   <td data-label="REALIZADO POR">
@@ -291,6 +290,12 @@ export default function ProveidosView({
                   {/* NUEVO ESTADO */}
                   <td data-label="ESTADO">
                     <StatusBadge status={proveido.estado as any} />
+                  </td>
+                  <td data-label="ACCIONES">
+                    <button type="button" className="action-link" onClick={() => onDeleteProveido(proveido)}>
+                      Eliminar
+                    </button>
+                    <button type="button" className="action-link" onClick={() => onEditProveido(proveido)}>Editar</button>
                   </td>
 
                   <td data-label="DOCUMENTO">

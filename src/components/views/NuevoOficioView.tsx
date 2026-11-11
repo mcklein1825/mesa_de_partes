@@ -1,39 +1,40 @@
-import { FormEvent, useMemo, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useState } from 'react'
 import { FileUp, LoaderCircle } from 'lucide-react'
-import { Expediente } from '../../types'
-import {
-  AREA_DESTINO_OPTIONS,
-  getAreaCopia,
-  getAreaResponsable
-} from '../../constants'
+import { Expediente, Oficio } from '../../types'
 import { formatNroExp, getSupportedDocumentMimeType } from '../../utils/expedienteHelpers'
 import { useToast } from '../common/ToastProvider'
+import {
+  fetchOficioDestinatariosFrecuentes,
+  registrarOficioDestinatario
+} from '../../services/oficioDestinatariosService'
 
 type Props = {
   expediente: Expediente | null
   onCancelar: () => void
-  onGuardar: (datos: NuevoOficioData) => Promise<void>
+  onGuardar: (datos: NuevoOficioData) => Promise<boolean>
+  oficioParaEditar?: Oficio | null
 }
 
 export type NuevoOficioData = {
   expedienteId: string
   nroExpediente: string
   fecha: string
+  areaDestino: string
   destinatario: string
+  responsable: string
   asuntoTipo: string
   asuntoDetalle: string
-  responsable: string
   codigoOad: string
   codigoOgesup: string
   anio: number
-  areaDestino: string
   archivo: File | null
 }
 
 export default function NuevoOficioView({
   expediente,
   onCancelar,
-  onGuardar
+  onGuardar,
+  oficioParaEditar = null
 }: Props) {
   const { toast } = useToast()
   const [fecha, setFecha] = useState(
@@ -41,20 +42,36 @@ export default function NuevoOficioView({
   )
 
   const [asuntoDetalle, setAsuntoDetalle] = useState('')
-  const [destinatario, setDestinatario] = useState('')
   const [areaDestino, setAreaDestino] = useState('')
-  const [areaBusqueda, setAreaBusqueda] = useState('')
-  const [areaAbierta, setAreaAbierta] = useState(false)
-  const responsable = getAreaResponsable(areaDestino)
+  const [destinatario, setDestinatario] = useState('')
+  const [responsable, setResponsable] = useState('')
+  const [destinatariosFrecuentes, setDestinatariosFrecuentes] = useState<string[]>([])
   const [archivo, setArchivo] = useState<File | null>(null)
+  useEffect(() => {
+    if (!oficioParaEditar) return
+    setFecha(oficioParaEditar.fecha?.slice(0, 10) || '')
+    setAsuntoDetalle(oficioParaEditar.asuntoDetalle)
+    setAreaDestino(oficioParaEditar.areaDestino)
+    setDestinatario(oficioParaEditar.destinatario)
+    setResponsable(oficioParaEditar.responsable)
+  }, [oficioParaEditar])
 
   const [guardando, setGuardando] = useState(false)
-  const areasFiltradas = useMemo(() => {
-    const texto = areaBusqueda.trim().toLowerCase()
-    return AREA_DESTINO_OPTIONS.filter(area =>
-      !texto || area.toLowerCase().includes(texto)
-    )
-  }, [areaBusqueda])
+  const destinatariosFiltrados = useMemo(() => {
+    const texto = destinatario.trim().toLowerCase()
+    return destinatariosFrecuentes.filter(item =>
+      !texto || item.toLowerCase().includes(texto)
+    ).slice(0, 8)
+  }, [destinatario, destinatariosFrecuentes])
+
+  useEffect(() => {
+    fetchOficioDestinatariosFrecuentes()
+      .then(setDestinatariosFrecuentes)
+      .catch(error => {
+        console.error('Error cargando destinatarios frecuentes de Oficios:', error)
+        toast('No se pudieron cargar las sugerencias de destinatarios.', 'warning')
+      })
+  }, [toast])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -64,18 +81,23 @@ export default function NuevoOficioView({
       return
     }
 
-    if (!areaDestino) {
-      toast('Seleccione el área destino.', 'warning')
-      return
-    }
-
     if (!asuntoDetalle.trim()) {
       toast('Ingrese el asunto del Oficio.', 'warning')
       return
     }
 
+    if (!areaDestino.trim()) {
+      toast('Ingrese el área o entidad destino del Oficio.', 'warning')
+      return
+    }
+
     if (!destinatario.trim()) {
       toast('Ingrese el destinatario del Oficio.', 'warning')
+      return
+    }
+
+    if (!responsable.trim()) {
+      toast('Ingrese el responsable del Oficio.', 'warning')
       return
     }
 
@@ -92,20 +114,28 @@ export default function NuevoOficioView({
     setGuardando(true)
 
     try {
-      await onGuardar({
+      const guardado = await onGuardar({
         expedienteId: String(expediente.id),
         nroExpediente: String(expediente.nroExp),
         fecha,
+        areaDestino: areaDestino.trim(),
         destinatario: destinatario.trim(),
+        responsable: responsable.trim(),
         asuntoTipo: '',
         asuntoDetalle: asuntoDetalle.trim(),
-        responsable: responsable.trim(),
         codigoOad: '',
         codigoOgesup: '',
         anio: new Date(`${fecha}T00:00:00`).getFullYear(),
-        areaDestino: areaDestino.trim(),
         archivo
       })
+      if (guardado) {
+        try {
+          await registrarOficioDestinatario(destinatario.trim())
+        } catch (error) {
+          console.error('Error guardando destinatario frecuente de Oficio:', error)
+          toast('El Oficio se guardó, pero no se pudo actualizar la sugerencia.', 'warning')
+        }
+      }
     } finally {
       setGuardando(false)
     }
@@ -116,9 +146,9 @@ export default function NuevoOficioView({
       <div className="page-heading compact document-form-header">
         <div>
           <p className="eyebrow">GESTIÓN DOCUMENTAL</p>
-          <h1>Nuevo Oficio</h1>
+          <h1>{oficioParaEditar ? 'Editar Oficio' : 'Nuevo Oficio'}</h1>
           <p className="muted">
-            Registre la fecha, el área de destino, el asunto y el responsable del Oficio.
+            Registre la fecha, el área o entidad destino, el destinatario externo, el responsable y el asunto.
           </p>
         </div>
 
@@ -169,72 +199,6 @@ export default function NuevoOficioView({
                   required
                 />
               </div>
-
-              <div className="form-group document-form-field">
-                <label>Área de destino DRELM *</label>
-                <div className="memo-destino-combobox">
-                  <input
-                    type="text"
-                    value={areaBusqueda}
-                    onChange={event => {
-                      setAreaBusqueda(event.target.value)
-                      setAreaDestino('')
-                      setAreaAbierta(true)
-                    }}
-                    onFocus={() => setAreaAbierta(true)}
-                    placeholder="Escribe área o subárea..."
-                    autoComplete="off"
-                    required={!areaDestino}
-                  />
-                  {areaAbierta && (
-                    <div className="memo-destino-options">
-                      {areasFiltradas.length > 0 ? (
-                        areasFiltradas.map(area => (
-                          <button
-                            key={area}
-                            type="button"
-                            className="memo-destino-option"
-                            onMouseDown={event => {
-                              event.preventDefault()
-                              setAreaDestino(area)
-                              setAreaBusqueda(area)
-                              setAreaAbierta(false)
-                            }}
-                          >
-                            {area}
-                          </button>
-                        ))
-                      ) : (
-                        <div className="memo-destino-empty">
-                          No se encontraron áreas o subáreas.
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="form-group document-form-field">
-                <label>Responsable</label>
-                <input
-                  type="text"
-                  value={responsable}
-                  readOnly
-                  placeholder="Se completa según el área seleccionada"
-                />
-                <small>
-                  {responsable
-                    ? areaDestino.startsWith('Administración / ')
-                      ? 'Responsable: jefatura de Administración. La subárea se conserva como destino para indicar la copia correspondiente.'
-                      : 'Jefe del área destinataria.'
-                    : 'El destino no tiene un jefe asignado en el catálogo.'}
-                </small>
-                {getAreaCopia(areaDestino) && (
-                  <small>
-                    Con copia a: {getAreaCopia(areaDestino)}
-                  </small>
-                )}
-              </div>
             </div>
           </div>
 
@@ -252,7 +216,37 @@ export default function NuevoOficioView({
                   type="text"
                   value={destinatario}
                   onChange={event => setDestinatario(event.target.value)}
+                  list="oficio-destinatarios-frecuentes"
                   placeholder="Nombre o entidad destinataria"
+                  required
+                />
+                <datalist id="oficio-destinatarios-frecuentes">
+                  {destinatariosFiltrados.map(item => (
+                    <option key={item} value={item} />
+                  ))}
+                </datalist>
+              </div>
+
+              <div className="form-group document-form-field">
+                <label htmlFor="oficio-area-destino">Área o entidad destino *</label>
+                <input
+                  id="oficio-area-destino"
+                  type="text"
+                  value={areaDestino}
+                  onChange={event => setAreaDestino(event.target.value)}
+                  placeholder="Nombre del área o entidad externa"
+                  required
+                />
+              </div>
+
+              <div className="form-group form-group-full document-form-field">
+                <label htmlFor="oficio-responsable">Responsable *</label>
+                <input
+                  id="oficio-responsable"
+                  type="text"
+                  value={responsable}
+                  onChange={event => setResponsable(event.target.value)}
+                  placeholder="Nombre del responsable externo"
                   required
                 />
               </div>
