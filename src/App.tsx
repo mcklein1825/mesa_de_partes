@@ -29,12 +29,15 @@
     X,
     ShieldCheck,
     MoreVertical,
-    Check
+    Check,
+    UserCog
   } from 'lucide-react'
 
 // Tipos y Constantes
   import { User, View, Expediente, Memo, Oficio, Proveido, Status } from './types'
-  import { ROLE_PERMISSIONS, areas, getAreaCopia, getAreaResponsable } from './constants'
+  import { ROLE_PERMISSIONS, areas, getAreaCopia, getAreaDestinoOptions, getAreaResponsable, useAreasCatalog } from './constants'
+  import { resetAreasCatalog } from './constants/areasCatalog'
+  import { cargarCatalogoAreas } from './services/areasResponsablesService'
 
   // Utilidades
   import {
@@ -50,6 +53,7 @@
   import ExpedientesView from './components/views/ExpedientesView'
   import MemosView from './components/views/MemosView'
   import MemorandosMultiplesView from './components/views/MemorandosMultiplesView'
+  import JefaturasView from './components/views/JefaturasView'
   import NewExpedienteView from './components/views/NewExpedienteView'
   const ReportsView = lazy(() => import('./components/views/ReportsView'))
 
@@ -69,7 +73,8 @@
       'memos',
       'memos-multiples',
       'oficios',
-      'proveidos'
+      'proveidos',
+      'jefaturas'
     ]
     return validViews.includes(section as View) ? section as View : 'inicio'
   }
@@ -80,6 +85,7 @@
   export default function App() {
 
     const [currentUser, setCurrentUser] = useState<User | null>(null)
+    const areasCatalog = useAreasCatalog()
     const [view, setView] = useState<View>(() => viewFromHash(window.location.hash))
     const [expedienteParaDuplicar, setExpedienteParaDuplicar] =
     useState<Expediente | null>(null)
@@ -113,6 +119,7 @@
     const [memoParaDuplicar, setMemoParaDuplicar] = useState<Memo | null>(null)
     const [memoParaEditar, setMemoParaEditar] = useState<Memo | null>(null)
     const [oficioParaEditar, setOficioParaEditar] = useState<Oficio | null>(null)
+    const [oficioParaDuplicar, setOficioParaDuplicar] = useState<Oficio | null>(null)
     const [proveidoParaEditar, setProveidoParaEditar] = useState<Proveido | null>(null)
     const [memorandoMultipleParaEditar, setMemorandoMultipleParaEditar] = useState<any>(null)
     const [showMemoForm, setShowMemoForm] = useState(false)
@@ -140,7 +147,8 @@
         memos: 'Memos',
         'memos-multiples': 'Memos múltiples',
         oficios: 'Oficios',
-        proveidos: 'Proveídos'
+        proveidos: 'Proveídos',
+        jefaturas: 'Jefaturas'
       }
       document.title = `${sectionTitles[view]} | Gestión Documental`
     }, [view])
@@ -169,12 +177,30 @@
     }
 
     setMemoResponsable(getAreaResponsable(memoAreaDestino))
-  }, [memoAreaDestino])
+  }, [memoAreaDestino, areasCatalog])
 
     const notify = useCallback((message: string) => {
       setToast(message)
       window.setTimeout(() => setToast(''), 3000)
     }, [])
+
+    // Áreas, jefes y subáreas: se leen de Supabase al iniciar sesión.
+    // Si la tabla aún no existe, se siguen usando los nombres iniciales del código.
+    useEffect(() => {
+      if (!currentUser) {
+        resetAreasCatalog()
+        return
+      }
+      let cancelled = false
+      cargarCatalogoAreas().catch(error => {
+        if (!cancelled) {
+          console.warn('No se pudo cargar el catálogo de jefaturas; se usan los valores iniciales.', error)
+        }
+      })
+      return () => {
+        cancelled = true
+      }
+    }, [currentUser?.id])
     const confirmDelete = useCallback(async (
       type: Parameters<typeof deleteDocument>[0],
       id: string,
@@ -279,6 +305,7 @@
     const canArchive = userPermissions?.puedeArchivar === true
     const canEdit = userPermissions?.puedeEditar === true
     const canSeeReports = userPermissions?.puedeVerReportes === true
+    const canManageAreas = canEdit
 
     const visibleExpedientes = useMemo(() => {
       if (userPermissions?.puedeVerTodos !== false) return expedientes
@@ -355,7 +382,7 @@
       }
 
       // 4. Juntar áreas oficiales + áreas de la BD
-      const rawAreas = [...areas, ...visibleExpedientes.map(getAreaDestino).filter(Boolean)]
+      const rawAreas = [...areas, ...getAreaDestinoOptions(), ...visibleExpedientes.map(getAreaDestino).filter(Boolean)]
 
       // 5. Procesar
       const cleaned = rawAreas
@@ -376,7 +403,7 @@
         )
 
       return cleaned.sort()
-    }, [visibleExpedientes])
+    }, [visibleExpedientes, areasCatalog])
 
     const currentDate = useMemo(() => {
       const now = new Date()
@@ -1349,7 +1376,7 @@
       count={visibleExpedientes.filter(item => item.estado === 'Pendiente').length}
     />
     <NavItem
-    icon={<ChartNoAxesCombined size={18} strokeWidth={1.8} />}
+    icon={<FileText size={18} strokeWidth={1.8} />}
     label="Memos"
     active={view === 'memos'}
     onClick={() => {
@@ -1393,11 +1420,19 @@
       onClick={() => navigateToView('reportes')}
     />
     )}
+    {canManageAreas && (
+    <NavItem
+      icon={<UserCog size={18} strokeWidth={1.8} />}
+      label="Jefaturas"
+      active={view === 'jefaturas'}
+      onClick={() => navigateToView('jefaturas')}
+    />
+    )}
   </nav>
           <div className="sidebar-footer">
             <div className="secure-note">
               <ShieldCheck size={16} aria-hidden="true" />
-              <div><b>Supabase</b><small>Datos almacenados en la base de datos</small></div>
+              <div><b>{currentUser.area || 'Dirección General'}</b><small>Entorno institucional</small></div>
             </div>
             <div className="profile-menu">
               <button
@@ -1464,6 +1499,9 @@
               riskAnalysis={expedienteRiskAnalysis}
             />
           )}
+          {view === 'jefaturas' && (
+            <JefaturasView canEdit={canManageAreas} notify={notify} />
+          )}
           {view === 'memos-multiples' && (
             <MemorandosMultiplesView
               memorandos={memorandosMultiples}
@@ -1479,6 +1517,7 @@
                 setMemorandoMultipleParaEditar(null)
               }}
               onEdit={memo => setMemorandoMultipleParaEditar(memo)}
+              onCancelEdit={() => setMemorandoMultipleParaEditar(null)}
               notify={notify}
             />
           )}
@@ -1689,12 +1728,27 @@
       areaOptions={areaOptions}
       showSelector={showOficioSelector}
       canCreate={canDerive}
-      onCloseSelector={() => setShowOficioSelector(false)}
+      oficioParaDuplicar={oficioParaDuplicar}
+      onCloseSelector={() => {
+        setShowOficioSelector(false)
+        setOficioParaDuplicar(null)
+      }}
       onNuevoOficio={() => {
         if (!canDerive) {
           notify('No tiene permisos para registrar Oficios')
           return
         }
+        setOficioParaDuplicar(null)
+        setShowOficioSelector(true)
+      }}
+      onDuplicateOficio={oficio => {
+        if (!canDerive) {
+          notify('No tiene permisos para duplicar Oficios')
+          return
+        }
+        setOficioParaEditar(null)
+        setOficioParaDuplicar(oficio)
+        setOficioExpediente(null)
         setShowOficioSelector(true)
       }}
       onSelectExpediente={(exp) => {
@@ -1721,10 +1775,12 @@
     <NuevoOficioView
       expediente={oficioExpediente}
       oficioParaEditar={oficioParaEditar}
+      oficioParaDuplicar={oficioParaDuplicar}
       onCancelar={() => {
         setShowOficioForm(false)
         setOficioExpediente(null)
         setOficioParaEditar(null)
+        setOficioParaDuplicar(null)
       }}
       onGuardar={async datos => {
         if (!canDerive) {
@@ -1827,6 +1883,7 @@
 
           setShowOficioForm(false)
           setOficioExpediente(null)
+          setOficioParaDuplicar(null)
           navigateToView('oficios')
 
           notify(

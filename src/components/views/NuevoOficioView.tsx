@@ -1,7 +1,8 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react'
 import { FileUp, LoaderCircle } from 'lucide-react'
 import { Expediente, Oficio } from '../../types'
-import { formatNroExp, getSupportedDocumentMimeType } from '../../utils/expedienteHelpers'
+import { dataUrlToFile, formatNroExp, getSupportedDocumentMimeType } from '../../utils/expedienteHelpers'
+import { formatDocumentNumber } from '../../utils/documentHelpers'
 import { useToast } from '../common/ToastProvider'
 import {
   fetchOficioDestinatariosFrecuentes,
@@ -13,6 +14,8 @@ type Props = {
   onCancelar: () => void
   onGuardar: (datos: NuevoOficioData) => Promise<boolean>
   oficioParaEditar?: Oficio | null
+  /** Oficio existente cuyos datos y adjunto se copian en uno nuevo */
+  oficioParaDuplicar?: Oficio | null
 }
 
 export type NuevoOficioData = {
@@ -34,7 +37,8 @@ export default function NuevoOficioView({
   expediente,
   onCancelar,
   onGuardar,
-  oficioParaEditar = null
+  oficioParaEditar = null,
+  oficioParaDuplicar = null
 }: Props) {
   const { toast } = useToast()
   const [fecha, setFecha] = useState(
@@ -55,6 +59,17 @@ export default function NuevoOficioView({
     setDestinatario(oficioParaEditar.destinatario)
     setResponsable(oficioParaEditar.responsable)
   }, [oficioParaEditar])
+
+  useEffect(() => {
+    if (!oficioParaDuplicar) return
+    // La copia lleva la fecha de hoy y los mismos datos; el número lo asigna la base de datos.
+    setFecha(new Date().toISOString().split('T')[0])
+    setAsuntoDetalle(oficioParaDuplicar.asuntoDetalle)
+    setAreaDestino(oficioParaDuplicar.areaDestino)
+    setDestinatario(oficioParaDuplicar.destinatario)
+    setResponsable(oficioParaDuplicar.responsable)
+    setArchivo(null)
+  }, [oficioParaDuplicar])
 
   const [guardando, setGuardando] = useState(false)
   const destinatariosFiltrados = useMemo(() => {
@@ -111,9 +126,29 @@ export default function NuevoOficioView({
       return
     }
 
+    if (
+      !archivo &&
+      oficioParaDuplicar?.archivoData &&
+      (oficioParaDuplicar.archivoTamano || 0) > 5 * 1024 * 1024
+    ) {
+      toast('El archivo original supera los 5 MB; seleccione un archivo válido.', 'warning')
+      return
+    }
+
     setGuardando(true)
 
     try {
+      // Al duplicar, si no se elige otro archivo se conserva el adjunto del Oficio original.
+      const archivoFinal =
+        archivo ??
+        (oficioParaDuplicar?.archivoData
+          ? dataUrlToFile(
+              oficioParaDuplicar.archivoData,
+              oficioParaDuplicar.archivo || 'documento',
+              oficioParaDuplicar.archivoTipo
+            )
+          : null)
+
       const guardado = await onGuardar({
         expedienteId: String(expediente.id),
         nroExpediente: String(expediente.nroExp),
@@ -126,7 +161,7 @@ export default function NuevoOficioView({
         codigoOad: '',
         codigoOgesup: '',
         anio: new Date(`${fecha}T00:00:00`).getFullYear(),
-        archivo
+        archivo: archivoFinal
       })
       if (guardado) {
         try {
@@ -146,9 +181,11 @@ export default function NuevoOficioView({
       <div className="page-heading compact document-form-header">
         <div>
           <p className="eyebrow">GESTIÓN DOCUMENTAL</p>
-          <h1>{oficioParaEditar ? 'Editar Oficio' : 'Nuevo Oficio'}</h1>
+          <h1>{oficioParaEditar ? 'Editar Oficio' : oficioParaDuplicar ? 'Duplicar Oficio' : 'Nuevo Oficio'}</h1>
           <p className="muted">
-            Registre la fecha, el área o entidad destino, el destinatario externo, el responsable y el asunto.
+            {oficioParaDuplicar
+              ? `Copia del Oficio ${formatDocumentNumber(oficioParaDuplicar.nRegistro, oficioParaDuplicar.createdAt)}. El original se conservará y la copia recibirá su propio número.`
+              : 'Registre la fecha, el área o entidad destino, el destinatario externo, el responsable y el asunto.'}
           </p>
         </div>
 
@@ -266,7 +303,7 @@ export default function NuevoOficioView({
               <div className="form-group document-form-field">
                 <label htmlFor="oficio-archivo">Adjunto (opcional)</label>
                 <label className="document-form-file-button" htmlFor="oficio-archivo">
-                  <><FileUp size={16} aria-hidden="true" /> Seleccionar archivo</>
+                  <><FileUp size={16} aria-hidden="true" /> {archivo || oficioParaDuplicar?.archivoData ? 'Cambiar archivo' : 'Seleccionar archivo'}</>
                   <input
                     id="oficio-archivo"
                     type="file"
@@ -299,7 +336,9 @@ export default function NuevoOficioView({
                 <small>
                   {archivo
                     ? `Seleccionado: ${archivo.name}`
-                    : 'PDF o imagen JPG/PNG. Máximo 5 MB.'}
+                    : oficioParaDuplicar?.archivoData
+                      ? `Se conservará el archivo ${oficioParaDuplicar.archivo || 'original'} si no selecciona otro. Máximo 5 MB.`
+                      : 'PDF o imagen JPG/PNG. Máximo 5 MB.'}
                 </small>
                 {archivo && (
                   <button

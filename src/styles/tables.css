@@ -111,7 +111,7 @@
 
 .list-panel .expedientes-table th:nth-child(6),
 .list-panel .expedientes-table td:nth-child(6) {
-  width: 130px; /* Estado */
+  width: 185px; /* Estado: cabe la etiqueta más larga (SOLO REGISTRO) con holgura */
 }
 
 .list-panel .expedientes-table th:nth-child(7),
@@ -160,6 +160,11 @@
   border-color: var(--color-346);
 }
 
+.status-badge.en-atención,
+.status-badge.en-atencion {
+  background: var(--color-343);
+}
+
 .clear-filters-button {
   align-self: center;
   padding: 8px 10px;
@@ -187,58 +192,83 @@
   table-layout: fixed;
 }
 
-/* Expediente: columna compacta */
+/* 10 columnas que suman 100 %. El ancho mínimo de la tabla está más abajo. */
+/* N.º proveído */
 .list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(1),
 .list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(1) {
-  width: 9%;
+  width: 8%;
+  min-width: 0;
+  max-width: none;
+}
+
+/* Expediente */
+.list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(2),
+.list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(2) {
+  width: 8%;
   min-width: 0;
   max-width: none;
 }
 
 /* Fecha */
-.list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(2),
-.list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(2) {
-  width: 10%;
+.list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(3),
+.list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(3) {
+  width: 8%;
   min-width: 0;
   max-width: none;
 }
 
 /* Área destino */
-.list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(3),
-.list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(3) {
-  width: 15%;
-  min-width: 0;
-  max-width: none;
-}
-
-/* Responsable */
 .list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(4),
 .list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(4) {
-  width: 16%;
+  width: 11%;
   min-width: 0;
   max-width: none;
 }
 
-/* Instrucción */
+/* Realizado por */
 .list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(5),
 .list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(5) {
-  width: 27%;
-  min-width: 0;
-  max-width: none;
-}
-
-/* Estado */
-.list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(6),
-.list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(6) {
   width: 9%;
   min-width: 0;
   max-width: none;
 }
 
-/* Documento */
+/* Responsable */
+.list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(6),
+.list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(6) {
+  width: 10%;
+  min-width: 0;
+  max-width: none;
+}
+
+/* Instrucción */
 .list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(7),
 .list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(7) {
-  width: 14%;
+  width: 13%;
+  min-width: 0;
+  max-width: none;
+}
+
+/* Estado */
+.list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(8),
+.list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(8) {
+  width: 12%;
+  min-width: 0;
+  max-width: none;
+}
+
+/* Documento */
+.list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(9),
+.list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(9) {
+  width: 12%;
+  min-width: 0;
+  max-width: none;
+}
+
+/* Acciones */
+.list-panel.proveidos-list .table-wrap > table.proveidos-table th:nth-child(10),
+.list-panel.proveidos-list .table-wrap > table.proveidos-table td:nth-child(10) {
+  width: 9%;
   min-width: 0;
   max-width: none;
 }
@@ -250,6 +280,219 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Memos múltiples: 9 columnas que suman 100 % (sustituye los anchos genéricos en px de base.css). */
+.list-panel .memorandos-multiples-table th:nth-child(1),
+.list-panel .memorandos-multiples-table td:nth-child(1) {
+  width: 8%;
+  min-width: 0;
+  max-width: none;
+}
+
+.list-panel .memorandos-multiples-table th:nth-child(2),
+.list-panel .memorandos-multiples-table td:nth-child(2) {
+  width: 10%;
+  min-width: 0;
+  max-width: none;
+}
+
+.list-panel .memorandos-multiples-table th:nth-child(3),
+.list-panel .memorandos-multiples-table td:nth-child(3) {
+  width: 8%;
+  min-width: 0;
+  max-width: none;
+}
+
+.list-panel .memorandos-multiples-table th:nth-child(4),
+.list-panel .memorandos-multiples-table td:nth-child(4) {
+  width: 18%;
+  min-width: 0;
+  max-width: none;
+}
+
+.list-panel .memorandos-multiples-table th:nth-child(5),
+.list-panel .memorandos-multiples-table td:nth-child(5) {
+  width: 17%;
+  min-width: 0;
+  max-width: none;
+}
+
+.list-panel .memorandos-multiples-table th:nth-child(6),
+.list-panel .memorandos-multiples-table td:nth-child(6) {
+  width: 9%;
+  min-width: 0;
+  max-width: none;
+}
+
+.list-panel .memorandos-multiples-table th:nth-child(7),
+.list-panel .memorandos-multiples-table td:nth-child(7) {
+  width: 9%;
+  min-width: 0;
+  max-width: none;
+}
+
+.list-panel .memorandos-multiples-table th:nth-child(8),
+.list-panel .memorandos-multiples-table td:nth-child(8) {
+  width: 11%;
+  min-width: 0;
+  max-width: none;
+}
+
+.list-panel .memorandos-multiples-table th:nth-child(9),
+.list-panel .memorandos-multiples-table td:nth-child(9) {
+  width: 10%;
+  min-width: 0;
+  max-width: none;
+}
+
+/* Jefaturas: 4 columnas que suman 100 %. */
+.list-panel .jefaturas-table th:nth-child(1),
+.list-panel .jefaturas-table td:nth-child(1) {
+  width: 30%;
+  min-width: 0;
+  max-width: none;
+}
+
+.list-panel .jefaturas-table th:nth-child(2),
+.list-panel .jefaturas-table td:nth-child(2) {
+  width: 33%;
+  min-width: 0;
+  max-width: none;
+}
+
+.list-panel .jefaturas-table th:nth-child(3),
+.list-panel .jefaturas-table td:nth-child(3) {
+  width: 12%;
+  min-width: 0;
+  max-width: none;
+}
+
+.list-panel .jefaturas-table th:nth-child(4),
+.list-panel .jefaturas-table td:nth-child(4) {
+  width: 25%;
+  min-width: 0;
+  max-width: none;
+}
+
+/* Los nombres de áreas y jefes se muestran completos (con salto de línea), sin recortar. */
+.portal-shell .list-panel .table-wrap > table.jefaturas-table td {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+}
+
+.jefatura-area-row td {
+  background: rgba(15, 23, 42, 0.03);
+}
+
+.jefatura-subarea-row td:first-child {
+  padding-left: 30px;
+}
+
+.jefatura-subarea-name {
+  display: block;
+  font-weight: 600;
+}
+
+.jefatura-subarea-note {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.jefaturas-heading-actions {
+  align-items: flex-start;
+}
+
+.jefaturas-heading-actions button {
+  white-space: nowrap;
+}
+
+.portal-shell .jefaturas-secondary-button {
+  padding: 14px 20px;
+  border: 1px solid var(--turquesa);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--turquesa);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.portal-shell .jefaturas-secondary-button:hover {
+  background: rgba(32, 178, 170, 0.08);
+}
+
+/* Acciones de cada fila en una sola línea (Editar, ＋ Subárea, Eliminar). */
+.portal-shell .list-panel .table-wrap > table.jefaturas-table td.col-acciones .action-link {
+  display: inline-block;
+  margin: 0 14px 0 0;
+  white-space: nowrap;
+}
+
+.jefaturas-modal {
+  width: min(560px, 92vw);
+}
+
+.jefaturas-form-grid {
+  grid-template-columns: 1fr;
+  padding: 0;
+}
+
+.jefaturas-form-error {
+  margin: 16px 0 0;
+  padding: 10px 12px;
+  border: 1px solid #fecdca;
+  border-radius: 6px;
+  background: #fef3f2;
+  color: #b42318;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Estados (ENVIADO, PENDIENTE...): en todas las tablas se ven igual y la etiqueta
+   siempre abraza su texto, sin recortarlo ni salirse de su recuadro. */
+.portal-shell .list-panel .table-wrap > table.data-table td .status-badge {
+  max-width: none;
+}
+
+/* Las columnas no se aprietan por debajo de un ancho legible: en pantallas más angostas
+   la tabla se desplaza horizontalmente dentro de su recuadro. */
+@media (min-width: 701px) {
+  .list-panel .table-wrap > table.oficios-table { min-width: 1460px; }
+  .list-panel .table-wrap > table.proveidos-table { min-width: 1350px; }
+  .list-panel .table-wrap > table.memos-table { min-width: 1300px; }
+  .list-panel .table-wrap > table.memorandos-multiples-table { min-width: 1300px; }
+}
+
+/* Encabezados: mismo estilo en todas las tablas; si un título no cabe pasa a una segunda línea. */
+.portal-shell .list-panel .table-wrap > table.data-table thead th {
+  white-space: normal;
+  line-height: 1.3;
+}
+
+/* Columna ACCIONES compartida (Editar / Eliminar) de Memos, Oficios, Proveídos y Memos múltiples */
+.list-panel .table-wrap > table.data-table td.col-acciones {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.list-panel .table-wrap > table.data-table td.col-acciones .action-link,
+.list-panel .table-wrap > table.data-table td.col-acciones .tracking-button {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  margin: 0 0 8px;
+  text-align: left;
+}
+
+.list-panel .table-wrap > table.data-table td.col-acciones .action-link:last-child,
+.list-panel .table-wrap > table.data-table td.col-acciones .tracking-button:last-child {
+  margin-bottom: 0;
 }
 
 @media (max-width: 700px) {

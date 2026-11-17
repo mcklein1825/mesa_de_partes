@@ -1,5 +1,4 @@
 import { Expediente, HistoryEntry } from '../types'
-import { AREA_RESPONSABLES } from '../constants'
 
 export const getSupportedDocumentMimeType = (file: File): string | null => {
   const extension = file.name.split('.').pop()?.toLowerCase()
@@ -270,3 +269,42 @@ export const readFileAsDataUrl = (file: File): Promise<string> =>
     reader.onerror = () => reject(reader.error || new Error('No se pudo leer el archivo.'))
     reader.readAsDataURL(file)
   })
+
+export const MAX_ADJUNTO_BYTES = 5 * 1024 * 1024
+
+export type AdjuntoPreparado = {
+  archivo: string
+  archivoData: string
+  archivoTipo: string
+  archivoTamano: number
+}
+
+/** Valida (PDF, JPG o PNG de hasta 5 MB) y convierte un archivo al formato que guarda la base de datos. */
+export const prepararAdjunto = async (file: File): Promise<AdjuntoPreparado> => {
+  const mimeType = getSupportedDocumentMimeType(file)
+  if (!mimeType) throw new Error('Adjunte un archivo PDF, JPG, JPEG o PNG.')
+  if (file.size > MAX_ADJUNTO_BYTES) throw new Error('El archivo no puede superar los 5 MB.')
+
+  const dataUrl = await readFileAsDataUrl(file)
+  return {
+    archivo: file.name,
+    // El tipo del encabezado debe coincidir con el tipo validado (algunos navegadores lo dejan vacío).
+    archivoData: dataUrl.replace(/^data:[^;,]*;base64,/, `data:${mimeType};base64,`),
+    archivoTipo: mimeType,
+    archivoTamano: file.size
+  }
+}
+
+/** Reconstruye un archivo a partir de un adjunto ya guardado (data URL en base64). */
+export const dataUrlToFile = (dataUrl: string, name: string, type?: string): File => {
+  const match = /^data:([^;,]*)(;base64)?,([\s\S]*)$/.exec(dataUrl)
+  if (!match) throw new Error('El adjunto original no se puede leer.')
+
+  const binary = match[2] ? atob(match[3]) : decodeURIComponent(match[3])
+  const bytes = new Uint8Array(binary.length)
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index)
+  }
+
+  return new File([bytes], name, { type: type || match[1] || 'application/octet-stream' })
+}

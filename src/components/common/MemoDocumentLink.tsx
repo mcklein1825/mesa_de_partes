@@ -135,9 +135,9 @@ export default function MemoDocumentLink({
     }}
   >
     {cargando ? (
-      <><LoaderCircle size={15} aria-hidden="true" /> Cargando...</>
+      <><LoaderCircle size={15} aria-hidden="true" /><span className="document-link-label">Cargando...</span></>
     ) : (
-      <><FileText size={15} aria-hidden="true" /> {archivo || 'Documento'}</>
+      <><FileText size={15} aria-hidden="true" /><span className="document-link-label">{archivo || 'Documento'}</span></>
     )}
   </button>
 )

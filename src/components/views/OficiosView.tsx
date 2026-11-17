@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import IconAction from '../common/IconAction'
 import { Expediente, Oficio } from '../../types'
 import { formatNroExp, displayDate } from '../../utils/expedienteHelpers'
 import { formatDocumentNumber } from '../../utils/documentHelpers'
@@ -7,7 +8,8 @@ import ExpedienteSelector from '../common/ExpedienteSelector'
 import MemoDocumentLink from '../common/MemoDocumentLink'
 import StatusBadge from '../common/StatusBadge'
 import Modal from '../common/Modal'
-import { Search } from 'lucide-react'
+import { Copy, Pencil, Search, Trash2 } from 'lucide-react'
+import DuplicateDocumentModal from '../modals/DuplicateDocumentModal'
 
 type Props = {
   oficios: Oficio[]
@@ -21,6 +23,9 @@ type Props = {
   onSelectExpediente: (exp: Expediente) => void
   onDeleteOficio: (oficio: Oficio) => void
   onEditOficio: (oficio: Oficio) => void
+  onDuplicateOficio: (oficio: Oficio) => void
+  /** Oficio que se está duplicando: cambia los textos al elegir el expediente */
+  oficioParaDuplicar?: Oficio | null
 }
 
 export default function OficiosView({
@@ -34,8 +39,11 @@ export default function OficiosView({
   onNuevoOficio,
   onSelectExpediente,
   onDeleteOficio,
-  onEditOficio
+  onEditOficio,
+  onDuplicateOficio,
+  oficioParaDuplicar = null
 }: Props) {
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false)
   const [busqueda, setBusqueda] = useState('')
   const [estadoFiltro, setEstadoFiltro] = useState('Todos')
   const [areaFilter, setAreaFilter] = useState('Todas')
@@ -76,8 +84,57 @@ export default function OficiosView({
     })
   }, [oficios, busqueda, estadoFiltro, areaFilter])
 
+  const formatExpedienteOficio = (oficio: Oficio) =>
+    formatNroExp(
+      oficio.nroExpediente,
+      false,
+      expedientes.find(item => item.id === String(oficio.expedienteId))?.fechaIngreso
+    )
+
   return (
     <>
+      {showDuplicateModal && (
+        <DuplicateDocumentModal<Oficio>
+          titleId="duplicate-oficio-modal-title"
+          title="Duplicar Oficio"
+          description="Busque y seleccione el Oficio que desea duplicar."
+          searchLabel="Buscar Oficio"
+          searchPlaceholder="N.º de Oficio, expediente, destinatario o asunto"
+          items={oficios}
+          getSearchText={oficio => [
+            formatDocumentNumber(oficio.nRegistro, oficio.createdAt),
+            oficio.nroExpediente,
+            oficio.asuntoDetalle,
+            oficio.destinatario,
+            oficio.areaDestino,
+            oficio.responsable
+          ]}
+          getNumber={oficio => formatDocumentNumber(oficio.nRegistro, oficio.createdAt)}
+          getDate={oficio => displayDate(oficio.fecha)}
+          getSubject={oficio => oficio.asuntoDetalle}
+          getDetails={oficio => [
+            `Expediente: ${formatExpedienteOficio(oficio)}`,
+            `${oficio.areaDestino || 'Sin área destino'} · Destinatario: ${oficio.destinatario || 'Sin destinatario'}`
+          ]}
+          previewTitle="Oficio que se duplicará"
+          getPreview={oficio => [
+            { label: 'N.º de Oficio original', value: formatDocumentNumber(oficio.nRegistro, oficio.createdAt) },
+            { label: 'Expediente original', value: formatExpedienteOficio(oficio) },
+            { label: 'Destinatario', value: oficio.destinatario, wide: true },
+            { label: 'Asunto', value: oficio.asuntoDetalle, wide: true }
+          ]}
+          resultText="Se creará un nuevo Oficio para otro expediente; el original se conservará."
+          confirmLabel="Continuar con este Oficio"
+          emptyText="No hay Oficios disponibles para duplicar."
+          noResultsText="No se encontraron Oficios con esos datos."
+          onClose={() => setShowDuplicateModal(false)}
+          onConfirm={oficio => {
+            setShowDuplicateModal(false)
+            onDuplicateOficio(oficio)
+          }}
+        />
+      )}
+
       {/* MODAL DE SELECCIÓN DE EXPEDIENTE (Igual al de Memos) */}
       {showSelector && (
         <Modal
@@ -89,8 +146,12 @@ export default function OficiosView({
             <div className="memo-modal-header">
               <div>
                 <p className="eyebrow">GESTIÓN DOCUMENTAL</p>
-                <h2 id="nuevo-oficio-title">Nuevo Oficio</h2>
-                <p>Seleccione el expediente al que desea asociar el Oficio.</p>
+                <h2 id="nuevo-oficio-title">{oficioParaDuplicar ? 'Duplicar Oficio' : 'Nuevo Oficio'}</h2>
+                <p>
+                  {oficioParaDuplicar
+                    ? `Elija un expediente diferente para crear una copia del Oficio ${formatDocumentNumber(oficioParaDuplicar.nRegistro, oficioParaDuplicar.createdAt)}. El original se conservará.`
+                    : 'Seleccione el expediente al que desea asociar el Oficio.'}
+                </p>
               </div>
               <button
                 type="button"
@@ -142,13 +203,22 @@ export default function OficiosView({
         </div>
 
         {canCreate && (
-          <button
-            type="button"
-            className="primary-button"
-            onClick={onNuevoOficio}
-          >
-            ＋ Nuevo Oficio
-          </button>
+          <div className="memo-heading-actions">
+            <button
+              type="button"
+              className="primary-button"
+              onClick={onNuevoOficio}
+            >
+              ＋ Nuevo Oficio
+            </button>
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => setShowDuplicateModal(true)}
+            >
+              <Copy size={16} aria-hidden="true" /> Duplicar Oficio
+            </button>
+          </div>
         )}
       </div>
 
@@ -206,6 +276,7 @@ export default function OficiosView({
                 <th scope="col">RESPONSABLE</th>
                 <th scope="col">ADJUNTO</th>
                 <th scope="col">ESTADO</th>
+                <th scope="col">ACCIONES</th>
               </tr>
             </thead>
 
@@ -333,18 +404,18 @@ export default function OficiosView({
                   <td data-label="ESTADO">
                     <StatusBadge status={oficio.estado} />
                   </td>
-                  <td data-label="ACCIONES">
-                    <button type="button" className="action-link" onClick={() => onDeleteOficio(oficio)}>
-                      Eliminar
-                    </button>
-                    <button type="button" className="action-link" onClick={() => onEditOficio(oficio)}>Editar</button>
+                  <td className="col-acciones" data-label="ACCIONES">
+                    <div className="table-actions">
+                      <IconAction label="Editar" icon={Pencil} onClick={() => onEditOficio(oficio)} />
+                      <IconAction label="Eliminar" icon={Trash2} tone="danger" onClick={() => onDeleteOficio(oficio)} />
+                    </div>
                   </td>
                 </tr>
               ))}
 
               {resultados.length === 0 && (
                 <tr>
-                  <td colSpan={10}>
+                  <td colSpan={11}>
                     <div className="empty-state">
                       {busqueda || estadoFiltro !== 'Todos'
                         ? 'No se encontraron oficios con esos criterios.'

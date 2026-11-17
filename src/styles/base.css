@@ -1708,6 +1708,31 @@ tbody tr:last-child td {
   margin: 0 22px 22px;
 }
 
+/* Campo "Adjunto (opcional)" del memorando múltiple */
+.multiple-memo-modal .multiple-memo-form > form > .form-group.multiple-memo-file {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 20px 22px 20px;
+}
+
+.multiple-memo-modal .multiple-memo-form > form > .form-group.multiple-memo-file > label {
+  margin-bottom: 0;
+}
+
+.multiple-memo-modal .multiple-memo-form > form > .form-group.multiple-memo-file > label.document-form-file-button {
+  display: inline-flex;
+  gap: 8px;
+  margin: 0;
+  color: var(--color-153);
+}
+
+.multiple-memo-modal .multiple-memo-form .multiple-memo-file small {
+  color: #64748b;
+  font-size: 12px;
+}
+
 .multiple-recipient-picker label {
   display: grid;
   gap: 6px;
@@ -2304,6 +2329,18 @@ tbody tr:last-child td {
 .document-link:hover {
   text-decoration: underline;
   color: var(--color-154);
+}
+
+/* Nombre del archivo: se recorta con puntos suspensivos en lugar de cortarse a mitad del recuadro. */
+.document-link .document-link-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.document-link svg {
+  flex: 0 0 auto;
 }
 .document-text-without-file {
   color: var(--color-162);

@@ -1,4 +1,5 @@
   import { useEffect, useMemo, useState } from 'react'
+import IconAction from '../common/IconAction'
   import { Expediente, Memo } from '../../types'
   import { getAreaCopia, getSubareas } from '../../constants'
   import ExpedienteSelector from '../common/ExpedienteSelector'
@@ -10,7 +11,7 @@
   import { getSupportedDocumentMimeType } from '../../utils/expedienteHelpers'
   import { useToast } from '../common/ToastProvider'
   import Modal from '../common/Modal'
-  import { Copy, Paperclip, Search } from 'lucide-react'
+  import { Copy, Eye, Paperclip, Pencil, Search, Trash2 } from 'lucide-react'
 
   export default function MemosView({
     expediente,
@@ -1158,17 +1159,12 @@ if (showMemoForm && expediente) {
       </td>
 
       {/* MÁS DATOS */}
-      <td data-label="ACCIONES">
-        <button
-          className="tracking-button"
-          onClick={() => setSelectedMemo(memo)}
-        >
-          <Search size={16} aria-hidden="true" /> Ver más datos
-        </button>
-        <button type="button" className="action-link" onClick={() => onDeleteMemo(memo)}>
-          Eliminar
-        </button>
-        {onEditMemo && <button type="button" className="action-link" onClick={() => onEditMemo(memo)}>Editar</button>}
+      <td className="col-acciones" data-label="ACCIONES">
+        <div className="table-actions">
+          <IconAction label="Ver más datos" icon={Eye} onClick={() => setSelectedMemo(memo)} />
+          {onEditMemo && <IconAction label="Editar" icon={Pencil} onClick={() => onEditMemo(memo)} />}
+          <IconAction label="Eliminar" icon={Trash2} tone="danger" onClick={() => onDeleteMemo(memo)} />
+        </div>
       </td>
 
     </tr>
