@@ -1,0 +1,390 @@
+/*
+ * TEMA DEL SISTEMA — paleta del login aplicada a toda la aplicación
+ *
+ *   Índigo  #10134f  estructura (menú lateral) y botones
+ *   Coral   #f45b4f  acento (contadores del menú, ítem activo)
+ *   Tinta   #20233c  texto  ·  Gris #777b91  texto secundario  ·  Línea #e8e9f0
+ *
+ * Este archivo se carga AL FINAL de styles.css y solo redefine colores: no cambia tamaños,
+ * espacios ni estructura. Para volver al aspecto anterior basta quitar su línea @import.
+ * Los colores de estado (Pendiente, Atendido, Archivado, Sin respuesta, Enviado, etc.) no se tocan.
+ */
+:root {
+  /* Paleta base (la misma del login) */
+  --sys-indigo: #10134f;
+  --sys-indigo-deep: #090c3e;
+  --sys-indigo-link: #2f3590;
+  --sys-coral: #f45b4f;
+  --sys-ink: #20233c;
+  --sys-muted: #777b91;
+  --sys-line: #e8e9f0;
+
+  /* Sombras con tinte índigo */
+  --shadow-card: 0 2px 8px rgba(16, 19, 79, 0.08);
+  --shadow-panel: 0 12px 30px rgba(16, 19, 79, 0.10);
+
+  /* Colores de marca del sistema: del verde azulado al índigo (misma luminosidad) */
+  --color-225: #2f3590;
+  --color-001: #10134f;
+  --color-002: #232880;
+  --color-003: #10134f;
+  --color-004: #9799c5;
+  --color-005: #f4f4f9;
+  --color-006: #e4e4eb;
+  --color-010: #757586;
+  --color-013: #d8d8e4;
+  --color-014: #9294af;
+  --color-015: #7a7c96;
+  --color-016: #b1b2c8;
+  --color-017: #1b1f66;
+  --color-019: #2f314e;
+  --color-020: #7c7fbd;
+  --color-021: #dddeea;
+  --color-022: #87889f;
+  --color-025: #7e7f9b;
+  --color-026: #82849d;
+  --color-028: #9d9eae;
+  --color-029: #d3d3dc;
+  --color-030: #48485a;
+  --color-031: #88899a;
+  --color-033: #8f90a3;
+  --color-035: #1e204218;
+  --color-037: #565768;
+  --color-038: #eeeef1;
+  --color-039: #383a54;
+  --color-040: #efeff5;
+  --color-041: #1e203b;
+  --color-042: #8c8d9e;
+  --color-043: #31369b24;
+  --color-044: #090c3e;
+  --color-045: #dbdbe3;
+  --color-046: #33378d;
+  --color-047: #eaeaef;
+  --color-048: #1e204205;
+  --color-051: #eaebf6;
+  --color-052: #575ba3;
+  --color-057: #767788;
+  --color-058: #25263d;
+  --color-059: #a3a4b1;
+  --color-061: #e9e9ef;
+  --color-062: #292a43;
+  --color-063: #9e9fad;
+  --color-064: #9799bd;
+  --color-065: #eeeef4;
+  --color-066: #a0a0ad;
+  --color-068: #efeff2;
+  --color-069: #f0f1f3;
+  --color-070: #555667;
+  --color-071: #a2a3af;
+  --color-072: #e7e8ef;
+  --color-073: #515381;
+  --color-087: #cacad3;
+  --color-088: #858697;
+  --color-091: #efeff1;
+  --color-092: #50527c;
+  --color-097: #343884;
+  --color-098: #565768;
+  --color-100: #ebebf5;
+  --color-101: #d8d9eb;
+  --color-102: #3c3e72;
+  --color-103: #373c93;
+  --color-104: #65678a;
+  --color-105: #7c7ea2;
+  --color-106: #dedee6;
+  --color-107: #9899aa;
+  --color-108: #414257;
+  --color-109: #68697a;
+  --color-110: #2f3590;
+  --color-111: #9596a5;
+  --color-112: #9999a6;
+  --color-113: #a1a1ae;
+  --color-114: #10134f;
+  --color-115: #d3d3dc;
+  --color-116: #5e5f70;
+  --color-117: #3a3b51;
+  --color-118: #4b4f9f;
+  --color-119: #4b4f9f1a;
+  --color-120: #cccdda;
+  --color-121: #fbfbfd;
+  --color-122: #707187;
+  --color-123: #424696;
+  --color-124: #585976;
+  --color-125: #9d9eaf;
+  --color-126: #575870;
+  --color-127: #e8e8f2;
+  --color-128: #5a5b6e;
+  --color-129: #eeeef2;
+  --color-130: #595da8;
+  --color-131: #3a3d80;
+  --color-132: #1d1f45;
+  --color-133: #1e204233;
+  --color-135: #efeff4;
+  --color-136: #6c6d88;
+  --color-137: #ccccd6;
+  --color-138: #c8c8d5;
+  --color-139: #30325518;
+  --color-140: #cdceda;
+  --color-141: #e8e8ef;
+  --color-142: #44465f;
+  --color-143: #babbcc;
+  --color-144: #35364f;
+  --color-145: #f1f2f9;
+  --color-146: #b1b1c3;
+  --color-147: #2f3590;
+  --color-148: #2f35902b;
+  --color-149: #8c8eb5;
+  --color-150: #f6f6fa;
+  --color-151: #a4a5bc;
+  --color-152: #3c3d59;
+  --color-153: #2f3590;
+  --color-154: #1c2070;
+  --color-155: #16183899;
+  --color-156: #16183855;
+  --color-157: #696a7c;
+  --color-158: #6d6e87;
+  --color-159: #dadbe5;
+  --color-160: #8b8c9e;
+  --color-161: #bec0da;
+  --color-163: #fbfcfe;
+  --color-164: #3b3f8a;
+  --color-165: #eaebf6;
+  --color-166: #21245f;
+  --color-167: #41435c;
+  --color-209: #dddde7;
+  --color-211: #e8e9f0;
+  --color-212: #272838;
+  --color-213: #dbdbe8;
+  --color-214: #f8f8fb;
+  --color-215: #64667c;
+  --color-216: #2a2b3e;
+  --color-217: #4a4b5f;
+  --color-218: #ceceda;
+  --color-219: #686ba0;
+  --color-220: #f5f5f7;
+  --color-221: #57586d;
+  --color-222: #eaeaf4;
+  --color-226: #d6d7e2;
+  --color-227: #f6f6f9;
+  --color-228: #bec0db;
+  --color-229: #f2f2f9;
+  --color-230: #272c80;
+  --color-231: #292a45;
+  --color-232: #636477;
+  --color-233: #282c82;
+  --color-238: #2f3498;
+  --color-239: #f1f1f9;
+  --color-240: #cecfdf;
+  --color-241: #898bba;
+  --color-242: #444559;
+  --color-243: #e3e3eb;
+  --color-244: #585a78;
+  --color-245: #f9f9fb;
+  --color-246: #fafbfd;
+  --color-247: #f4f4f7;
+  --color-248: #b1b2c3;
+  --color-249: #2e3178;
+  --color-250: #bec0da;
+  --color-251: #ececf5;
+  --color-252: #34364c;
+  --color-253: #c6c7d8;
+  --color-254: #efeff7;
+  --color-255: #bcbdce;
+  --color-256: #adafc5;
+  --color-257: #8688aa;
+  --color-339: #e3e3eb;
+  --color-340: #dedfe9;
+  --color-341: #f4f4f8;
+  --color-342: #585a73;
+  --color-343: #eeeef3;
+  --color-344: #45465c;
+  --color-346: #cdcdd7;
+  --color-347: #cccddb;
+  --color-348: #393b60;
+  --color-349: #7d80ae;
+  --color-352: #dedfe9;
+  --color-353: #e6e6ed;
+  --color-355: #eeeff5;
+  --color-356: #575871;
+  --color-357: #eaebf1;
+  --color-358: #2e2f45;
+  --color-359: #6c6d83;
+  --color-362: #6a6b7c;
+}
+
+/* ========================================================================
+   Capa de componentes
+   ======================================================================== */
+
+/* Fondo de página */
+.portal-shell .main-content {
+  background: #f5f6fa;
+}
+
+/* ---------- Menú lateral: degradado índigo con un resplandor suave abajo a la derecha ---------- */
+.portal-shell .sidebar {
+  background:
+    radial-gradient(200px 420px at 100% 100%, rgba(90, 96, 185, 0.5), rgba(90, 96, 185, 0) 100%),
+    linear-gradient(180deg, #171b65 0%, #090c3f 85%, #090c3f 100%);
+}
+
+.portal-shell .institution-logo-copy strong {
+  color: #f4f3fd;
+}
+
+.portal-shell .institution-logo-copy small {
+  color: #8d90cc;
+}
+
+.portal-shell .menu-label {
+  color: #a4a6d2;
+}
+
+.portal-shell .nav-item {
+  color: #c9cbea;
+  border-radius: 10px;
+}
+
+.portal-shell .nav-item:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+}
+
+.portal-shell .nav-item.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.portal-shell .nav-item.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 11px;
+  bottom: 11px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--sys-coral);
+}
+
+/* Contadores del menú: pastilla coral */
+.portal-shell .nav-item em {
+  background: var(--sys-coral);
+  color: #fff;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.portal-shell .secure-note {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.portal-shell .secure-note b {
+  color: #e4e6f7;
+}
+
+.portal-shell .secure-note small,
+.portal-shell .user-mini small {
+  color: #aeb0cf;
+}
+
+.portal-shell .user-mini b {
+  color: #f1f3fa;
+}
+
+.portal-shell .sidebar .avatar {
+  background: var(--sys-coral);
+  color: #fff;
+}
+
+/* ---------- Tablas ---------- */
+.portal-shell .table-wrap > table:not(.risk-table) thead th {
+  background: #f1f1fb;
+  color: #5d6285;
+  border-bottom-color: #e6e7f3;
+}
+
+.portal-shell .table-wrap > table:not(.risk-table) tbody td {
+  border-bottom-color: #f3f3f8;
+}
+
+/* Sin filas alternadas: fondo blanco y líneas finas */
+.portal-shell .table-wrap > table:not(.risk-table) tbody tr:nth-child(even) td {
+  background: #fff;
+}
+
+.portal-shell .table-wrap > table:not(.risk-table) tbody tr:hover td {
+  background: #f3f3fb;
+}
+
+/* Documentos adjuntos: fondo suave, sin borde */
+.portal-shell .document-link {
+  /* El componente trae su estilo escrito directamente: se ajusta por variables */
+  --ui-border: transparent;
+  --ui-surface: #f1f2f8;
+  --ui-text: #4a4f6b;
+  border-radius: 8px !important;
+}
+
+.portal-shell .document-link:hover {
+  --ui-surface: #e9eaf5;
+  --ui-text: #10134f;
+  text-decoration: none;
+}
+
+/* ---------- Acciones de las tablas: botones solo con ícono ---------- */
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.icon-action {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #e7e8f3;
+  border-radius: 9px;
+  background: #fff;
+  color: #2f3362;
+  box-shadow: 0 1px 2px rgba(16, 19, 79, 0.06);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.icon-action:hover {
+  background: #f1f1fb;
+  border-color: #c9cbe6;
+  color: #10134f;
+}
+
+.icon-action-danger:hover {
+  background: #fff1f0;
+  border-color: #f7c4c0;
+  color: #d9372c;
+}
+
+.icon-action:focus-visible {
+  outline: 2px solid var(--sys-indigo-link);
+  outline-offset: 2px;
+}
+
+.icon-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Anillos de foco de los formularios, en índigo */
+.memo-form-field input:focus,
+.memo-form-field select:focus,
+.document-form-grid input:focus,
+.document-form-grid select:focus,
+.document-form-grid textarea:focus {
+  box-shadow: 0 0 0 3px rgba(47, 53, 144, 0.14);
+}
+
+.portal-shell .jefaturas-secondary-button:hover {
+  background: rgba(16, 19, 79, 0.06);
+}

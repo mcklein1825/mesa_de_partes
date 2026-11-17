@@ -46,88 +46,47 @@ export const areas = [
   'Dirección General'
 ]
 
-export const AREAS_UNICAS = Array.from(
-  new Set(
-    areas
-      .map(area => area.trim())
-      .filter(Boolean)
-  )
-)
-export const SUBAREAS_POR_AREA: Record<string, string[]> = {
-  'Administración': [
-    'Tesorería',
-    'Área de Personal',
-    'Patrimonio',
-    'Logística'
-  ]
+// Áreas, jefes y subáreas: se administran desde la pantalla "Jefaturas" (tabla
+// `areas_responsables` en Supabase). Los valores iniciales están en ./areasDefaults.
+import {
+  getAreaDestinoOptions,
+  getAreaCopia,
+  getAreaResponsable,
+  getAreasPrincipales,
+  getSubareas,
+  useAreasCatalog
+} from './areasCatalog'
+
+export {
+  getAreaDestinoOptions,
+  getAreaCopia,
+  getAreaResponsable,
+  getAreasPrincipales,
+  getSubareas,
+  useAreasCatalog
 }
 
-export const getSubareas = (area: string): string[] => {
-  return SUBAREAS_POR_AREA[area] || []
-}
-
-export const AREA_RESPONSABLES: Record<string, string> = {
-  'Unidad Académica': 'Ing. NÓSSER JURADO GUILLÉN',
-  'Administración': 'CPC MARICELA OLIVARES MANDUJANO',
-  'Dirección General': 'Pilar de la Cruz',
-  'Secretaría Académica': 'Ing. AMADEO ANTONIO PAZSOLÁN',
-  'Unidad de Bienestar del Estudiante': 'Mag. JOSÉ LUIS RAZO QUISPE',
-  'Unidad de Investigación': 'Lic. LUIS RAMÍREZ CHUQUIHUANGA',
-  'Unidad de Formación Continua': 'Lic. TEODORO PILLACA DÍAZ',
-  'Área de Calidad': 'Ing. JOSÉ GUTIÉRREZ BARAHONA',
-  'Electrónica Industrial': 'Ing. LUIS ALBERTO ROJAS CAHUA',
-  'Gestión Administrativa': 'Dr. SIDNEY LUCAS TAMAYO',
-  'Contabilidad': 'CPC DOMENICA QUISPE DIAZ',
-  'Desarrollo de Sistemas de Información': 'Ing. BENJAMÍN HUANCA PACHAURI',
-  'Electricidad': 'Lic. LUIS CARHUANCHO PALOMINO',
-  'Construcción Civil': 'Arq. VIRGINIA AZAHUANCHE ASMAT',
-  'Mecatrónica Automotriz': 'Mag. JIM PALOMARES ANSELMO',
-  'Mecánica de Producción': 'Lic. RIGOBERTO HUARACHA CASAS'
-}
-
-export const AREA_COPIAS: Record<string, string> = {
-  Tesorería: 'Celio Verde Marcelino',
-  'Área de Personal': 'Julio García de la Chira',
-  Patrimonio: 'Willy Quintana',
-  Logística: 'Noa Wilfredo'
-}
-
-export const AREA_DESTINO_OPTIONS = Object.keys(AREA_RESPONSABLES).flatMap(
-  area => [
-    area,
-    ...getSubareas(area).map(subarea => `${area} / ${subarea}`)
-  ]
-)
-
-export const getAreaResponsable = (area: string): string => {
+/** Áreas "históricas" (`areas`) más las áreas y subáreas vigentes del catálogo, sin repetir. */
+export const getAreasUnicas = (): string[] => {
   const normalize = (value: string) =>
-    value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase()
-  const areaBase = area.split(' / ')[0].trim()
-  const areaEncontrada = Object.keys(AREA_RESPONSABLES).find(
-    registrada => normalize(registrada) === normalize(areaBase)
-  )
-
-  return areaEncontrada ? AREA_RESPONSABLES[areaEncontrada] : ''
+    value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().replace(/\s+/g, ' ').toLowerCase()
+  const vistas = new Set<string>()
+  return [...areas, ...getAreaDestinoOptions()]
+    .map(area => area.trim())
+    .filter(area => {
+      const key = normalize(area)
+      if (!key || vistas.has(key)) return false
+      vistas.add(key)
+      return true
+    })
 }
 
-export const getAreaCopia = (area: string): string => {
-  const normalize = (value: string) =>
-    value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase()
-  const subarea = area.split(' / ')[1]?.trim()
-  if (!subarea) return ''
-
-  const subareaEncontrada = Object.keys(AREA_COPIAS).find(
-    registrada => normalize(registrada) === normalize(subarea)
-  )
-
-  return subareaEncontrada ? AREA_COPIAS[subareaEncontrada] : ''
-}
-
-export const MEMORANDOS_MULTIPLES_DESTINATARIOS: Array<{
+export type MemorandoMultipleDestinatarioOption = {
   categoria: 'Área / Jefatura' | 'Consejo Directivo' | 'Comité' | 'Grupo institucional'
   nombre: string
-}> = [
-  ...AREA_DESTINO_OPTIONS.map(nombre => ({ categoria: 'Área / Jefatura' as const, nombre })),
+}
+
+const MEMORANDOS_MULTIPLES_OTROS_DESTINATARIOS: MemorandoMultipleDestinatarioOption[] = [
   { categoria: 'Consejo Directivo', nombre: 'Consejo Directivo' },
   { categoria: 'Comité', nombre: 'Comité de Gestión' },
   { categoria: 'Comité', nombre: 'Comité de Intervención frente al Hostigamiento Sexual' },
@@ -140,4 +99,9 @@ export const MEMORANDOS_MULTIPLES_DESTINATARIOS: Array<{
   { categoria: 'Grupo institucional', nombre: 'Delegados' },
   { categoria: 'Grupo institucional', nombre: 'Docentes nombrados y contratados' },
   { categoria: 'Grupo institucional', nombre: 'Jefes' }
+]
+
+export const getMemorandosMultiplesDestinatarios = (): MemorandoMultipleDestinatarioOption[] => [
+  ...getAreaDestinoOptions().map(nombre => ({ categoria: 'Área / Jefatura' as const, nombre })),
+  ...MEMORANDOS_MULTIPLES_OTROS_DESTINATARIOS
 ]

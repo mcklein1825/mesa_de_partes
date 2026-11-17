@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient'
+import { prepararAdjunto } from '../utils/expedienteHelpers'
 
 export type CrudDocumentType =
   | 'expediente'
@@ -31,8 +32,12 @@ export async function updateMemorandoMultiple(
     fecha: string
     asunto: string
     destinatarios: Array<{ categoria: string; nombre: string; medioEntrega: string }>
+    /** Archivo nuevo; si se omite, se conserva el adjunto actual */
+    archivo?: File | null
   }
 ) {
+  const adjunto = data.archivo ? await prepararAdjunto(data.archivo) : null
+
   const { data: result, error } = await supabase.rpc('actualizar_memorando_multiple', {
     p_id: id,
     p_fecha: data.fecha,
@@ -41,7 +46,13 @@ export async function updateMemorandoMultiple(
       categoria: item.categoria,
       nombre: item.nombre,
       medio_entrega: item.medioEntrega
-    }))
+    })),
+    ...(adjunto ? {
+      p_archivo: adjunto.archivo,
+      p_archivo_data: adjunto.archivoData,
+      p_archivo_tipo: adjunto.archivoTipo,
+      p_archivo_tamano: adjunto.archivoTamano
+    } : {})
   })
   if (error) throw error
   return result

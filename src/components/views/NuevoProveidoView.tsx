@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { FileUp, LoaderCircle } from 'lucide-react'
 import { Expediente, Proveido } from '../../types'
 import {
-  AREA_DESTINO_OPTIONS,
-  getAreaResponsable
+  getAreaDestinoOptions,
+  getAreaResponsable,
+  useAreasCatalog
 } from '../../constants'
 import ExpedienteSelector from '../common/ExpedienteSelector'
 import { useToast } from '../common/ToastProvider'
@@ -39,6 +40,7 @@ export default function NuevoProveidoView({
   const [areaDestino, setAreaDestino] = useState('')
   const [areaBusqueda, setAreaBusqueda] = useState('')
   const [areaAbierta, setAreaAbierta] = useState(false)
+  const areasCatalog = useAreasCatalog()
   const responsable = getAreaResponsable(areaDestino)
   const [instruccion, setInstruccion] = useState('')
   const [archivoSeleccionado, setArchivoSeleccionado] =
@@ -46,8 +48,8 @@ export default function NuevoProveidoView({
   const [guardando, setGuardando] = useState(false)
   const guardandoRef = useRef(false)
   const areasPrincipales = useMemo(
-    () => Array.from(new Set(AREA_DESTINO_OPTIONS.map(area => area.split(' / ')[0]))),
-    []
+    () => Array.from(new Set(getAreaDestinoOptions().map(area => area.split(' / ')[0]))),
+    [areasCatalog]
   )
   const areasFiltradas = useMemo(() => {
     const texto = areaBusqueda.trim().toLowerCase()

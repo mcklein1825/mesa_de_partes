@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import IconAction from '../common/IconAction'
 import { Expediente, Proveido } from '../../types'
 import { displayDate, formatNroExp } from '../../utils/expedienteHelpers'
 import { formatDocumentNumber } from '../../utils/documentHelpers'
@@ -7,7 +8,7 @@ import ExpedienteSelector from '../common/ExpedienteSelector'
 import MemoDocumentLink from '../common/MemoDocumentLink'
 import StatusBadge from '../common/StatusBadge'
 import Modal from '../common/Modal'
-import { Search } from 'lucide-react'
+import { Pencil, Search, Trash2 } from 'lucide-react'
 
 type Props = {
   proveidos: Proveido[]
@@ -191,6 +192,7 @@ export default function ProveidosView({
                 <th scope="col">INSTRUCCIÓN</th>
                 <th scope="col">ESTADO</th>
                 <th scope="col">DOCUMENTO</th>
+                <th scope="col">ACCIONES</th>
               </tr>
             </thead>
 
@@ -291,13 +293,6 @@ export default function ProveidosView({
                   <td data-label="ESTADO">
                     <StatusBadge status={proveido.estado as any} />
                   </td>
-                  <td data-label="ACCIONES">
-                    <button type="button" className="action-link" onClick={() => onDeleteProveido(proveido)}>
-                      Eliminar
-                    </button>
-                    <button type="button" className="action-link" onClick={() => onEditProveido(proveido)}>Editar</button>
-                  </td>
-
                   <td data-label="DOCUMENTO">
                     <MemoDocumentLink
                       archivoData={proveido.archivoData}
@@ -306,12 +301,19 @@ export default function ProveidosView({
                       {proveido.archivo || 'Sin adjunto'}
                     </MemoDocumentLink>
                   </td>
+
+                  <td className="col-acciones" data-label="ACCIONES">
+                    <div className="table-actions">
+                      <IconAction label="Editar" icon={Pencil} onClick={() => onEditProveido(proveido)} />
+                      <IconAction label="Eliminar" icon={Trash2} tone="danger" onClick={() => onDeleteProveido(proveido)} />
+                    </div>
+                  </td>
                 </tr>
               ))}
 
               {resultados.length === 0 && (
                 <tr>
-                  <td colSpan={9}>
+                  <td colSpan={10}>
                     <div className="empty-state">
                       {busqueda
                         ? 'No se encontraron proveídos con esos criterios.'

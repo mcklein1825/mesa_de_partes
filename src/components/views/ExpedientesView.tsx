@@ -1,10 +1,11 @@
 import { useState } from 'react'
+import IconAction from '../common/IconAction'
 import { Expediente, Memo, Oficio, Proveido, Status } from '../../types'
 import { formatNroExp, displayDate, getRemitenteNombre, getAreaDestino, getDeadlineState } from '../../utils/expedienteHelpers'
 import DocumentLink from '../common/DocumentLink'
 import StatusBadge from '../common/StatusBadge'
 import DuplicateExpedienteModal from '../modals/DuplicateExpedienteModal'
-import { Copy, Eye, Search } from 'lucide-react'
+import { Copy, Eye, Pencil, Search, Trash2 } from 'lucide-react'
 
 export default function ExpedientesView({
   items,
@@ -403,26 +404,11 @@ export default function ExpedientesView({
                     </td>
 
                     <td className="actions-cell" data-label="ACCIONES">
-
-                      <button
-                        className="tracking-button"
-                        onClick={() => onTracking(item.id)}
-                      >
-
-                      <Eye size={16} aria-hidden="true" /> Ver seguimiento
-                    </button>
-                    <button
-                      type="button"
-                      className="action-link"
-                      onClick={() => onDelete(item)}
-                    >
-                      Eliminar
-                    </button>
-                    <button type="button" className="action-link" onClick={() => onEdit(item)}>
-                      Editar
-                    </button>
-
-
+                    <div className="table-actions">
+                      <IconAction label="Ver seguimiento" icon={Eye} onClick={() => onTracking(item.id)} />
+                      <IconAction label="Editar" icon={Pencil} onClick={() => onEdit(item)} />
+                      <IconAction label="Eliminar" icon={Trash2} tone="danger" onClick={() => onDelete(item)} />
+                    </div>
                   </td>
                   </tr>
                 )

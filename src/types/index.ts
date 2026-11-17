@@ -1,5 +1,5 @@
 export type Status = 'Pendiente' | 'Sin respuesta' | 'Atendido' | 'Archivado'
-export type View = 'inicio' | 'expedientes' | 'reportes' | 'memos' | 'memos-multiples' | 'oficios' | 'proveidos'
+export type View = 'inicio' | 'expedientes' | 'reportes' | 'memos' | 'memos-multiples' | 'oficios' | 'proveidos' | 'jefaturas'
 export type Role = 'DireccionGeneral' | 'AreaOperativa' | 'Administrador' | 'Auditor'
 
 export type User = {
@@ -116,6 +116,10 @@ export type MemorandoMultiple = {
   estado: MemorandoMultipleEstado
   destinatarios: MemorandoMultipleDestinatario[]
   createdAt?: string
+  archivo?: string
+  archivoData?: string
+  archivoTipo?: string
+  archivoTamano?: number
 }
 
 export type Expediente = {

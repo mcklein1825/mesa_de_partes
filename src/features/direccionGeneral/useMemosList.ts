@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Expediente, Memo } from '../../types'
-import { AREAS_UNICAS } from '../../constants'
+import { getAreasUnicas, useAreasCatalog } from '../../constants'
 import { supabase } from '../../lib/supabaseClient'
 import { formatNroExp } from '../../utils/expedienteHelpers'
 import { formatDocumentNumber } from '../../utils/documentHelpers'
@@ -58,9 +58,10 @@ export default function useMemosList(
       .sort()
   }, [areaOptions, memos])
 
+  const areasCatalog = useAreasCatalog()
   const destinoOptions = useMemo(
-    () => AREAS_UNICAS.map(area => ({ value: area, label: area, searchText: area })),
-    []
+    () => getAreasUnicas().map(area => ({ value: area, label: area, searchText: area })),
+    [areasCatalog]
   )
   const estadoOptions = useMemo(
     () => Array.from(new Set(memos.map(memo => memo.estado).filter(Boolean))).sort(),

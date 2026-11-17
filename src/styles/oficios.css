@@ -43,15 +43,18 @@
   table-layout: fixed;
 }
 
-.list-panel .oficios-table th:nth-child(1) { width: 7%; }
-.list-panel .oficios-table th:nth-child(2) { width: 12%; }
+/* 11 columnas que suman 100 %. El ancho mínimo de la tabla está en tables.css. */
+.list-panel .oficios-table th:nth-child(1) { width: 9%; }
+.list-panel .oficios-table th:nth-child(2) { width: 8%; }
 .list-panel .oficios-table th:nth-child(3) { width: 8%; }
-.list-panel .oficios-table th:nth-child(4) { width: 19%; }
-.list-panel .oficios-table th:nth-child(5) { width: 12%; }
-.list-panel .oficios-table th:nth-child(6) { width: 13%; }
-.list-panel .oficios-table th:nth-child(7) { width: 11%; }
-.list-panel .oficios-table th:nth-child(8) { width: 10%; }
+.list-panel .oficios-table th:nth-child(4) { width: 11%; }
+.list-panel .oficios-table th:nth-child(5) { width: 10%; }
+.list-panel .oficios-table th:nth-child(6) { width: 9%; }
+.list-panel .oficios-table th:nth-child(7) { width: 9%; }
+.list-panel .oficios-table th:nth-child(8) { width: 9%; }
 .list-panel .oficios-table th:nth-child(9) { width: 8%; }
+.list-panel .oficios-table th:nth-child(10) { width: 12%; }
+.list-panel .oficios-table th:nth-child(11) { width: 7%; }
 
 @media (max-width: 700px) {
   .oficio-form .oficio-form-grid {
