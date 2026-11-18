@@ -12,11 +12,13 @@ import { FileText, LoaderCircle } from 'lucide-react'
 export default function DocumentLink({
   item,
   children,
-  onAttach
+  onAttach,
+  soloBoton = false
 }: {
   item: Expediente
   children?: ReactNode
   onAttach?: (file: File) => Promise<void>
+  soloBoton?: boolean
 }) {
   const { toast } = useToast()
   const [cargando, setCargando] = useState(false)
@@ -140,6 +142,28 @@ export default function DocumentLink({
    */
 
   if (!tieneDocumento) {
+    if (soloBoton) {
+      return onAttach ? (
+        <>
+          <button
+            type="button"
+            className="document-attach-button"
+            onClick={seleccionarArchivo}
+            disabled={cargando}
+          >
+            Adjuntar
+          </button>
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            style={{ display: 'none' }}
+            onChange={manejarArchivo}
+          />
+        </>
+      ) : null
+    }
+
     return (
       <span className="document-pending">
        <span
@@ -192,56 +216,91 @@ export default function DocumentLink({
    * =========================================================
    */
 
-return (
-  <span
-    style={{
-      display: 'inline-flex',
-      flexDirection: 'column',
-      alignItems: 'flex-start',
-      gap: '6px'
-    }}
-  >
-    <span
-  className="table-cell-text"
-  title={
-    typeof textoVisible === 'string'
-      ? textoVisible
-      : item.archivo || 'Documento'
+  if (soloBoton) {
+    return (
+      <button
+        type="button"
+        className="document-link"
+        onClick={abrirArchivo}
+        disabled={cargando}
+        title={`Abrir ${item.archivo}`}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '6px',
+          border: '1px solid var(--ui-border)',
+          borderRadius: '6px',
+          background: 'var(--ui-surface)',
+          color: 'var(--ui-text)',
+          padding: '5px 10px',
+          cursor: cargando ? 'wait' : 'pointer',
+          fontSize: '13px',
+          fontWeight: 500,
+          maxWidth: '100%',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap'
+        }}
+      >
+        {cargando ? (
+          <><LoaderCircle size={15} /> Cargando...</>
+        ) : (
+          <><FileText size={15} /> {item.archivo}</>
+        )}
+      </button>
+    )
   }
->
-      {textoVisible}
-    </span>
 
-    <button
-      type="button"
-      className="document-link"
-      onClick={abrirArchivo}
-      disabled={cargando}
-      title={`Abrir ${item.archivo}`}
+  return (
+    <span
       style={{
         display: 'inline-flex',
-        alignItems: 'center',
-        gap: '6px',
-        border: '1px solid var(--ui-border)',
-        borderRadius: '6px',
-        background: 'var(--ui-surface)',
-        color: 'var(--ui-text)',
-        padding: '5px 10px',
-        cursor: cargando ? 'wait' : 'pointer',
-        fontSize: '13px',
-        fontWeight: 500,
-        maxWidth: '100%',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap'
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        gap: '6px'
       }}
     >
-      {cargando ? (
-        <><LoaderCircle size={15} aria-hidden="true" /> Cargando...</>
-      ) : (
-        <><FileText size={15} aria-hidden="true" /> {item.archivo}</>
-      )}
-    </button>
-  </span>
-)
+      <span
+        className="table-cell-text"
+        title={
+          typeof textoVisible === 'string'
+            ? textoVisible
+            : item.archivo || 'Documento'
+        }
+      >
+        {textoVisible}
+      </span>
+
+      <button
+        type="button"
+        className="document-link"
+        onClick={abrirArchivo}
+        disabled={cargando}
+        title={`Abrir ${item.archivo}`}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '6px',
+          border: '1px solid var(--ui-border)',
+          borderRadius: '6px',
+          background: 'var(--ui-surface)',
+          color: 'var(--ui-text)',
+          padding: '5px 10px',
+          cursor: cargando ? 'wait' : 'pointer',
+          fontSize: '13px',
+          fontWeight: 500,
+          maxWidth: '100%',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap'
+        }}
+      >
+        {cargando ? (
+          <><LoaderCircle size={15} aria-hidden="true" /> Cargando...</>
+        ) : (
+          <><FileText size={15} aria-hidden="true" /> {item.archivo}</>
+        )}
+      </button>
+    </span>
+  )
 }

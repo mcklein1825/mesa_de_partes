@@ -47,6 +47,7 @@ export default function OficiosView({
   const [busqueda, setBusqueda] = useState('')
   const [estadoFiltro, setEstadoFiltro] = useState('Todos')
   const [areaFilter, setAreaFilter] = useState('Todas')
+  const [destinatarioFilter, setDestinatarioFilter] = useState('')
 
   const resultados = useMemo(() => {
     const texto = busqueda.trim().toLowerCase()
@@ -80,9 +81,13 @@ export default function OficiosView({
         areaFilter === 'Todas' ||
         oficio.areaDestino === areaFilter
 
-      return coincideTexto && coincideEstado && coincideArea
+      const coincideDestinatario =
+        !destinatarioFilter.trim() ||
+        oficio.destinatario.toLowerCase().includes(destinatarioFilter.trim().toLowerCase())
+
+      return coincideTexto && coincideEstado && coincideArea && coincideDestinatario
     })
-  }, [oficios, busqueda, estadoFiltro, areaFilter])
+  }, [oficios, busqueda, estadoFiltro, areaFilter, destinatarioFilter])
 
   const formatExpedienteOficio = (oficio: Oficio) =>
     formatNroExp(
@@ -233,6 +238,13 @@ export default function OficiosView({
             />
           </div>
 
+          <input
+            className="filter-input"
+            value={destinatarioFilter}
+            onChange={e => setDestinatarioFilter(e.target.value)}
+            placeholder="Filtrar por destinatario..."
+          />
+
           <select
             value={areaFilter}
             onChange={e => setAreaFilter(e.target.value)}
@@ -256,6 +268,21 @@ export default function OficiosView({
             <option value="Anulado">Anulado</option>
           </select>
 
+          {(busqueda || destinatarioFilter.trim() || areaFilter !== 'Todas' || estadoFiltro !== 'Todos') && (
+            <button
+              type="button"
+              className="clear-filters-button"
+              onClick={() => {
+                setBusqueda('')
+                setDestinatarioFilter('')
+                setAreaFilter('Todas')
+                setEstadoFiltro('Todos')
+              }}
+            >
+              Limpiar filtros
+            </button>
+          )}
+
           <span className="result-count">
             {resultados.length} resultados
           </span>
@@ -275,7 +302,7 @@ export default function OficiosView({
                 <th scope="col">REALIZADO POR</th>
                 <th scope="col">RESPONSABLE</th>
                 <th scope="col">ADJUNTO</th>
-                <th scope="col">ESTADO</th>
+
                 <th scope="col">ACCIONES</th>
               </tr>
             </thead>
@@ -401,9 +428,7 @@ export default function OficiosView({
                     </MemoDocumentLink>
                   </td>
 
-                  <td data-label="ESTADO">
-                    <StatusBadge status={oficio.estado} />
-                  </td>
+                  
                   <td className="col-acciones" data-label="ACCIONES">
                     <div className="table-actions">
                       <IconAction label="Editar" icon={Pencil} onClick={() => onEditOficio(oficio)} />
@@ -417,8 +442,7 @@ export default function OficiosView({
                 <tr>
                   <td colSpan={11}>
                     <div className="empty-state">
-                      {busqueda || estadoFiltro !== 'Todos'
-                        ? 'No se encontraron oficios con esos criterios.'
+                      {(busqueda || destinatarioFilter.trim() || areaFilter !== 'Todas' || estadoFiltro !== 'Todos') ? 'No se encontraron oficios con esos criterios.'
                         : 'No hay oficios registrados.'}
                     </div>
                   </td>
