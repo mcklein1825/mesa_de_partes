@@ -9,3 +9,9 @@ dist/
 # Variables de entorno locales
 .env.local
 .env
+
+# Temporales de refactor UI
+*.patch
+scripts-ui-*.mjs
+respaldo-ui/
+tilo-institucional

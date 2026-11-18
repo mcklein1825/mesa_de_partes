@@ -1036,3 +1036,12 @@
     width: fit-content;
   }
 }
+
+/* Estado editable: misma estructura visual que StatusBadge (icono + etiqueta + color). */
+.status-select { position: relative; cursor: pointer; }
+.status-select .status-select-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.status-select .status-select-chevron { flex: 0 0 auto; opacity: 0.6; }
+.status-select .status-select-native { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; opacity: 0; cursor: pointer; appearance: none; }
+.status-select .status-select-native:disabled { cursor: not-allowed; }
+.status-select.is-disabled { cursor: default; }
+.status-select:focus-within { outline: 2px solid var(--sys-indigo-link); outline-offset: 2px; }

@@ -2127,6 +2127,7 @@
             memos={visibleMemos}
             oficios={visibleOficios}
             proveidos={visibleProveidos}
+            memorandosMultiples={memorandosMultiples}
             onAttachDocument={file =>
               adjuntarDocumento(trackingId, file)
             }

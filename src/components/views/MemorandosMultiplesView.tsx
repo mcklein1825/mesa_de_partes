@@ -61,6 +61,8 @@ export default function MemorandosMultiplesView({
     medioEntrega: MemorandoMultipleMedio
   }>>([])
   const [filtro, setFiltro] = useState<MemorandoMultipleCategoria | 'Todas'>('Todas')
+  const [estadoFiltro, setEstadoFiltro] = useState('Todos')
+  const [medioFiltro, setMedioFiltro] = useState('Todos')
   const [busqueda, setBusqueda] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [archivo, setArchivo] = useState<File | null>(null)
@@ -219,6 +221,8 @@ export default function MemorandosMultiplesView({
     const texto = busqueda.toLowerCase()
     return (
       (filtro === 'Todas' || item.destinatarios.some(destinatario => destinatario.categoria === filtro)) &&
+      (estadoFiltro === 'Todos' || item.estado === estadoFiltro) &&
+      (medioFiltro === 'Todos' || item.destinatarios.some(destinatario => destinatario.medioEntrega === medioFiltro)) &&
       (!texto ||
         item.asunto.toLowerCase().includes(texto) ||
         item.nroRegistro.toLowerCase().includes(texto) ||
@@ -409,6 +413,41 @@ export default function MemorandosMultiplesView({
           <select value={filtro} onChange={event => setFiltro(event.target.value as MemorandoMultipleCategoria | 'Todas')}>
             {categorias.map(item => <option key={item}>{item}</option>)}
           </select>
+                    <select
+            value={estadoFiltro}
+            onChange={e => setEstadoFiltro(e.target.value)}
+            aria-label="Filtrar por estado"
+          >
+            <option value="Todos">Todos los estados</option>
+            <option value="Pendiente">Pendiente</option>
+            <option value="Entregado">Entregado</option>
+            <option value="Atendido">Atendido</option>
+          </select>
+          <select
+            value={medioFiltro}
+            onChange={e => setMedioFiltro(e.target.value)}
+            aria-label="Filtrar por medio de entrega"
+          >
+            <option value="Todos">Todos los medios</option>
+            <option value="Correo">Correo</option>
+            <option value="Presencial">Presencial</option>
+          </select>
+
+                    {(busqueda || filtro !== 'Todas' || estadoFiltro !== 'Todos' || medioFiltro !== 'Todos') && (
+            <button
+              type="button"
+              className="clear-filters-button"
+              onClick={() => {
+                setBusqueda('')
+                setFiltro('Todas')
+                setEstadoFiltro('Todos')
+                setMedioFiltro('Todos')
+              }}
+            >
+              Limpiar filtros
+            </button>
+          )}
+
           <span className="result-count">{visibles.length} resultados</span>
         </div>
         <div className="table-wrap">
@@ -440,7 +479,7 @@ export default function MemorandosMultiplesView({
               </td>
             </tr>)}</tbody>
           </table>
-          {visibles.length === 0 && <div className="empty-state">No hay memorandos múltiples registrados.</div>}
+          {visibles.length === 0 && <div className="empty-state">{busqueda || filtro !== 'Todas' || estadoFiltro !== 'Todos' || medioFiltro !== 'Todos' ? 'No se encontraron memorandos múltiples con esos criterios.' : 'No hay memorandos múltiples registrados.'}</div>}
         </div>
       </section>
     </>

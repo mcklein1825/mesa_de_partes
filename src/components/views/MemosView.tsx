@@ -1,5 +1,6 @@
   import { useEffect, useMemo, useState } from 'react'
 import IconAction from '../common/IconAction'
+import StatusSelect, { type StatusOption } from '../common/StatusSelect'
   import { Expediente, Memo } from '../../types'
   import { getAreaCopia, getSubareas } from '../../constants'
   import ExpedienteSelector from '../common/ExpedienteSelector'
@@ -156,6 +157,22 @@ import IconAction from '../common/IconAction'
     * OPCIONES DE FILTROS
     * =========================================================
     */
+  const opcionesDeEstado = (estado: Memo['estado'], puedeArchivar: boolean): StatusOption[] => {
+    if (estado === 'Pendiente') {
+      return [{ value: 'Pendiente' }, { value: 'Sin respuesta' }, { value: 'Atendido' }]
+    }
+    if (estado === 'Sin respuesta') {
+      return [
+        { value: 'Sin respuesta' },
+        { value: 'Atendido' },
+        { value: 'Archivado', disabled: !puedeArchivar }
+      ]
+    }
+    if (estado === 'Archivado') {
+      return [{ value: 'Archivado', disabled: !puedeArchivar }]
+    }
+    return [{ value: estado }]
+  }
     const destinosFiltrados = useMemo(() => {
     const termino = destinoBusqueda.trim().toLowerCase()
 
@@ -937,6 +954,21 @@ if (showMemoForm && expediente) {
 
             </select>
 
+                        {(query || areaFilter !== 'Todas' || estadoFilter !== 'Todos') && (
+              <button
+                type="button"
+                className="clear-filters-button"
+                onClick={() => {
+                  setQuery('')
+                  setAreaFilter('Todas')
+                  setEstadoFilter('Todos')
+                  setPage(1)
+                }}
+              >
+                Limpiar filtros
+              </button>
+            )}
+
             <span className="result-count">
               {memosFiltrados.length} resultados
             </span>
@@ -1091,72 +1123,16 @@ if (showMemoForm && expediente) {
       </td>
       {/* ESTADO */}
       <td data-label="ESTADO">
-        <select
-          className={`status-badge ${memo.estado.toLowerCase().replace(/\s+/g, '-')}`}
-          value={memo.estado}
-          disabled={!canAtender}
-          onChange={e => {
-            const nuevoEstado =
-              e.target.value as Memo['estado']
-
-            console.log('CAMBIANDO MEMO:', {
-              id: memo.id,
-              nroMemo: memo.nroMemo,
-              estadoAnterior: memo.estado,
-              nuevoEstado
-            })
-
-            onUpdateMemoEstado(
-              memo.id,
-              nuevoEstado
-            )
-          }}
-        >
-          {memo.estado === 'Pendiente' && (
-            <>
-              <option value="Pendiente">
-                Pendiente
-              </option>
-
-              <option value="Sin respuesta">
-                Sin respuesta
-              </option>
-
-              <option value="Atendido">
-                Atendido
-              </option>
-            </>
-          )}
-
-          {memo.estado === 'Sin respuesta' && (
-            <>
-              <option value="Sin respuesta">
-                Sin respuesta
-              </option>
-
-              <option value="Atendido">
-                Atendido
-              </option>
-
-              <option value="Archivado" disabled={!canArchivar}>
-                Archivado
-              </option>
-            </>
-          )}
-
-          {memo.estado === 'Atendido' && (
-            <option value="Atendido">
-              Atendido
-            </option>
-          )}
-
-          {memo.estado === 'Archivado' && (
-            <option value="Archivado" disabled={!canArchivar}>
-              Archivado
-            </option>
-          )}
-        </select>
-      </td>
+  <StatusSelect
+    status={memo.estado}
+    options={opcionesDeEstado(memo.estado, canArchivar)}
+    disabled={!canAtender}
+    label={`Cambiar estado del Memo ${formatDocumentNumber(memo.nroMemo, memo.createdAt)}`}
+    onChange={nuevoEstado =>
+      onUpdateMemoEstado(memo.id, nuevoEstado as Memo['estado'])
+    }
+  />
+</td>
 
       {/* MÁS DATOS */}
       <td className="col-acciones" data-label="ACCIONES">

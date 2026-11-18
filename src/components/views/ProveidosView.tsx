@@ -6,7 +6,6 @@ import { formatDocumentNumber } from '../../utils/documentHelpers'
 import { getAreaCopia } from '../../constants'
 import ExpedienteSelector from '../common/ExpedienteSelector'
 import MemoDocumentLink from '../common/MemoDocumentLink'
-import StatusBadge from '../common/StatusBadge'
 import Modal from '../common/Modal'
 import { Pencil, Search, Trash2 } from 'lucide-react'
 
@@ -175,6 +174,19 @@ export default function ProveidosView({
             ))}
           </select>
 
+                    {(busqueda || areaFilter !== 'Todas') && (
+            <button
+              type="button"
+              className="clear-filters-button"
+              onClick={() => {
+                setBusqueda('')
+                setAreaFilter('Todas')
+              }}
+            >
+              Limpiar filtros
+            </button>
+          )}
+
           <span className="result-count">{resultados.length} resultados</span>
         </div>
 
@@ -189,8 +201,7 @@ export default function ProveidosView({
                 <th scope="col">ÁREA DESTINO</th>
                 <th scope="col">REALIZADO POR</th>
                 <th scope="col">RESPONSABLE</th>
-                <th scope="col">INSTRUCCIÓN</th>
-                <th scope="col">ESTADO</th>
+                <th scope="col">INSTRUCCIÓN</th>
                 <th scope="col">DOCUMENTO</th>
                 <th scope="col">ACCIONES</th>
               </tr>
@@ -289,10 +300,6 @@ export default function ProveidosView({
                     </span>
                   </td>
 
-                  {/* NUEVO ESTADO */}
-                  <td data-label="ESTADO">
-                    <StatusBadge status={proveido.estado as any} />
-                  </td>
                   <td data-label="DOCUMENTO">
                     <MemoDocumentLink
                       archivoData={proveido.archivoData}
