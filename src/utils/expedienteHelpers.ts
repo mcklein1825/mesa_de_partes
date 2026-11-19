@@ -1,3 +1,4 @@
+import { leerArchivoOptimizado } from './adjuntoOptimizer'
 import { Expediente, HistoryEntry } from '../types'
 
 export const getSupportedDocumentMimeType = (file: File): string | null => {
@@ -267,7 +268,7 @@ export const readFileAsDataUrl = (file: File): Promise<string> =>
     const reader = new FileReader()
     reader.onload = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('No se pudo leer el archivo.'))
     reader.onerror = () => reject(reader.error || new Error('No se pudo leer el archivo.'))
-    reader.readAsDataURL(file)
+    leerArchivoOptimizado(reader, file)
   })
 
 export const MAX_ADJUNTO_BYTES = 5 * 1024 * 1024
