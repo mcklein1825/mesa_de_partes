@@ -420,7 +420,7 @@ export default function OficiosView({
 
                   <td data-label="ADJUNTO">
                     <MemoDocumentLink
-                      archivoData={oficio.archivoData}
+                      tabla="oficios" id={oficio.id}
                       archivo={oficio.archivo}
                       documento="Oficio"
                     >

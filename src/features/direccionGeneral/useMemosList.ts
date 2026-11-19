@@ -149,7 +149,7 @@ export default function useMemosList(
 
       const { data, error } = await supabase
         .from('mesa_partes_2026')
-        .select('id, archivo, archivo_data')
+        .select('id, archivo')
         .in('id', ids.map(Number))
 
       if (error) {
@@ -159,9 +159,9 @@ export default function useMemosList(
 
       const documentos: Record<string, { archivoData: string; archivo: string }> = {}
       data?.forEach(item => {
-        if (item.archivo_data) {
+        if (item.archivo) {
           documentos[String(item.id)] = {
-            archivoData: item.archivo_data,
+            archivoData: '',
             archivo: item.archivo || 'Documento'
           }
         }

@@ -7,7 +7,7 @@ export const fetchProveidos = async (): Promise<Proveido[]> => {
     .from('proveidos')
     .select(`
       id, expediente_id, nro_expediente, fecha, area_destino, realizado_por,
-      responsable, instruccion, estado, archivo, archivo_data, archivo_tipo,
+      responsable, instruccion, estado, archivo, archivo_tipo,
       archivo_tamano, created_at
     `)
     .order('id', { ascending: false })

@@ -32,6 +32,14 @@ import DocumentLink from '../common/DocumentLink'
 import MemoDocumentLink from '../common/MemoDocumentLink'
 import Modal from '../common/Modal'
 
+const TABLA_POR_DOCUMENTO: Record<string, string> = {
+  Memo: 'memos',
+  Oficio: 'oficios',
+  'Proveído': 'proveidos',
+  'Memorando múltiple': 'memorandos_multiples'
+}
+const tablaDe = (nombre: string): string | undefined => TABLA_POR_DOCUMENTO[nombre]
+
 const iconoDeMovimiento = (accion: string): LucideIcon => {
   const texto = (accion || '').toLowerCase()
   if (/archivado/.test(texto)) return CheckCircle2
@@ -51,6 +59,7 @@ type FilaRelacionada = {
   archivoData?: string
   archivo?: string
   nombreDocumento: string
+  id: string
 }
 
 type GrupoRelacion = {
@@ -65,7 +74,8 @@ function FilaDocumento({
   lineas,
   archivoData,
   archivo,
-  nombreDocumento
+  nombreDocumento,
+  id
 }: {
   icon: LucideIcon
   titulo: string
@@ -73,6 +83,7 @@ function FilaDocumento({
   archivoData?: string
   archivo?: string
   nombreDocumento: string
+  id: string
 }) {
   return (
     <div className="tracking-doc-row">
@@ -82,7 +93,7 @@ function FilaDocumento({
         {lineas.filter(Boolean).map((linea, indice) => <small key={indice}>{linea}</small>)}
       </div>
       {archivoData ? (
-        <MemoDocumentLink archivoData={archivoData} archivo={archivo} documento={nombreDocumento}>
+        <MemoDocumentLink tabla={tablaDe(nombreDocumento)} id={id} archivo={archivo} documento={nombreDocumento}>
           {archivo || 'Abrir documento'}
         </MemoDocumentLink>
       ) : (
@@ -132,7 +143,7 @@ export default function TrackingModal({
         ],
         archivoData: m.archivoData,
         archivo: m.archivo,
-        nombreDocumento: 'Memo'
+        nombreDocumento: 'Memo', id: String(m.id)
       }))
     },
     {
@@ -148,7 +159,7 @@ export default function TrackingModal({
         ],
         archivoData: o.archivoData,
         archivo: o.archivo,
-        nombreDocumento: 'Oficio'
+        nombreDocumento: 'Oficio', id: String(o.id)
       }))
     },
     {
@@ -163,7 +174,7 @@ export default function TrackingModal({
         ],
         archivoData: p.archivoData,
         archivo: p.archivo,
-        nombreDocumento: 'Proveído'
+        nombreDocumento: 'Proveído', id: String(p.id)
       }))
     },
     {
@@ -179,7 +190,7 @@ export default function TrackingModal({
         ],
         archivoData: mm.archivoData,
         archivo: mm.archivo,
-        nombreDocumento: 'Memorando múltiple'
+        nombreDocumento: 'Memorando múltiple', id: String(mm.id)
       }))
     }
   ]
@@ -335,7 +346,7 @@ export default function TrackingModal({
                       lineas={f.lineas}
                       archivoData={f.archivoData}
                       archivo={f.archivo}
-                      nombreDocumento={f.nombreDocumento}
+                      nombreDocumento={f.nombreDocumento} id={f.id}
                     />
                   ))}
                 </div>

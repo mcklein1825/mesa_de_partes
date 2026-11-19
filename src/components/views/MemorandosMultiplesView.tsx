@@ -464,7 +464,7 @@ export default function MemorandosMultiplesView({
               <td data-label="REALIZADO POR">{item.realizadoPor}</td>
               <td data-label="DOCUMENTO">
                 <MemoDocumentLink
-                  archivoData={item.archivoData}
+                  tabla="memorandos_multiples" id={item.id}
                   archivo={item.archivo || ''}
                   documento="Memorando múltiple"
                 >

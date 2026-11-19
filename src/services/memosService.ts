@@ -6,12 +6,12 @@ export const fetchMemos = async (): Promise<Memo[]> => {
       id, nro_memo, expediente_id, nro_expediente, fecha, asunto,
       registrado_por, area_destino, responsable, envia_copia,
       destinatario_copia, estado, archivo,
-      archivo_data, archivo_tipo, archivo_tamano, created_at
+      archivo_tipo, archivo_tamano, created_at
     `
   const selectLegacy = `
       id, nro_memo, expediente_id, nro_expediente, fecha, asunto,
       registrado_por, area_destino, responsable, estado, archivo,
-      archivo_data, archivo_tipo, archivo_tamano, created_at
+      archivo_tipo, archivo_tamano, created_at
     `
 
   let { data, error } = await supabase
