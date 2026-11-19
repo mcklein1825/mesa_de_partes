@@ -15,3 +15,10 @@ dist/
 scripts-ui-*.mjs
 respaldo-ui/
 tilo-institucional
+
+herramientas/
+mesa-dist.zip
+
+
+scripts-code-splitting.mjs
+scripts-manual-chunks.mjs
