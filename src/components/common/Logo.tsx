@@ -1,9 +1,9 @@
-export default function Logo({ compact = false }: { compact?: boolean }) {
+﻿export default function Logo({ compact = false }: { compact?: boolean }) {
   return (
     <span className={`institution-logo ${compact ? 'institution-logo-compact' : ''}`}>
       <img
         className="institution-logo-image"
-        src="/logo-institucional.png"
+        src="/logo-institucional.jpg"
         alt="Logo del IESTP Gilda Ballivián"
       />
       {!compact && (

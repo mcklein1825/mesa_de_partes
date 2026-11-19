@@ -302,7 +302,7 @@ export default function ProveidosView({
 
                   <td data-label="DOCUMENTO">
                     <MemoDocumentLink
-                      archivoData={proveido.archivoData}
+                      tabla="proveidos" id={proveido.id}
                       archivo={proveido.archivo || ''}
                     >
                       {proveido.archivo || 'Sin adjunto'}

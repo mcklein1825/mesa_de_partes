@@ -70,7 +70,7 @@ const RECIPIENTS_SELECT = `
   )
 `
 const BASE_COLUMNS = 'id, expediente_id, nro_expediente, nro_registro, fecha, asunto, realizado_por, estado, created_at'
-const FILE_COLUMNS = 'archivo, archivo_data, archivo_tipo, archivo_tamano'
+const FILE_COLUMNS = 'archivo, archivo_tipo, archivo_tamano'
 
 type QueryResult = { data: unknown; error: { message?: string } | null }
 

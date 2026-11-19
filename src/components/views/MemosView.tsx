@@ -1053,10 +1053,10 @@ if (showMemoForm && expediente) {
           {memo.asunto || '—'}
         </div>
 
-        {memo.archivoData && (
+        {memo.archivo && (
           <div style={{ marginTop: '6px' }}>
             <MemoDocumentLink
-              archivoData={memo.archivoData}
+              tabla="memos" id={memo.id}
               archivo={memo.archivo}
             >
               {memo.archivo}

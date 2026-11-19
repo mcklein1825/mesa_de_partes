@@ -8,7 +8,7 @@ export const fetchOficios = async (): Promise<Oficio[]> => {
     .select(`
       id, n_registro, expediente_id, nro_expediente, fecha, destinatario,
       asunto_tipo, asunto_detalle, realizado_por, responsable, codigo_oad,
-      codigo_ogesup, anio, area_destino, estado, archivo, archivo_data,
+      codigo_ogesup, anio, area_destino, estado, archivo,
       archivo_tipo, archivo_tamano, fecha_registro, created_at
     `)
     .order('id', { ascending: false })

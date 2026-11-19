@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from 'react'
+import { ReactNode, useState } from 'react'
+import { supabase } from '../../lib/supabaseClient'
 import { useToast } from './ToastProvider'
 import { FileText, LoaderCircle } from 'lucide-react'
 
@@ -6,139 +7,117 @@ export default function MemoDocumentLink({
   archivoData,
   archivo,
   documento = 'Memo',
+  tabla,
+  id,
   children
 }: {
   archivoData?: string
   archivo?: string
   documento?: string
-  children: ReactNode
+  tabla?: string
+  id?: string
+  children?: ReactNode
 }) {
   const { toast } = useToast()
   const [cargando, setCargando] = useState(false)
 
-  const abrirArchivo = () => {
-    if (!archivoData || cargando) {
-      return
+  const hayAdjunto =
+    Boolean(archivoData) ||
+    Boolean(tabla && id && archivo && archivo !== 'Sin adjunto')
+
+  const abrirArchivo = async () => {
+    if (cargando) return
+    let dataUrl = archivoData
+    let tipoDeTabla = ''
+
+    if (!dataUrl && tabla && id) {
+      setCargando(true)
+      try {
+        const { data, error } = await supabase
+          .from(tabla)
+          .select('archivo_data, archivo_tipo, archivo')
+          .eq('id', id)
+          .single()
+        if (error || !data?.archivo_data) {
+          toast('Este documento no tiene archivo almacenado.', 'error')
+          return
+        }
+        dataUrl = data.archivo_data
+        tipoDeTabla = data.archivo_tipo || ''
+      } catch {
+        toast('No se pudo cargar el archivo.', 'error')
+        return
+      } finally {
+        setCargando(false)
+      }
     }
 
+    if (!dataUrl) return
     setCargando(true)
-
     try {
-      // Convertir el Data URL en Blob
-      const partes = archivoData.split(',')
-
-      if (partes.length !== 2) {
-        throw new Error('El archivo almacenado no tiene un formato válido.')
-      }
-
-      const encabezado = partes[0]
-      const contenido = partes[1]
-
-      const mimeMatch = encabezado.match(/data:(.*?);base64/)
-
-      if (!mimeMatch) {
-        throw new Error('No se pudo identificar el tipo de archivo.')
-      }
-
-      const mimeType = mimeMatch[1]
-
-      const byteCharacters = atob(contenido)
+      const partes = dataUrl.split(',')
+      if (partes.length !== 2) throw new Error('formato invalido')
+      const mimeMatch = partes[0].match(/data:(.*?);base64/)
+      const mimeType = mimeMatch ? mimeMatch[1] : (tipoDeTabla || 'application/pdf')
+      const byteCharacters = atob(partes[1])
       const byteArrays: Uint8Array[] = []
-
-      const tamañoBloque = 1024 * 1024
-
-      for (
-        let offset = 0;
-        offset < byteCharacters.length;
-        offset += tamañoBloque
-      ) {
-        const bloque = byteCharacters.slice(
-          offset,
-          offset + tamañoBloque
-        )
-
-        const byteNumbers = new Uint8Array(bloque.length)
-
-        for (let i = 0; i < bloque.length; i++) {
-          byteNumbers[i] = bloque.charCodeAt(i)
-        }
-
-        byteArrays.push(byteNumbers)
+      const tamBloque = 1024 * 1024
+      for (let off = 0; off < byteCharacters.length; off += tamBloque) {
+        const bloque = byteCharacters.slice(off, off + tamBloque)
+        const arr = new Uint8Array(bloque.length)
+        for (let i = 0; i < bloque.length; i++) arr[i] = bloque.charCodeAt(i)
+        byteArrays.push(arr)
       }
-
-      const blob = new Blob(byteArrays, {
-        type: mimeType
-      })
-
+      const blob = new Blob(byteArrays, { type: mimeType })
       const url = URL.createObjectURL(blob)
-
-      const nuevaVentana = window.open(
-        url,
-        '_blank'
-      )
-
-      if (!nuevaVentana) {
+      const ventana = window.open(url, '_blank')
+      if (!ventana) {
         URL.revokeObjectURL(url)
-
         toast('El navegador bloqueó la ventana emergente. Permita las ventanas emergentes para este sitio.', 'warning')
-
         return
       }
-
-      // Liberar la URL después de un tiempo
-      setTimeout(() => {
-        URL.revokeObjectURL(url)
-      }, 60000)
-
-    } catch (error) {
-      console.error(
-        `Error al abrir archivo del ${documento}:`,
-        error
-      )
-
+      setTimeout(() => URL.revokeObjectURL(url), 60000)
+    } catch {
       toast(`No se pudo abrir el archivo del ${documento}.`, 'error')
     } finally {
       setCargando(false)
     }
   }
 
-  if (!archivoData) {
+  if (!hayAdjunto) {
     return (
-      <span
-        className="table-cell-text"
-        title="Sin documento"
-      >
+      <span className="table-cell-text" title="Sin documento">
         {children}
       </span>
     )
   }
 
   return (
-  <button
-    type="button"
-    className="document-link"
-    onClick={abrirArchivo}
-    disabled={cargando}
-    title={`Abrir ${archivo || `documento del ${documento}`}`}
-    style={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '6px',
-      border: '1px solid var(--ui-border)',
-      borderRadius: '6px',
-      background: 'var(--ui-surface)',
-      color: 'var(--ui-text)',
-      padding: '5px 10px',
-      cursor: cargando ? 'wait' : 'pointer',
-      fontSize: '13px',
-      fontWeight: 500
-    }}
-  >
-    {cargando ? (
-      <><LoaderCircle size={15} aria-hidden="true" /><span className="document-link-label">Cargando...</span></>
-    ) : (
-      <><FileText size={15} aria-hidden="true" /><span className="document-link-label">{archivo || 'Documento'}</span></>
-    )}
-  </button>
-)
+    <button
+      type="button"
+      className="document-link"
+      onClick={abrirArchivo}
+      disabled={cargando}
+      title={`Abrir ${archivo || `documento del ${documento}`}`}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '6px',
+        border: '1px solid var(--ui-border)',
+        borderRadius: '6px',
+        background: 'var(--ui-surface)',
+        color: 'var(--ui-text)',
+        padding: '5px 10px',
+        cursor: cargando ? 'wait' : 'pointer',
+        fontSize: '13px',
+        fontWeight: 500
+      }}
+    >
+      {cargando ? (
+        <><LoaderCircle size={15} /><span className="document-link-label">Cargando...</span></>
+      ) : (
+        <><FileText size={15} /><span className="document-link-label">{archivo || 'Documento'}</span></>
+      )}
+    </button>
+  )
 }
