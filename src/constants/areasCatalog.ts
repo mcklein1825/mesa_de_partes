@@ -108,7 +108,7 @@ export const resetAreasCatalog = () => {
   emit()
 }
 
-export const getAreasCatalog = (): AreasCatalog => snapshot
+const getAreasCatalog = (): AreasCatalog => snapshot
 
 const subscribe = (listener: () => void) => {
   listeners.add(listener)

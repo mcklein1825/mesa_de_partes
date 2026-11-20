@@ -18,7 +18,7 @@ type Props = {
   oficioParaDuplicar?: Oficio | null
 }
 
-export type NuevoOficioData = {
+type NuevoOficioData = {
   expedienteId: string
   nroExpediente: string
   fecha: string

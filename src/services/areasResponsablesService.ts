@@ -17,7 +17,7 @@ const toRow = (item: AreaResponsableDb): AreaResponsableRow => ({
   actualizadoEn: item.actualizado_en
 })
 
-export const fetchAreasResponsables = async (): Promise<AreaResponsableRow[]> => {
+const fetchAreasResponsables = async (): Promise<AreaResponsableRow[]> => {
   const { data, error } = await supabase
     .from('areas_responsables')
     .select('id, area, subarea, responsable, actualizado_en')

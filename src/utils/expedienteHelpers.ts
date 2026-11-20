@@ -153,7 +153,7 @@ export const addDays = (value: string, days: number) => {
   return date.toISOString().slice(0, 10)
 }
 
-export const daysUntilDeadline = (deadlineDate: string): number => {
+const daysUntilDeadline = (deadlineDate: string): number => {
   const deadline = parseDate(deadlineDate)
   if (!deadline) return Number.NaN
   deadline.setHours(0, 0, 0, 0)
@@ -161,7 +161,7 @@ export const daysUntilDeadline = (deadlineDate: string): number => {
   today.setHours(0, 0, 0, 0)
   return Math.ceil((deadline.getTime() - today.getTime()) / 86400000)
 }
-export type DeadlineKind =
+type DeadlineKind =
   | 'sin_plazo'
   | 'no_aplica'
   | 'vencido'
