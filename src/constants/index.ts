@@ -15,12 +15,6 @@ export const ROLE_PERMISSIONS: Record<Role, {
   Auditor: { puedeRegistrar: true, puedeDerivar: false, puedeAtender: false, puedeArchivar: false, puedeEditar: false, puedeVerReportes: true, puedeVerTodos: true }
 }
 
-export const VALID_TRANSITIONS: Record<Status, Status[]> = {
-  'Pendiente': ['Sin respuesta', 'Atendido'],
-  'Sin respuesta': ['Atendido', 'Archivado'],
-  'Atendido': [],
-  'Archivado': []
-}
 
 export const areas = [
   'Unidad Académica',

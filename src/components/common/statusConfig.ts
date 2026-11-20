@@ -12,7 +12,7 @@ import {
 import type { LucideIcon } from 'lucide-react'
 
 /** Clave CSS estable: minusculas, sin tildes, espacios como guiones. */
-export const normalizeStatus = (status: string): string =>
+const normalizeStatus = (status: string): string =>
   (status || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
